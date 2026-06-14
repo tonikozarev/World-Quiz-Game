@@ -2,11 +2,13 @@ package com.example.flaggameandroid
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import com.example.flaggameandroid.theme.FlagGameAndroidTheme
 
@@ -14,12 +16,21 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    enableEdgeToEdge()
+    enableEdgeToEdge(
+      statusBarStyle = SystemBarStyle.dark(
+        scrim = android.graphics.Color.BLACK,
+      ),
+      navigationBarStyle = SystemBarStyle.dark(
+        scrim = android.graphics.Color.BLACK,
+      ),
+    )
     setContent {
       FlagGameAndroidTheme {
         Surface(
-          modifier = Modifier.fillMaxSize(),
-          color = MaterialTheme.colorScheme.background,
+          modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding(),
+          color = Color.Black,
         ) {
           FlagGameApp()
         }

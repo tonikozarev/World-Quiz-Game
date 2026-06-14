@@ -1,5 +1,6 @@
 package com.example.flaggameandroid.feature.app
 
+import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuestionResult
@@ -19,7 +20,7 @@ data class QuizState(
   val questions: List<FlagQuestion> = emptyList(),
   val currentQuestionIndex: Int = 0,
   val score: Int = 0,
-  val selectedAnswer: String? = null,
+  val selectedAnswer: FlagCountry? = null,
   val answerRevealed: Boolean = false,
   val results: List<QuestionResult> = emptyList(),
 ) {

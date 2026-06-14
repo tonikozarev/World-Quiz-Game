@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.flaggameandroid.core.model.FlagCountry
+import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.theme.AccentGreen
@@ -189,11 +191,11 @@ fun MultipleChoiceQuizScreen(
   questionNumber: Int,
   totalQuestions: Int,
   mode: GameMode,
-  question: com.example.flaggameandroid.core.model.FlagQuestion,
-  selectedAnswer: String?,
+  question: FlagQuestion,
+  selectedAnswer: FlagCountry?,
   answerRevealed: Boolean,
   onBackToMenu: () -> Unit,
-  onAnswerSelected: (String) -> Unit,
+  onAnswerSelected: (FlagCountry) -> Unit,
   onNextQuestion: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -232,7 +234,7 @@ fun MultipleChoiceQuizScreen(
           verticalArrangement = Arrangement.spacedBy(16.dp),
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-          Text(text = question.flagEmoji, fontSize = 72.sp)
+          Text(text = question.flag.emoji, fontSize = 72.sp)
           Text(text = "Which country is this flag from?", style = MaterialTheme.typography.titleLarge)
         }
       }
@@ -242,8 +244,8 @@ fun MultipleChoiceQuizScreen(
           val optionColor =
             when {
               !answerRevealed -> MaterialTheme.colorScheme.primary
-              option == question.correctAnswer -> AccentGreen
-              option == selectedAnswer && option != question.correctAnswer -> AccentRed
+              option.code == question.flag.code -> AccentGreen
+              option.code == selectedAnswer?.code && option.code != question.flag.code -> AccentRed
               else -> MaterialTheme.colorScheme.surfaceVariant
             }
 
@@ -258,7 +260,7 @@ fun MultipleChoiceQuizScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             modifier = Modifier.fillMaxWidth(),
           ) {
-            Text(text = option)
+            Text(text = option.name)
           }
         }
       }
@@ -416,9 +418,9 @@ private fun ResultRow(
   ) {
     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
       Text(text = "Question $index", style = MaterialTheme.typography.titleMedium)
-      Text(text = "Flag: ${result.question.flagEmoji}", style = MaterialTheme.typography.bodyMedium)
-      Text(text = "Your answer: ${result.selectedAnswer}", style = MaterialTheme.typography.bodyMedium)
-      Text(text = "Correct answer: ${result.question.correctAnswer}", style = MaterialTheme.typography.bodyMedium)
+      Text(text = "Flag: ${result.question.flag.emoji}", style = MaterialTheme.typography.bodyMedium)
+      Text(text = "Your answer: ${result.selectedAnswer.name}", style = MaterialTheme.typography.bodyMedium)
+      Text(text = "Correct answer: ${result.question.flag.name}", style = MaterialTheme.typography.bodyMedium)
     }
   }
 }

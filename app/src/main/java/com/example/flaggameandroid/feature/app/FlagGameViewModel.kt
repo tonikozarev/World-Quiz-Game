@@ -1,8 +1,11 @@
 package com.example.flaggameandroid.feature.app
 
 import androidx.lifecycle.ViewModel
-import com.example.flaggameandroid.core.data.FlagQuestionRepository
-import com.example.flaggameandroid.core.data.StaticFlagQuestionRepository
+import com.example.flaggameandroid.core.data.DefaultFlagQuestionGenerator
+import com.example.flaggameandroid.core.data.FlagCatalogRepository
+import com.example.flaggameandroid.core.data.FlagQuestionGenerator
+import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
+import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuestionResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +14,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class FlagGameViewModel(
-  private val repository: FlagQuestionRepository = StaticFlagQuestionRepository(),
+  private val catalogRepository: FlagCatalogRepository = StaticFlagCatalogRepository(),
+  private val questionGenerator: FlagQuestionGenerator = DefaultFlagQuestionGenerator(),
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(FlagGameUiState())
   val uiState: StateFlow<FlagGameUiState> = _uiState.asStateFlow()
@@ -29,7 +33,10 @@ class FlagGameViewModel(
   }
 
   fun onMultipleChoiceModeSelected() {
-    val questions = repository.getMultipleChoiceQuestions().take(5)
+    val questions = questionGenerator.buildMultipleChoiceQuestions(
+      countries = catalogRepository.getCountries(),
+      totalQuestions = 5,
+    )
     _uiState.update {
       it.copy(
         screen = AppScreen.Quiz,
@@ -42,12 +49,12 @@ class FlagGameViewModel(
     }
   }
 
-  fun onAnswerSelected(answer: String) {
+  fun onAnswerSelected(answer: FlagCountry) {
     val state = _uiState.value
     val question = state.quiz.currentQuestion ?: return
     if (state.quiz.answerRevealed) return
 
-    val isCorrect = answer == question.correctAnswer
+    val isCorrect = answer.code == question.flag.code
     _uiState.update {
       it.copy(
         quiz =
