@@ -3,6 +3,7 @@ package com.example.flaggameandroid.feature.app
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -112,7 +113,7 @@ class FlagGameViewModelTest {
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
     assertEquals(1, player.hintPoints)
     assertEquals(0, player.earnedHintPoints)
-    assertEquals(1, viewModel.uiState.value.hintBanks.getValue("Solo"))
+    assertEquals(1, viewModel.uiState.value.hintCount)
   }
 
   @Test
@@ -139,11 +140,11 @@ class FlagGameViewModelTest {
   }
 
   @Test
-  fun hintCostsTwoOldUsablePoints() {
+  fun hintCostsOneOldUsableHint() {
     val viewModel = viewModel()
-    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 10)
+    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 5)
 
-    repeat(10) {
+    repeat(5) {
       answerCurrentCorrectly(viewModel)
       viewModel.onNextQuestion()
     }
@@ -151,13 +152,160 @@ class FlagGameViewModelTest {
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
     startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 2)
 
-    assertEquals(2, viewModel.uiState.value.quiz.currentPlayer.hintPoints)
+    assertEquals(1, viewModel.uiState.value.quiz.currentPlayer.hintPoints)
     viewModel.onUseHint()
 
     val quiz = viewModel.uiState.value.quiz
     assertEquals(0, quiz.currentPlayer.hintPoints)
     assertTrue(quiz.hintUsedOnCurrentQuestion)
     assertEquals(2, quiz.hiddenOptionCodes.size)
+  }
+
+  @Test
+  fun rookieDifficultyAwardsHintForEveryCorrectAnswerAfterQuizEnds() {
+    val viewModel = viewModel()
+
+    viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
+    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 3)
+
+    repeat(3) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+
+    assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
+    assertEquals(3, viewModel.uiState.value.hintCount)
+  }
+
+  @Test
+  fun localMultiplayerCanSpendExistingHintsButDoesNotCollectNewHints() {
+    val viewModel = viewModel()
+
+    viewModel.onTestingToolsVisibleChanged(true)
+    viewModel.onAddTestingHintsClicked()
+    viewModel.onModeSelected(GameMode.LocalMultiplayer)
+    viewModel.onQuestionCountChanged(2)
+    viewModel.onStartQuiz()
+
+    assertEquals(10, viewModel.uiState.value.quiz.currentPlayer.hintPoints)
+    viewModel.onUseHint()
+    assertEquals(9, viewModel.uiState.value.hintCount)
+
+    answerCurrentCorrectly(viewModel)
+    viewModel.onNextQuestion()
+    answerCurrentCorrectly(viewModel)
+    viewModel.onNextQuestion()
+
+    assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
+    assertEquals(9, viewModel.uiState.value.hintCount)
+    assertEquals(0, viewModel.uiState.value.quiz.players.sumOf { it.earnedHintPoints })
+  }
+
+  @Test
+  fun settingsCanResetAndAddTestingHints() {
+    val viewModel = viewModel()
+
+    viewModel.onAddTestingHintsClicked()
+    assertEquals(10, viewModel.uiState.value.hintCount)
+
+    viewModel.onResetHintsClicked()
+    assertEquals(0, viewModel.uiState.value.hintCount)
+  }
+
+  @Test
+  fun testingHintsDoNotAdvanceLevelProgress() {
+    val viewModel = viewModel()
+
+    viewModel.onAddTestingHintsClicked()
+
+    val progress = viewModel.uiState.value.levelProgress
+    assertEquals(1, progress.level)
+    assertEquals(0, progress.hintsTowardNextLevel)
+    assertEquals(0, progress.correctAnswersTowardNextLevel)
+    assertEquals(0, progress.eligibleQuizzesTowardNextLevel)
+  }
+
+  @Test
+  fun levelProgress_requiresHintsCorrectAnswersAndFiftyEligibleQuizzes() {
+    val viewModel = viewModel()
+    viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
+
+    repeat(49) {
+      completePerfectQuiz(viewModel, questionCount = 10)
+    }
+
+    assertEquals(1, viewModel.uiState.value.levelProgress.level)
+    assertEquals(49, viewModel.uiState.value.levelProgress.eligibleQuizzesTowardNextLevel)
+
+    completePerfectQuiz(viewModel, questionCount = 10)
+
+    val state = viewModel.uiState.value
+    assertEquals(2, state.levelProgress.level)
+    assertTrue(state.levelProgress.levelUpVisible)
+    assertEquals(505, state.hintCount)
+    assertEquals(0, state.levelProgress.eligibleQuizzesTowardNextLevel)
+  }
+
+  @Test
+  fun levelUpSeen_hidesLevelUpCelebration() {
+    val viewModel = viewModel()
+    viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
+
+    repeat(50) {
+      completePerfectQuiz(viewModel, questionCount = 10)
+    }
+
+    assertTrue(viewModel.uiState.value.levelProgress.levelUpVisible)
+    viewModel.onLevelUpSeen()
+    assertEquals(false, viewModel.uiState.value.levelProgress.levelUpVisible)
+  }
+
+  @Test
+  fun continentSelection_updatesQuestionCountLimitAndRejectsTooManyQuestions() {
+    val viewModel = viewModel()
+    val europeCount = StaticFlagCatalogRepository().getCountries().count { it.continent == "Europe" }
+
+    viewModel.onModeSelected(GameMode.Continents)
+    viewModel.uiState.value.setup.selectedContinents
+      .filterNot { it == "Europe" }
+      .forEach(viewModel::onContinentToggled)
+
+    assertEquals(europeCount, viewModel.uiState.value.questionCountLimit)
+
+    viewModel.onQuestionCountChanged(europeCount + 1)
+    viewModel.onStartQuiz()
+
+    assertEquals(AppScreen.Setup, viewModel.uiState.value.screen)
+    assertEquals("Question count must be between 1 and $europeCount.", viewModel.uiState.value.setupError)
+  }
+
+  @Test
+  fun surpriseMe_usesSelectedCountryPoolRange() {
+    val viewModel = viewModel()
+    val europeCount = StaticFlagCatalogRepository().getCountries().count { it.continent == "Europe" }
+
+    viewModel.onModeSelected(GameMode.Continents)
+    viewModel.uiState.value.setup.selectedContinents
+      .filterNot { it == "Europe" }
+      .forEach(viewModel::onContinentToggled)
+    viewModel.onSurpriseMeClicked()
+    viewModel.onStartQuiz()
+
+    val totalQuestions = viewModel.uiState.value.quiz.totalQuestions
+    assertTrue(totalQuestions in 1..europeCount)
+  }
+
+  @Test
+  fun skipQuestion_keepsScoreNeutralAndMovesForward() {
+    val viewModel = viewModel()
+    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 2)
+
+    viewModel.onSkipQuestion()
+
+    val state = viewModel.uiState.value
+    assertEquals(0, state.quiz.players.first().score)
+    assertEquals(1, state.quiz.currentQuestionIndex)
+    assertTrue(state.quiz.results.first().skipped)
   }
 
   @Test
@@ -208,6 +356,17 @@ class FlagGameViewModelTest {
     QuizVariant.entries.filterNot { it == variant }.forEach(viewModel::onVariantToggled)
     viewModel.onQuestionCountChanged(count)
     viewModel.onStartQuiz()
+  }
+
+  private fun completePerfectQuiz(
+    viewModel: FlagGameViewModel,
+    questionCount: Int,
+  ) {
+    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = questionCount)
+    repeat(questionCount) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
   }
 
   private fun answerCurrentCorrectly(viewModel: FlagGameViewModel) {

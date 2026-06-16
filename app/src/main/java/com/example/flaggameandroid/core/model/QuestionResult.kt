@@ -7,4 +7,5 @@ data class QuestionResult(
   val typedAnswer: String,
   val isCorrect: Boolean,
   val hintUsed: Boolean,
+  val skipped: Boolean = false,
 )

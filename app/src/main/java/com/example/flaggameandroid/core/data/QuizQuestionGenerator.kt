@@ -4,6 +4,7 @@ import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.QuizConfig
 import com.example.flaggameandroid.core.model.QuizVariant
+import java.text.Normalizer
 import kotlin.random.Random
 
 class QuizQuestionGenerator(
@@ -16,8 +17,8 @@ class QuizQuestionGenerator(
     val pool = countries.distinctBy { it.code }.shuffled(random)
     require(pool.size >= 4) { "Need at least 4 countries to build a quiz." }
 
-    val variants = config.variants.ifEmpty { QuizVariant.entries.toSet() }.toList()
     val targetCount = config.questionCount.coerceIn(1, pool.size)
+    val variants = buildWeightedVariants(config, targetCount)
 
     return pool.take(targetCount).mapIndexed { index, correctCountry ->
       val variant = variants[index % variants.size]
@@ -34,6 +35,33 @@ class QuizQuestionGenerator(
       )
     }.shuffled(random)
   }
+
+  private fun buildWeightedVariants(
+    config: QuizConfig,
+    targetCount: Int,
+  ): List<QuizVariant> {
+    val selectedVariants = config.variants.ifEmpty { QuizVariant.entries.toSet() }
+    val weights = config.hintDifficulty.variantWeights.filterKeys { it in selectedVariants }
+    val totalWeight = weights.values.sum().coerceAtLeast(1)
+    val exactCounts = weights.mapValues { (_, weight) -> targetCount * weight.toDouble() / totalWeight }
+    val baseCounts = exactCounts.mapValues { (_, exact) -> exact.toInt() }.toMutableMap()
+    var remaining = targetCount - baseCounts.values.sum()
+
+    exactCounts
+      .entries
+      .sortedWith(compareByDescending<Map.Entry<QuizVariant, Double>> { it.value - it.value.toInt() }.thenBy { it.key.ordinal })
+      .forEach { entry ->
+        if (remaining > 0) {
+          baseCounts[entry.key] = baseCounts.getValue(entry.key) + 1
+          remaining--
+        }
+      }
+
+    return baseCounts
+      .flatMap { (variant, count) -> List(count) { variant } }
+      .ifEmpty { selectedVariants.toList() }
+      .shuffled(random)
+  }
 }
 
 object QuizAnswerChecker {
@@ -48,12 +76,21 @@ object QuizAnswerChecker {
   ): Boolean {
     val normalizedAnswer = typedAnswer.normalizeAnswer()
     val acceptedAnswers = (listOf(correctCountry.name) + correctCountry.aliases).map { it.normalizeAnswer() }
-    return normalizedAnswer in acceptedAnswers
+    return normalizedAnswer in acceptedAnswers ||
+      normalizedAnswer.compactAnswer() in acceptedAnswers.map { it.compactAnswer() } ||
+      normalizedAnswer.looseCompactAnswer() in acceptedAnswers.map { it.looseCompactAnswer() }
   }
 
   fun String.normalizeAnswer(): String =
-    trim()
+    Normalizer.normalize(trim(), Normalizer.Form.NFD)
+      .replace(Regex("\\p{Mn}+"), "")
       .lowercase()
-      .replace(Regex("[^a-z0-9 ]"), "")
+      .replace("&", " and ")
+      .replace(Regex("[^a-z0-9 ]"), " ")
       .replace(Regex("\\s+"), " ")
+      .trim()
+
+  private fun String.compactAnswer(): String = replace(" ", "")
+
+  private fun String.looseCompactAnswer(): String = compactAnswer().replace("and", "")
 }

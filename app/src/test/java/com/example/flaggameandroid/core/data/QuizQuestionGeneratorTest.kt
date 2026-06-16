@@ -1,6 +1,7 @@
 package com.example.flaggameandroid.core.data
 
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizConfig
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
@@ -54,5 +55,79 @@ class QuizQuestionGeneratorTest {
       assertEquals(4, question.options.distinctBy { it.code }.size)
       assertTrue(question.options.any { it.code == question.correctCountry.code })
     }
+  }
+
+  @Test
+  fun buildQuestions_usesRookieVariantWeights() {
+    val counts = variantCountsFor(HintDifficulty.Rookie)
+
+    assertEquals(45, counts.getValue(QuizVariant.FlagToCountry))
+    assertEquals(45, counts.getValue(QuizVariant.CountryToFlag))
+    assertEquals(10, counts.getValue(QuizVariant.TypeCountryName))
+  }
+
+  @Test
+  fun buildQuestions_usesMediumVariantWeights() {
+    val counts = variantCountsFor(HintDifficulty.Medium)
+
+    assertEquals(40, counts.getValue(QuizVariant.FlagToCountry))
+    assertEquals(40, counts.getValue(QuizVariant.CountryToFlag))
+    assertEquals(20, counts.getValue(QuizVariant.TypeCountryName))
+  }
+
+  @Test
+  fun buildQuestions_usesHardVariantWeights() {
+    val counts = variantCountsFor(HintDifficulty.Hard)
+
+    assertEquals(30, counts.getValue(QuizVariant.FlagToCountry))
+    assertEquals(30, counts.getValue(QuizVariant.CountryToFlag))
+    assertEquals(40, counts.getValue(QuizVariant.TypeCountryName))
+  }
+
+  @Test
+  fun buildQuestions_usesImpossibleVariantWeights() {
+    val counts = variantCountsFor(HintDifficulty.Impossible)
+
+    assertEquals(20, counts.getValue(QuizVariant.FlagToCountry))
+    assertEquals(20, counts.getValue(QuizVariant.CountryToFlag))
+    assertEquals(60, counts.getValue(QuizVariant.TypeCountryName))
+  }
+
+  @Test
+  fun buildQuestions_rebalancesWeightsAcrossSelectedVariantsOnly() {
+    val generator = QuizQuestionGenerator(Random(8))
+    val questions =
+      generator.buildQuestions(
+        countries = repository.getCountries(),
+        config =
+          QuizConfig(
+            mode = GameMode.Training,
+            variants = setOf(QuizVariant.FlagToCountry, QuizVariant.CountryToFlag),
+            questionCount = 100,
+            hintDifficulty = HintDifficulty.Rookie,
+          ),
+      )
+    val counts = questions.groupingBy { it.variant }.eachCount()
+
+    assertEquals(50, counts.getValue(QuizVariant.FlagToCountry))
+    assertEquals(50, counts.getValue(QuizVariant.CountryToFlag))
+    assertTrue(QuizVariant.TypeCountryName !in counts)
+  }
+
+  private fun variantCountsFor(difficulty: HintDifficulty): Map<QuizVariant, Int> {
+    val generator = QuizQuestionGenerator(Random(8))
+    return generator
+      .buildQuestions(
+        countries = repository.getCountries(),
+        config =
+          QuizConfig(
+            mode = GameMode.Training,
+            variants = QuizVariant.entries.toSet(),
+            questionCount = 100,
+            hintDifficulty = difficulty,
+          ),
+      )
+      .groupingBy { it.variant }
+      .eachCount()
   }
 }

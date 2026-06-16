@@ -4,12 +4,17 @@ import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizVariant
 
 sealed interface AppScreen {
   data object Menu : AppScreen
+
+  data object GameModes : AppScreen
+
+  data object Settings : AppScreen
 
   data object Setup : AppScreen
 
@@ -24,6 +29,11 @@ enum class MultiplayerQuizBase(
   Continents("Continents setup"),
   AllIn("All-In setup"),
 }
+
+data class SettingsState(
+  val hintDifficulty: HintDifficulty = HintDifficulty.Medium,
+  val testingToolsVisible: Boolean = false,
+)
 
 data class SetupState(
   val mode: GameMode = GameMode.Training,
@@ -75,11 +85,34 @@ data class QuizState(
     get() = players.size > 1
 }
 
+data class LevelProgressState(
+  val level: Int = 1,
+  val hintsTowardNextLevel: Int = 0,
+  val correctAnswersTowardNextLevel: Int = 0,
+  val eligibleQuizzesTowardNextLevel: Int = 0,
+  val levelUpVisible: Boolean = false,
+) {
+  val hintsNeeded: Int = 20
+  val correctAnswersNeeded: Int = 200
+  val eligibleQuizzesNeeded: Int = 50
+
+  val progressFraction: Float
+    get() =
+      minOf(
+        hintsTowardNextLevel.toFloat() / hintsNeeded,
+        correctAnswersTowardNextLevel.toFloat() / correctAnswersNeeded,
+        eligibleQuizzesTowardNextLevel.toFloat() / eligibleQuizzesNeeded,
+      ).coerceIn(0f, 1f)
+}
+
 data class FlagGameUiState(
   val screen: AppScreen = AppScreen.Menu,
+  val settings: SettingsState = SettingsState(),
   val setup: SetupState = SetupState(),
   val quiz: QuizState = QuizState(),
   val availableContinents: List<String> = emptyList(),
-  val hintBanks: Map<String, Int> = emptyMap(),
+  val questionCountLimit: Int = 195,
+  val levelProgress: LevelProgressState = LevelProgressState(),
+  val hintCount: Int = 0,
   val setupError: String? = null,
 )
