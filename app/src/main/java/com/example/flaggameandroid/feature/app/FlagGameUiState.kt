@@ -41,7 +41,7 @@ data class SetupState(
   val selectedContinents: Set<String> = emptySet(),
   val questionCountInput: String = "10",
   val surpriseMe: Boolean = false,
-  val allInType: AllInType = AllInType.Hardcore,
+  val allInType: AllInType = AllInType.NoBluffAllTough,
   val multiplayerBase: MultiplayerQuizBase = MultiplayerQuizBase.Continents,
   val playerNames: List<String> = listOf("Player 1", "Player 2"),
 ) {
@@ -58,6 +58,7 @@ data class SetupState(
 data class QuizState(
   val mode: GameMode? = null,
   val allInType: AllInType? = null,
+  val variants: Set<QuizVariant> = emptySet(),
   val questions: List<FlagQuestion> = emptyList(),
   val currentQuestionIndex: Int = 0,
   val players: List<PlayerProgress> = listOf(PlayerProgress("Solo")),

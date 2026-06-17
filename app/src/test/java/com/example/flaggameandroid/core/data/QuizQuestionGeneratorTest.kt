@@ -2,6 +2,7 @@ package com.example.flaggameandroid.core.data
 
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.QuizConfig
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
@@ -42,7 +43,7 @@ class QuizQuestionGeneratorTest {
         countries = repository.getCountries(),
         config =
           QuizConfig(
-            mode = GameMode.Training,
+            mode = GameMode.Continents,
             variants = variants,
             questionCount = 25,
           ),
@@ -59,7 +60,7 @@ class QuizQuestionGeneratorTest {
 
   @Test
   fun buildQuestions_usesRookieVariantWeights() {
-    val counts = variantCountsFor(HintDifficulty.Rookie)
+    val counts = weightedVariantCountsFor(HintDifficulty.Rookie)
 
     assertEquals(45, counts.getValue(QuizVariant.FlagToCountry))
     assertEquals(45, counts.getValue(QuizVariant.CountryToFlag))
@@ -68,7 +69,7 @@ class QuizQuestionGeneratorTest {
 
   @Test
   fun buildQuestions_usesMediumVariantWeights() {
-    val counts = variantCountsFor(HintDifficulty.Medium)
+    val counts = weightedVariantCountsFor(HintDifficulty.Medium)
 
     assertEquals(40, counts.getValue(QuizVariant.FlagToCountry))
     assertEquals(40, counts.getValue(QuizVariant.CountryToFlag))
@@ -77,7 +78,7 @@ class QuizQuestionGeneratorTest {
 
   @Test
   fun buildQuestions_usesHardVariantWeights() {
-    val counts = variantCountsFor(HintDifficulty.Hard)
+    val counts = weightedVariantCountsFor(HintDifficulty.Hard)
 
     assertEquals(30, counts.getValue(QuizVariant.FlagToCountry))
     assertEquals(30, counts.getValue(QuizVariant.CountryToFlag))
@@ -86,7 +87,7 @@ class QuizQuestionGeneratorTest {
 
   @Test
   fun buildQuestions_usesImpossibleVariantWeights() {
-    val counts = variantCountsFor(HintDifficulty.Impossible)
+    val counts = weightedVariantCountsFor(HintDifficulty.Impossible)
 
     assertEquals(20, counts.getValue(QuizVariant.FlagToCountry))
     assertEquals(20, counts.getValue(QuizVariant.CountryToFlag))
@@ -114,16 +115,60 @@ class QuizQuestionGeneratorTest {
     assertTrue(QuizVariant.TypeCountryName !in counts)
   }
 
-  private fun variantCountsFor(difficulty: HintDifficulty): Map<QuizVariant, Int> {
+  @Test
+  fun training_canRepeatCountriesUpToNineHundredNinetyNineQuestions() {
+    val generator = QuizQuestionGenerator(Random(8))
+
+    val questions =
+      generator.buildQuestions(
+        countries = repository.getCountries(),
+        config =
+          QuizConfig(
+            mode = GameMode.Training,
+            variants = QuizVariant.entries.toSet(),
+            questionCount = 300,
+          ),
+      )
+
+    assertEquals(300, questions.size)
+    assertTrue(questions.map { it.correctCountry.code }.distinct().size < questions.size)
+  }
+
+  @Test
+  fun nonWeightedModes_keepThreeVariantsEvenlyDistributed() {
+    val generator = QuizQuestionGenerator(Random(8))
+
+    val counts =
+      generator
+        .buildQuestions(
+          countries = repository.getCountries(),
+          config =
+            QuizConfig(
+              mode = GameMode.Continents,
+              variants = QuizVariant.entries.toSet(),
+              questionCount = 99,
+              hintDifficulty = HintDifficulty.Impossible,
+            ),
+        )
+        .groupingBy { it.variant }
+        .eachCount()
+
+    assertEquals(33, counts.getValue(QuizVariant.FlagToCountry))
+    assertEquals(33, counts.getValue(QuizVariant.CountryToFlag))
+    assertEquals(33, counts.getValue(QuizVariant.TypeCountryName))
+  }
+
+  private fun weightedVariantCountsFor(difficulty: HintDifficulty): Map<QuizVariant, Int> {
     val generator = QuizQuestionGenerator(Random(8))
     return generator
       .buildQuestions(
         countries = repository.getCountries(),
         config =
           QuizConfig(
-            mode = GameMode.Training,
+            mode = GameMode.AllIn,
             variants = QuizVariant.entries.toSet(),
             questionCount = 100,
+            allInType = AllInType.NoBluffAllTough,
             hintDifficulty = difficulty,
           ),
       )

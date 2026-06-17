@@ -2,7 +2,6 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -62,11 +61,10 @@ class GameModeRegressionTest {
   }
 
   @Test
-  fun allInHardcoreUsesFullCatalogAndAllVariants() {
+  fun allInUsesFullCatalogAndDefaultVariants() {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.AllIn)
-    viewModel.onAllInTypeSelected(AllInType.Hardcore)
     viewModel.onStartQuiz()
 
     val quiz = viewModel.uiState.value.quiz
@@ -79,7 +77,6 @@ class GameModeRegressionTest {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.AllIn)
-    viewModel.onAllInTypeSelected(AllInType.NoBluffAllTough)
     QuizVariant.entries.filterNot { it == QuizVariant.TypeCountryName }.forEach(viewModel::onVariantToggled)
     viewModel.onStartQuiz()
 

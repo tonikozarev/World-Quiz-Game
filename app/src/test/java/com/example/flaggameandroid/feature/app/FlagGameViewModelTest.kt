@@ -2,6 +2,7 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
+import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -61,6 +62,30 @@ class FlagGameViewModelTest {
     val state = viewModel.uiState.value
     assertEquals(AppScreen.Quiz, state.screen)
     assertEquals(14, state.quiz.totalQuestions)
+  }
+
+  @Test
+  fun setupBack_returnsToGameModes() {
+    val viewModel = viewModel()
+
+    viewModel.onStartClicked()
+    viewModel.onModeSelected(GameMode.Training)
+    viewModel.onBackToGameModes()
+
+    assertEquals(AppScreen.GameModes, viewModel.uiState.value.screen)
+  }
+
+  @Test
+  fun trainingMode_allowsNineHundredNinetyNineQuestionsAndRepeatsCountries() {
+    val viewModel = viewModel()
+
+    viewModel.onModeSelected(GameMode.Training)
+    viewModel.onQuestionCountChanged(999)
+    viewModel.onStartQuiz()
+
+    val questions = viewModel.uiState.value.quiz.questions
+    assertEquals(999, questions.size)
+    assertTrue(questions.map { it.correctCountry.code }.distinct().size < questions.size)
   }
 
   @Test
@@ -178,6 +203,23 @@ class FlagGameViewModelTest {
   }
 
   @Test
+  fun trainingMode_doesNotProgressLevelCounters() {
+    val viewModel = viewModel()
+    viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
+    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 10)
+
+    repeat(10) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+
+    val progress = viewModel.uiState.value.levelProgress
+    assertEquals(0, progress.hintsTowardNextLevel)
+    assertEquals(0, progress.correctAnswersTowardNextLevel)
+    assertEquals(0, progress.eligibleQuizzesTowardNextLevel)
+  }
+
+  @Test
   fun localMultiplayerCanSpendExistingHintsButDoesNotCollectNewHints() {
     val viewModel = viewModel()
 
@@ -231,13 +273,13 @@ class FlagGameViewModelTest {
     viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
 
     repeat(49) {
-      completePerfectQuiz(viewModel, questionCount = 10)
+      completePerfectContinentsQuiz(viewModel, questionCount = 10)
     }
 
     assertEquals(1, viewModel.uiState.value.levelProgress.level)
     assertEquals(49, viewModel.uiState.value.levelProgress.eligibleQuizzesTowardNextLevel)
 
-    completePerfectQuiz(viewModel, questionCount = 10)
+    completePerfectContinentsQuiz(viewModel, questionCount = 10)
 
     val state = viewModel.uiState.value
     assertEquals(2, state.levelProgress.level)
@@ -252,12 +294,88 @@ class FlagGameViewModelTest {
     viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
 
     repeat(50) {
-      completePerfectQuiz(viewModel, questionCount = 10)
+      completePerfectContinentsQuiz(viewModel, questionCount = 10)
     }
 
     assertTrue(viewModel.uiState.value.levelProgress.levelUpVisible)
     viewModel.onLevelUpSeen()
     assertEquals(false, viewModel.uiState.value.levelProgress.levelUpVisible)
+  }
+
+  @Test
+  fun perfectNoBluffAllToughWithAllVariants_grantsFullLevelWithoutResettingProgress() {
+    val viewModel = viewModel()
+    viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
+
+    viewModel.onModeSelected(GameMode.Continents)
+    viewModel.uiState.value.setup.selectedContinents
+      .filterNot { it == "Europe" }
+      .forEach(viewModel::onContinentToggled)
+    viewModel.onQuestionCountChanged(10)
+    viewModel.onStartQuiz()
+    repeat(10) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+
+    val beforeSpecial = viewModel.uiState.value.levelProgress
+    assertEquals(10, beforeSpecial.hintsTowardNextLevel)
+    assertEquals(10, beforeSpecial.correctAnswersTowardNextLevel)
+    assertEquals(1, beforeSpecial.eligibleQuizzesTowardNextLevel)
+
+    viewModel.onModeSelected(GameMode.AllIn)
+    viewModel.onAllInTypeSelected(AllInType.NoBluffAllTough)
+    viewModel.onStartQuiz()
+
+    repeat(viewModel.uiState.value.quiz.totalQuestions) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+
+    val progress = viewModel.uiState.value.levelProgress
+    assertEquals(2, progress.level)
+    assertEquals(10, progress.hintsTowardNextLevel)
+    assertEquals(10, progress.correctAnswersTowardNextLevel)
+    assertEquals(1, progress.eligibleQuizzesTowardNextLevel)
+  }
+
+  @Test
+  fun noBluffAllToughWithRemovedVariant_doesNotGrantFullLevel() {
+    val viewModel = viewModel()
+
+    viewModel.onModeSelected(GameMode.AllIn)
+    viewModel.onAllInTypeSelected(AllInType.NoBluffAllTough)
+    viewModel.onVariantToggled(QuizVariant.TypeCountryName)
+    viewModel.onStartQuiz()
+
+    repeat(viewModel.uiState.value.quiz.totalQuestions) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+
+    assertEquals(1, viewModel.uiState.value.levelProgress.level)
+  }
+
+  @Test
+  fun perfectNoBluffAllToughOnImpossible_grantsTwoFullLevels() {
+    val viewModel = viewModel()
+    viewModel.onHintDifficultySelected(HintDifficulty.Impossible)
+
+    viewModel.onModeSelected(GameMode.AllIn)
+    viewModel.onAllInTypeSelected(AllInType.NoBluffAllTough)
+    viewModel.onStartQuiz()
+
+    repeat(viewModel.uiState.value.quiz.totalQuestions) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+
+    val progress = viewModel.uiState.value.levelProgress
+    assertEquals(3, progress.level)
+    assertTrue(progress.levelUpVisible)
+    assertEquals(0, progress.hintsTowardNextLevel)
+    assertEquals(0, progress.correctAnswersTowardNextLevel)
+    assertEquals(0, progress.eligibleQuizzesTowardNextLevel)
   }
 
   @Test
@@ -293,6 +411,26 @@ class FlagGameViewModelTest {
 
     val totalQuestions = viewModel.uiState.value.quiz.totalQuestions
     assertTrue(totalQuestions in 1..europeCount)
+  }
+
+  @Test
+  fun continentsQuizWithTenOrMoreQuestions_countsAsOneLevelTest() {
+    val viewModel = viewModel()
+
+    viewModel.onModeSelected(GameMode.Continents)
+    viewModel.uiState.value.setup.selectedContinents
+      .filterNot { it == "Europe" }
+      .forEach(viewModel::onContinentToggled)
+    viewModel.onQuestionCountChanged(10)
+    viewModel.onStartQuiz()
+
+    repeat(10) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+
+    assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
+    assertEquals(1, viewModel.uiState.value.levelProgress.eligibleQuizzesTowardNextLevel)
   }
 
   @Test
@@ -363,6 +501,23 @@ class FlagGameViewModelTest {
     questionCount: Int,
   ) {
     startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = questionCount)
+    repeat(questionCount) {
+      answerCurrentCorrectly(viewModel)
+      viewModel.onNextQuestion()
+    }
+  }
+
+  private fun completePerfectContinentsQuiz(
+    viewModel: FlagGameViewModel,
+    questionCount: Int,
+  ) {
+    viewModel.onModeSelected(GameMode.Continents)
+    viewModel.uiState.value.setup.selectedContinents
+      .filterNot { it == "Europe" }
+      .forEach(viewModel::onContinentToggled)
+    QuizVariant.entries.filterNot { it == QuizVariant.FlagToCountry }.forEach(viewModel::onVariantToggled)
+    viewModel.onQuestionCountChanged(questionCount)
+    viewModel.onStartQuiz()
     repeat(questionCount) {
       answerCurrentCorrectly(viewModel)
       viewModel.onNextQuestion()

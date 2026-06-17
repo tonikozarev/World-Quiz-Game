@@ -60,75 +60,78 @@ import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizVariant
+import com.example.flaggameandroid.theme.AccentGold
 import com.example.flaggameandroid.theme.AccentGreen
 import com.example.flaggameandroid.theme.AccentRed
 import kotlinx.coroutines.delay
 
 @Composable
 fun FlagGameRoute(
-  screenViewModel: FlagGameViewModel = viewModel { FlagGameViewModel() },
+  screenViewModel: FlagGameViewModel? = null,
 ) {
-  val uiState by screenViewModel.uiState.collectAsStateWithLifecycle()
   val activity = LocalContext.current as? Activity
+  val resolvedViewModel = screenViewModel ?: viewModel(factory = FlagGameViewModel.factory(LocalContext.current.applicationContext))
+  val uiState by resolvedViewModel.uiState.collectAsStateWithLifecycle()
 
   when (uiState.screen) {
     AppScreen.Menu ->
       MenuScreen(
         levelProgress = uiState.levelProgress,
-        onStartClick = screenViewModel::onStartClicked,
-        onSettingsClick = screenViewModel::onSettingsClicked,
+        onStartClick = resolvedViewModel::onStartClicked,
+        onSettingsClick = resolvedViewModel::onSettingsClicked,
         onQuitClick = { activity?.finish() },
-        onLevelUpSeen = screenViewModel::onLevelUpSeen,
+        onLevelUpSeen = resolvedViewModel::onLevelUpSeen,
       )
     AppScreen.GameModes ->
       GameModesScreen(
-        onBack = screenViewModel::onBackToMenu,
-        onModeSelected = screenViewModel::onModeSelected,
+        onBack = resolvedViewModel::onBackToMenu,
+        onModeSelected = resolvedViewModel::onModeSelected,
       )
     AppScreen.Settings ->
       SettingsScreen(
         settings = uiState.settings,
         hintCount = uiState.hintCount,
-        onBack = screenViewModel::onBackToMenu,
-        onHintDifficultySelected = screenViewModel::onHintDifficultySelected,
-        onResetHintsClick = screenViewModel::onResetHintsClicked,
-        onAddTestingHintsClick = screenViewModel::onAddTestingHintsClicked,
+        onBack = resolvedViewModel::onBackToMenu,
+        onHintDifficultySelected = resolvedViewModel::onHintDifficultySelected,
+        onResetHintsClick = resolvedViewModel::onResetHintsClicked,
+        onAddTestingHintsClick = resolvedViewModel::onAddTestingHintsClicked,
       )
     AppScreen.Setup ->
       SetupScreen(
         setup = uiState.setup,
+        hintDifficulty = uiState.settings.hintDifficulty,
         availableContinents = uiState.availableContinents,
         questionCountLimit = uiState.questionCountLimit,
         setupError = uiState.setupError,
-        onBack = screenViewModel::onBackToMenu,
-        onVariantToggle = screenViewModel::onVariantToggled,
-        onContinentToggle = screenViewModel::onContinentToggled,
-        onQuestionCountChange = screenViewModel::onQuestionCountChanged,
-        onSurpriseMe = screenViewModel::onSurpriseMeClicked,
-        onAllInTypeSelected = screenViewModel::onAllInTypeSelected,
-        onMultiplayerBaseSelected = screenViewModel::onMultiplayerBaseSelected,
-        onPlayerNameChanged = screenViewModel::onPlayerNameChanged,
-        onAddPlayer = screenViewModel::onAddPlayer,
-        onRemovePlayer = screenViewModel::onRemovePlayer,
-        onStartQuiz = screenViewModel::onStartQuiz,
+        onBack = resolvedViewModel::onBackToGameModes,
+        onVariantToggle = resolvedViewModel::onVariantToggled,
+        onContinentToggle = resolvedViewModel::onContinentToggled,
+        onQuestionCountChange = resolvedViewModel::onQuestionCountChanged,
+        onSurpriseMe = resolvedViewModel::onSurpriseMeClicked,
+        onAllInTypeSelected = resolvedViewModel::onAllInTypeSelected,
+        onMultiplayerBaseSelected = resolvedViewModel::onMultiplayerBaseSelected,
+        onPlayerNameChanged = resolvedViewModel::onPlayerNameChanged,
+        onAddPlayer = resolvedViewModel::onAddPlayer,
+        onRemovePlayer = resolvedViewModel::onRemovePlayer,
+        onStartQuiz = resolvedViewModel::onStartQuiz,
       )
     AppScreen.Quiz ->
       QuizScreen(
         quiz = uiState.quiz,
-        onBackToMenu = screenViewModel::onBackToMenu,
-        onCountryAnswerSelected = screenViewModel::onCountryAnswerSelected,
-        onTypedAnswerChanged = screenViewModel::onTypedAnswerChanged,
-        onUseHint = screenViewModel::onUseHint,
-        onNextQuestion = screenViewModel::onNextQuestion,
-        onSkipQuestion = screenViewModel::onSkipQuestion,
+        onBackToMenu = resolvedViewModel::onBackToMenu,
+        onCountryAnswerSelected = resolvedViewModel::onCountryAnswerSelected,
+        onTypedAnswerChanged = resolvedViewModel::onTypedAnswerChanged,
+        onUseHint = resolvedViewModel::onUseHint,
+        onNextQuestion = resolvedViewModel::onNextQuestion,
+        onSkipQuestion = resolvedViewModel::onSkipQuestion,
       )
     AppScreen.Results ->
       ResultsScreen(
         quiz = uiState.quiz,
         levelProgress = uiState.levelProgress,
-        onPlayAgain = screenViewModel::onPlayAgain,
-        onBackToMenu = screenViewModel::onBackToMenu,
-        onLevelUpSeen = screenViewModel::onLevelUpSeen,
+        onPlayAgain = resolvedViewModel::onPlayAgain,
+        onBackToMenu = resolvedViewModel::onBackToMenu,
+        onLevelUpSeen = resolvedViewModel::onLevelUpSeen,
       )
   }
 }
@@ -146,11 +149,11 @@ fun MenuScreen(
     LevelProgressPanel(levelProgress = levelProgress, onLevelUpSeen = onLevelUpSeen)
 
     HeroPanel(
-      title = "Flag Game Android",
-      subtitle = "A sharper world quiz with training, continents, all-in challenges, and local multiplayer.",
+      title = "World Flag Challenge",
+      subtitle = "Sharp rounds, clean progression, and quick ways to drill every country on the map.",
     )
 
-    SectionCard(title = "Menu") {
+    SectionCard(title = "Play") {
       Button(onClick = onStartClick, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
         Text("Start")
       }
@@ -269,6 +272,7 @@ fun SettingsScreen(
 @Composable
 fun SetupScreen(
   setup: SetupState,
+  hintDifficulty: HintDifficulty,
   availableContinents: List<String>,
   questionCountLimit: Int,
   setupError: String?,
@@ -315,19 +319,6 @@ fun SetupScreen(
             title = base.title,
             selected = setup.multiplayerBase == base,
             onClick = { onMultiplayerBaseSelected(base) },
-          )
-        }
-      }
-    }
-
-    if (setup.mode == GameMode.AllIn || setup.multiplayerBase == MultiplayerQuizBase.AllIn && setup.mode == GameMode.LocalMultiplayer) {
-      SectionCard(title = "All-In type") {
-        AllInType.entries.forEach { type ->
-          SelectableRow(
-            title = type.title,
-            description = type.description,
-            selected = setup.allInType == type,
-            onClick = { onAllInTypeSelected(type) },
           )
         }
       }
@@ -382,22 +373,14 @@ fun SetupScreen(
       }
     }
 
-    if (!(setup.mode == GameMode.AllIn && setup.allInType == AllInType.Hardcore) &&
-      !(setup.mode == GameMode.LocalMultiplayer && setup.multiplayerBase == MultiplayerQuizBase.AllIn && setup.allInType == AllInType.Hardcore)
-    ) {
-      SectionCard(title = "Question variants") {
-        QuizVariant.entries.forEach { variant ->
-          CheckRow(
-            title = variant.title,
-            description = variant.description,
-            checked = variant in setup.variants,
-            onClick = { onVariantToggle(variant) },
-          )
-        }
-      }
-    } else {
-      SectionCard(title = "Question variants") {
-        Text("Hardcore uses all three variants automatically.", style = MaterialTheme.typography.bodyMedium)
+    SectionCard(title = "Question variants") {
+      QuizVariant.entries.forEach { variant ->
+        CheckRow(
+          title = variant.title,
+          description = variant.description,
+          checked = variant in setup.variants,
+          onClick = { onVariantToggle(variant) },
+        )
       }
     }
 
@@ -407,6 +390,34 @@ fun SetupScreen(
 
     Button(onClick = onStartQuiz, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
       Text("Start quiz")
+    }
+
+    if (setup.mode == GameMode.AllIn) {
+      val hasAllVariants = setup.variants.size == QuizVariant.entries.size
+      val hintSettingLabel = hintDifficulty.title
+      val levelReward = if (hintDifficulty == HintDifficulty.Impossible) "+2 full levels" else "+1 full level"
+      InfoPanel(
+        text = buildString {
+          append("Hint setting: ")
+          append(hintSettingLabel)
+          append(". ")
+          if (hasAllVariants) {
+            append("Perfect clear reward is active. Finish with no mistakes using all 3 variants to earn ")
+            append(levelReward)
+            append(".")
+            if (hintDifficulty != HintDifficulty.Impossible) {
+              append(" Switch to 'The impossible one' to earn +1 more level, for +2 full levels total.")
+            }
+          } else {
+            append("Perfect clear reward is inactive because not all 3 variants are selected. Re-enable every variant to earn ")
+            append(levelReward)
+            append(" for a perfect run.")
+            if (hintDifficulty != HintDifficulty.Impossible) {
+              append(" With 'The impossible one' enabled, that perfect-run reward would become +2 full levels.")
+            }
+          }
+        },
+      )
     }
   }
 }
@@ -652,13 +663,76 @@ private fun HeroPanel(
   subtitle: String,
 ) {
   ElevatedCard(
-    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+    colors = CardDefaults.elevatedCardColors(containerColor = Color.Transparent),
     modifier = Modifier.fillMaxWidth(),
   ) {
-    Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      Text(text = title, style = MaterialTheme.typography.headlineLarge)
-      Text(text = subtitle, style = MaterialTheme.typography.bodyLarge)
+    Box(
+      modifier =
+        Modifier
+          .fillMaxWidth()
+          .background(
+            Brush.linearGradient(
+              colors = listOf(
+                MaterialTheme.colorScheme.surface,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.88f),
+              ),
+            ),
+            shape = RoundedCornerShape(24.dp),
+          )
+          .padding(22.dp),
+    ) {
+      Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Surface(
+          color = AccentGold.copy(alpha = 0.16f),
+          contentColor = AccentGold,
+          shape = RoundedCornerShape(999.dp),
+        ) {
+          Text(
+            text = "GLOBAL QUIZ",
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+          )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(
+            text = title,
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontWeight = FontWeight.ExtraBold,
+          )
+          Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f),
+          )
+        }
+        FlowRow(
+          horizontalArrangement = Arrangement.spacedBy(8.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+          HeroStatPill(text = "195+ countries")
+          HeroStatPill(text = "4 game modes")
+          HeroStatPill(text = "Offline ready")
+        }
+      }
     }
+  }
+}
+
+@Composable
+private fun HeroStatPill(text: String) {
+  Surface(
+    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
+    contentColor = MaterialTheme.colorScheme.onPrimary,
+    shape = RoundedCornerShape(999.dp),
+  ) {
+    Text(
+      text = text,
+      modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+      style = MaterialTheme.typography.labelMedium,
+      fontWeight = FontWeight.Medium,
+    )
   }
 }
 

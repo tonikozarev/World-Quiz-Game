@@ -6,15 +6,15 @@ enum class GameMode(
 ) {
   Training(
     title = "Training",
-    description = "Mix flags, country names, and typed answers at your pace.",
+    description = "Mix flags, country names, and typed answers at your pace. Training does not give level-up progress.",
   ),
   Continents(
     title = "Continents",
     description = "Build a quiz from the continents you want to practice.",
   ),
   AllIn(
-    title = "All-In mode",
-    description = "Go through the world with tougher full-catalog rules.",
+    title = "No Bluff, All Tough",
+    description = "All countries with only the variants you choose.",
   ),
   LocalMultiplayer(
     title = "Local Multiplayer",
@@ -44,12 +44,8 @@ enum class AllInType(
   val title: String,
   val description: String,
 ) {
-  Hardcore(
-    title = "Hardcore",
-    description = "All countries, all question variants, fully randomized.",
-  ),
   NoBluffAllTough(
     title = "No Bluff, All Tough",
-    description = "All countries with only the variants you choose.",
+    description = "All countries with only the variants you choose. Perfect clear with all 3 variants gives +1 full level, or +2 if the hint setting is 'the impossible one'.",
   ),
 }
