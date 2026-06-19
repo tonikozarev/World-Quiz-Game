@@ -290,7 +290,7 @@ class FlagGameViewModelTest {
   }
 
   @Test
-  fun rookieDifficultyAwardsHintForEveryCorrectAnswerAfterQuizEnds() {
+  fun rookieDifficultyAwardsHintForEveryThreeCorrectAnswersAfterQuizEnds() {
     val viewModel = viewModel()
 
     viewModel.onHintDifficultySelected(HintDifficulty.Rookie)
@@ -302,7 +302,7 @@ class FlagGameViewModelTest {
     }
 
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
-    assertEquals(3, viewModel.uiState.value.hintCount)
+    assertEquals(1, viewModel.uiState.value.hintCount)
   }
 
   @Test
@@ -593,7 +593,7 @@ class FlagGameViewModelTest {
     val state = viewModel.uiState.value
     assertEquals(2, state.levelProgress.level)
     assertTrue(state.levelProgress.levelUpVisible)
-    assertEquals(105, state.hintCount)
+    assertEquals(35, state.hintCount)
     assertEquals(0, state.levelProgress.eligibleQuizzesTowardNextLevel)
     assertEquals(0, state.levelProgress.hintsTowardNextLevel)
     assertEquals(0, state.levelProgress.correctAnswersTowardNextLevel)
@@ -608,11 +608,11 @@ class FlagGameViewModelTest {
       completePerfectContinentsQuiz(viewModel, questionCount = 10)
     }
 
-    assertEquals(90, viewModel.uiState.value.hintCount)
+    assertEquals(27, viewModel.uiState.value.hintCount)
 
     completePerfectContinentsQuiz(viewModel, questionCount = 10)
 
-    assertEquals(105, viewModel.uiState.value.hintCount)
+    assertEquals(35, viewModel.uiState.value.hintCount)
     assertEquals(2, viewModel.uiState.value.levelProgress.level)
   }
 
@@ -634,14 +634,14 @@ class FlagGameViewModelTest {
     val beforeFinalRun = viewModel.uiState.value.levelProgress
     assertEquals(2, beforeFinalRun.level)
     assertEquals(14, beforeFinalRun.eligibleQuizzesTowardNextLevel)
-    assertEquals(140, beforeFinalRun.hintsTowardNextLevel)
+    assertEquals(42, beforeFinalRun.hintsTowardNextLevel)
     assertEquals(140, beforeFinalRun.correctAnswersTowardNextLevel)
 
     completePerfectContinentsQuiz(viewModel, questionCount = 10)
 
     val finalProgress = viewModel.uiState.value.levelProgress
     assertEquals(3, finalProgress.level)
-    assertEquals(260, viewModel.uiState.value.hintCount)
+    assertEquals(85, viewModel.uiState.value.hintCount)
     assertEquals(0, finalProgress.hintsTowardNextLevel)
     assertEquals(0, finalProgress.correctAnswersTowardNextLevel)
     assertEquals(0, finalProgress.eligibleQuizzesTowardNextLevel)
@@ -678,7 +678,7 @@ class FlagGameViewModelTest {
     }
 
     val beforeSpecial = viewModel.uiState.value.levelProgress
-    assertEquals(10, beforeSpecial.hintsTowardNextLevel)
+    assertEquals(3, beforeSpecial.hintsTowardNextLevel)
     assertEquals(10, beforeSpecial.correctAnswersTowardNextLevel)
     assertEquals(1, beforeSpecial.eligibleQuizzesTowardNextLevel)
 
@@ -804,6 +804,38 @@ class FlagGameViewModelTest {
     assertEquals(1, state.quiz.currentQuestionIndex)
     assertTrue(state.quiz.questionStates.first().status == QuestionStatus.Skipped)
     assertTrue(state.quiz.results.isEmpty())
+  }
+
+  @Test
+  fun rightArrowSkippingTypedQuestion_marksSkippedAndCanUnskip() {
+    val viewModel = viewModel()
+    startSingleVariantQuiz(viewModel, QuizVariant.TypeCountryName, count = 2)
+
+    viewModel.onNextQuestionPreview()
+
+    var state = viewModel.uiState.value
+    assertEquals(1, state.quiz.currentQuestionIndex)
+    assertTrue(state.quiz.questionStates.first().status == QuestionStatus.Skipped)
+
+    viewModel.onUnskipQuestion()
+
+    state = viewModel.uiState.value
+    assertEquals(0, state.quiz.currentQuestionIndex)
+    assertTrue(state.quiz.questionStates.first().status == QuestionStatus.Skipped)
+  }
+
+  @Test
+  fun rightArrowSkippingLastTypedQuestion_marksSkipped() {
+    val viewModel = viewModel()
+    startSingleVariantQuiz(viewModel, QuizVariant.TypeCountryName, count = 2)
+
+    viewModel.onTypedAnswerChanged(viewModel.uiState.value.quiz.currentQuestion!!.correctCountry.name)
+    viewModel.onNextQuestionPreview()
+    viewModel.onNextQuestionPreview()
+
+    val state = viewModel.uiState.value
+    assertEquals(1, state.quiz.currentQuestionIndex)
+    assertTrue(state.quiz.questionStates[1].status == QuestionStatus.Skipped)
   }
 
   @Test

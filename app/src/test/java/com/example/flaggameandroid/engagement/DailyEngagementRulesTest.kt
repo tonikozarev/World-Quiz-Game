@@ -34,21 +34,21 @@ class DailyEngagementRulesTest {
   }
 
   @Test
-  fun nextReminderEpochMillis_beforeReminder_returnsTodayAtThirteen() {
+  fun nextReminderEpochMillis_beforeReminder_returnsTodayAtTwelve() {
     val now = dateTime(2026, 6, 17, 9, 45)
 
     val result = DailyEngagementRules.nextReminderEpochMillis(now, zoneId)
 
-    assertEquals(dateTime(2026, 6, 17, 13, 0), result)
+    assertEquals(dateTime(2026, 6, 17, 12, 0), result)
   }
 
   @Test
-  fun nextReminderEpochMillis_afterReminder_returnsTomorrowAtThirteen() {
+  fun nextReminderEpochMillis_afterReminder_returnsTomorrowAtTwelve() {
     val now = dateTime(2026, 6, 17, 16, 10)
 
     val result = DailyEngagementRules.nextReminderEpochMillis(now, zoneId)
 
-    assertEquals(dateTime(2026, 6, 18, 13, 0), result)
+    assertEquals(dateTime(2026, 6, 18, 12, 0), result)
   }
 
   private fun dateTime(

@@ -14,6 +14,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -396,64 +400,95 @@ fun SettingsScreen(
   ScreenShell(modifier = modifier) {
     HeaderRow(title = t(settings.language, UiText.Settings))
 
-    SectionCard(title = t(settings.language, UiText.Language)) {
-      LanguageSelector(
-        selectedLanguage = settings.language,
-        expanded = languageMenuExpanded,
-        onExpandedChange = { languageMenuExpanded = it },
-        onLanguageSelected = onLanguageSelected,
-      )
-    }
-
-    SectionCard(title = t(settings.language, UiText.Hints)) {
-      Surface(
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier.fillMaxWidth(),
-      ) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+      Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
-          modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-          horizontalArrangement = Arrangement.SpaceBetween,
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(10.dp),
           verticalAlignment = Alignment.CenterVertically,
         ) {
-          Text(t(settings.language, UiText.CollectedHints), style = MaterialTheme.typography.titleMedium)
-          Text("$hintCount", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+          Text(
+            text = t(settings.language, UiText.Language),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+          LanguageSelector(
+            selectedLanguage = settings.language,
+            expanded = languageMenuExpanded,
+            onExpandedChange = { languageMenuExpanded = it },
+            onLanguageSelected = onLanguageSelected,
+          )
         }
-      }
-      HintDifficulty.entries.forEach { difficulty ->
-        CompactInfoRow(
-          title = localizedHintDifficultyTitle(difficulty, settings.language),
-          shortText = localizedHintDifficultyShortRule(difficulty, settings.language),
-          infoText = localizedHintDifficultyDescription(difficulty, settings.language),
-          selected = settings.hintDifficulty == difficulty,
-          infoExpanded = expandedDifficulty == difficulty,
-          onClick = { onHintDifficultySelected(difficulty) },
-          onInfoClick = {
-            expandedDifficulty = if (expandedDifficulty == difficulty) null else difficulty
-          },
-        )
       }
     }
 
-    SectionCard(title = when (settings.language) {
-      AppLanguage.English -> "Reminders"
-      AppLanguage.Bulgarian -> "Напомняния"
-      AppLanguage.German -> "Erinnerungen"
-    }) {
-      SettingSwitchRow(
-        title = when (settings.language) {
-          AppLanguage.English -> "Daily 13:00 reminder"
-          AppLanguage.Bulgarian -> "Дневно напомняне в 13:00"
-          AppLanguage.German -> "Tägliche Erinnerung um 13:00"
-        },
-        description = when (settings.language) {
-          AppLanguage.English -> "Send a 13:00 notification when you have not checked in yet today."
-          AppLanguage.Bulgarian -> "Изпрати известие в 13:00, ако още не си влязъл днес."
-          AppLanguage.German -> "Sende um 13:00 eine Benachrichtigung, wenn du heute noch nicht da warst."
-        },
-        checked = settings.reminderEnabled,
-        onCheckedChange = onReminderEnabledChanged,
-      )
+    Card(modifier = Modifier.fillMaxWidth()) {
+      Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(12.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Text(
+            text = t(settings.language, UiText.Hints),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+          )
+          Text("$hintCount", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        }
+        HintDifficulty.entries.forEach { difficulty ->
+          CompactInfoRow(
+            title = localizedHintDifficultyTitle(difficulty, settings.language),
+            shortText = localizedHintDifficultyShortRule(difficulty, settings.language),
+            infoText = localizedHintDifficultyDescription(difficulty, settings.language),
+            selected = settings.hintDifficulty == difficulty,
+            infoExpanded = expandedDifficulty == difficulty,
+            onClick = { onHintDifficultySelected(difficulty) },
+            onInfoClick = {
+              expandedDifficulty = if (expandedDifficulty == difficulty) null else difficulty
+            },
+          )
+        }
+      }
+    }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+      Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Text(
+            text = when (settings.language) {
+              AppLanguage.English -> "Played today?"
+              AppLanguage.Bulgarian -> "Игра ли днес?"
+              AppLanguage.German -> "Heute gespielt?"
+            },
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+          )
+          Switch(
+            checked = settings.reminderEnabled,
+            onCheckedChange = onReminderEnabledChanged,
+            modifier = Modifier.graphicsLayer(scaleX = 0.88f, scaleY = 0.88f),
+          )
+        }
+        Text(
+          text = when (settings.language) {
+            AppLanguage.English -> "The app sends a notification at 12:00 if you have not opened it yet today."
+            AppLanguage.Bulgarian -> "Приложението изпраща известие в 12:00, ако още не си го отворил днес."
+            AppLanguage.German -> "Um 12:00 kommt eine Benachrichtigung, falls du die App heute nicht geöffnet hast."
+          },
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
     }
 
     SectionCard(title = when (settings.language) {
@@ -1093,22 +1128,6 @@ fun QuizScreen(
         modifier = Modifier.weight(1f),
         onClick = { showQuizInfo = !showQuizInfo },
       )
-      if (question.variant == QuizVariant.TypeCountryName) {
-        OutlinedButton(
-          onClick = onVerifyTypedAnswer,
-          enabled = quiz.typedAnswer.isNotBlank() && !isTrainingLocked,
-          modifier = Modifier.weight(1f),
-          contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
-        ) {
-          Text(
-            text = localizedVerifyButtonLabel(language),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            softWrap = false,
-          )
-        }
-      }
       OutlinedButton(
         onClick = onUseHint,
         enabled = quiz.currentPlayer.hintPoints >= 1 && quiz.currentQuestionState.hintUses < 2 && !quiz.currentQuestionState.locked && quiz.currentQuestionState.status != QuestionStatus.Answered,
@@ -1141,6 +1160,22 @@ fun QuizScreen(
           maxLines = 1,
           softWrap = false,
         )
+      }
+      if (question.variant == QuizVariant.TypeCountryName) {
+        OutlinedButton(
+          onClick = onVerifyTypedAnswer,
+          enabled = quiz.typedAnswer.isNotBlank() && !isTrainingLocked,
+          modifier = Modifier.weight(1f),
+          contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
+        ) {
+          Text(
+            text = localizedVerifyButtonLabel(language),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            softWrap = false,
+          )
+        }
       }
     }
   }
@@ -1607,16 +1642,16 @@ private fun LanguageSelector(
   onExpandedChange: (Boolean) -> Unit,
   onLanguageSelected: (AppLanguage) -> Unit,
 ) {
-  Box(modifier = Modifier.fillMaxWidth()) {
+  Box(modifier = Modifier.widthIn(min = 128.dp, max = 162.dp)) {
     OutlinedButton(
       onClick = { onExpandedChange(!expanded) },
       modifier = Modifier.fillMaxWidth(),
       shape = RoundedCornerShape(18.dp),
-      contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+      contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
     ) {
       Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
       ) {
         Surface(
@@ -1626,26 +1661,21 @@ private fun LanguageSelector(
         ) {
           Text(
             text = languageFlag(selectedLanguage),
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-          )
-        }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-          Text(
-            text = t(selectedLanguage, UiText.Language),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-          Text(
-            languageName(selectedLanguage),
-            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
           )
         }
         Text(
+          languageName(selectedLanguage),
+          style = MaterialTheme.typography.bodyMedium,
+          fontWeight = FontWeight.Bold,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        Text(
           text = "\u25BE",
-          style = MaterialTheme.typography.titleLarge,
+          style = MaterialTheme.typography.bodyMedium,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
           modifier = Modifier.graphicsLayer {
@@ -1657,7 +1687,7 @@ private fun LanguageSelector(
     DropdownMenu(
       expanded = expanded,
       onDismissRequest = { onExpandedChange(false) },
-      modifier = Modifier.fillMaxWidth(0.94f),
+      modifier = Modifier.widthIn(min = 160.dp, max = 220.dp),
     ) {
       AppLanguage.entries.forEach { language ->
         DropdownMenuItem(
@@ -2186,14 +2216,52 @@ private fun ModeCard(
 private fun InfoButton(
   label: String = InfoSymbolText,
   modifier: Modifier = Modifier,
+  contentColor: Color = MaterialTheme.colorScheme.onSurface,
+  borderColor: Color = MaterialTheme.colorScheme.outline.copy(alpha = 0.78f),
+  containerColor: Color = Color.Transparent,
   onClick: () -> Unit,
 ) {
-  OutlinedButton(
-    onClick = onClick,
-    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-    modifier = modifier,
+  val iconOnly = label == InfoSymbolText
+  if (!iconOnly) {
+    OutlinedButton(
+      onClick = onClick,
+      modifier = modifier,
+      contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
+    ) {
+      Text(
+        text = label,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = 1,
+        softWrap = false,
+      )
+    }
+    return
+  }
+
+  Surface(
+    color = containerColor,
+    contentColor = contentColor,
+    shape = RoundedCornerShape(999.dp),
+    border = BorderStroke(1.dp, borderColor),
+    modifier =
+      modifier
+        .then(
+          Modifier
+            .width(42.dp)
+            .height(40.dp),
+        )
+        .clickable(onClick = onClick),
   ) {
-    Text(label, fontWeight = FontWeight.Bold)
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 0.dp)) {
+      Text(
+        text = label,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+        color = contentColor,
+        maxLines = 1,
+      )
+    }
   }
 }
 
@@ -2222,11 +2290,21 @@ private fun CompactInfoRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-          Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = contentColor)
-          Text(shortText, style = MaterialTheme.typography.bodySmall, color = contentColor.copy(alpha = 0.86f))
-        }
-        InfoButton(onClick = onInfoClick)
+        Text(
+          text = title,
+          style = MaterialTheme.typography.titleSmall.copy(fontSize = 13.sp),
+          fontWeight = FontWeight.Bold,
+          color = contentColor,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+          modifier = Modifier.weight(1f),
+        )
+        InfoButton(
+          onClick = onInfoClick,
+          contentColor = contentColor,
+          borderColor = contentColor.copy(alpha = 0.92f),
+          containerColor = contentColor.copy(alpha = 0.12f),
+        )
       }
       if (infoExpanded) {
         InfoPanel(text = infoText)
@@ -2288,7 +2366,7 @@ private fun formatQuestionRanges(numbers: List<Int>): String {
 
 private fun HintDifficulty.shortRule(): String =
   when (this) {
-    HintDifficulty.Rookie -> "Every correct answer"
+    HintDifficulty.Rookie -> "Every 3-streak"
     HintDifficulty.Medium -> "Every 5-streak"
     HintDifficulty.Hard -> "Every 10-streak"
     HintDifficulty.Impossible -> "Every 50-streak"
@@ -2368,19 +2446,12 @@ private fun QuestionPrompt(
       when (question.variant) {
         QuizVariant.FlagToCountry,
         QuizVariant.TypeCountryName -> {
-          Text(text = question.correctCountry.emoji, fontSize = 62.sp)
-          if (question.variant == QuizVariant.TypeCountryName) {
-            Text(
-              text =
-                when (language) {
-                  AppLanguage.English -> "Type the country name."
-                  AppLanguage.Bulgarian -> "Напиши името на държавата."
-                  AppLanguage.German -> "Tippe den Ländernamen."
-                },
-              style = MaterialTheme.typography.titleSmall,
-              textAlign = TextAlign.Center,
-            )
-          }
+          Text(
+            text = question.correctCountry.emoji,
+            fontSize = 62.sp,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+          )
         }
 
         QuizVariant.CountryToFlag -> {
@@ -2388,16 +2459,7 @@ private fun QuestionPrompt(
             text = question.correctCountry.localizedName(language),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-          )
-          Text(
-            text =
-              when (language) {
-                AppLanguage.English -> "Choose the flag."
-                AppLanguage.Bulgarian -> "Избери флага."
-                AppLanguage.German -> "Wähle die Flagge."
-              },
-            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
           )
         }
@@ -2539,6 +2601,22 @@ private fun ResultRow(
       result.isCorrect -> AccentGreen.copy(alpha = 0.15f)
       else -> AccentRed.copy(alpha = 0.15f)
     }
+  val hintSuffix =
+    when (result.hintUses) {
+      1 ->
+        when (language) {
+          AppLanguage.English -> " (Hinted)"
+          AppLanguage.Bulgarian -> " (Подсказано)"
+          AppLanguage.German -> " (Tipp genutzt)"
+        }
+      2 ->
+        when (language) {
+          AppLanguage.English -> " (Revealed)"
+          AppLanguage.Bulgarian -> " (Разкрито)"
+          AppLanguage.German -> " (Aufgedeckt)"
+        }
+      else -> ""
+    }
   val wrongOptions =
     if (result.question.variant == QuizVariant.TypeCountryName) {
       emptyList()
@@ -2554,9 +2632,9 @@ private fun ResultRow(
       Text(
         text =
           when (language) {
-            AppLanguage.English -> "Question $index - ${result.playerName}"
-            AppLanguage.Bulgarian -> "Въпрос $index - ${result.playerName}"
-            AppLanguage.German -> "Frage $index - ${result.playerName}"
+            AppLanguage.English -> "Question $index$hintSuffix"
+            AppLanguage.Bulgarian -> "Въпрос $index$hintSuffix"
+            AppLanguage.German -> "Frage $index$hintSuffix"
           },
         style = MaterialTheme.typography.titleMedium,
       )
@@ -2599,21 +2677,21 @@ private fun ResultRow(
           when (result.hintUses) {
             1 ->
               when (language) {
-                AppLanguage.English -> "Hint used (+0.5 point) - Hint streak is paused and stays ${result.hintStreak}."
-                AppLanguage.Bulgarian -> "Използван жокер (+0.5 точка) - Веригата за жокери е паузирана и остава ${result.hintStreak}."
-                AppLanguage.German -> "Hinweis verwendet (+0.5 Punkt) - Hinweis-Serie ist pausiert und bleibt bei ${result.hintStreak}."
+                AppLanguage.English -> "Hint streak is paused and stays ${result.hintStreak}."
+                AppLanguage.Bulgarian -> "Серията за нов жокер е паузирана и остава ${result.hintStreak}."
+                AppLanguage.German -> "Hinweis-Serie ist pausiert und bleibt bei ${result.hintStreak}."
               }
             2 ->
               when (language) {
-                AppLanguage.English -> "Reveal used (+0 point) - Hint streak is reset."
-                AppLanguage.Bulgarian -> "Разкрий използва (+0 точка) - Веригата за жокери се нулира."
-                AppLanguage.German -> "Aufdecken verwendet (+0 Punkt) - Hinweis-Serie ist zurückgesetzt."
+                AppLanguage.English -> "Hint streak is reset."
+                AppLanguage.Bulgarian -> "Серията за нов жокер се нулира."
+                AppLanguage.German -> "Hinweis-Serie ist zurückgesetzt."
               }
             else ->
               when (language) {
-                AppLanguage.English -> "No hint used (+1 point) - Hint streak is now ${result.hintStreak}."
-                AppLanguage.Bulgarian -> "Без жокер (+1 точка) - Веригата за жокери е ${result.hintStreak}."
-                AppLanguage.German -> "Kein Hinweis verwendet (+1 Punkt) - Hinweis-Serie ist jetzt ${result.hintStreak}."
+                AppLanguage.English -> "No hint used - Streak is now ${result.hintStreak}."
+                AppLanguage.Bulgarian -> "Без жокер - Серията за нов жокер: ${result.hintStreak}."
+                AppLanguage.German -> "Kein Hinweis verwendet - Hinweis-Serie ist jetzt ${result.hintStreak}."
               }
           },
       )
@@ -3011,27 +3089,27 @@ private fun localizedHintDifficultyTitle(
   when (difficulty) {
     HintDifficulty.Rookie ->
       when (language) {
-        AppLanguage.English -> "Rookie"
-        AppLanguage.Bulgarian -> "Начинаещ"
-        AppLanguage.German -> "Einsteiger"
+        AppLanguage.English -> "Easy (Every 3-streak)"
+        AppLanguage.Bulgarian -> "Лесно (Всеки 3 поредни ✔)"
+        AppLanguage.German -> "Einsteiger (Alle 3 in Folge)"
       }
     HintDifficulty.Medium ->
       when (language) {
-        AppLanguage.English -> "Medium"
-        AppLanguage.Bulgarian -> "Средно"
-        AppLanguage.German -> "Mittel"
+        AppLanguage.English -> "Medium (Every 5-streak)"
+        AppLanguage.Bulgarian -> "Средно (5 поредни ✔)"
+        AppLanguage.German -> "Mittel (Alle 5 in Folge)"
       }
     HintDifficulty.Hard ->
       when (language) {
-        AppLanguage.English -> "Hard"
-        AppLanguage.Bulgarian -> "Трудно"
-        AppLanguage.German -> "Schwer"
+        AppLanguage.English -> "Hard (Every 10-streak)"
+        AppLanguage.Bulgarian -> "Трудно (10 поредни ✔)"
+        AppLanguage.German -> "Schwer (Alle 10 in Folge)"
       }
     HintDifficulty.Impossible ->
       when (language) {
-        AppLanguage.English -> "The impossible one"
-        AppLanguage.Bulgarian -> "Невъзможното"
-        AppLanguage.German -> "Die unmögliche"
+        AppLanguage.English -> "Impossible (Every 50-streak)"
+        AppLanguage.Bulgarian -> "Невъзможно (50 поредни ✔)"
+        AppLanguage.German -> "Unmöglich (Alle 50 in Folge)"
       }
   }
 
@@ -3042,9 +3120,9 @@ private fun localizedHintDifficultyShortRule(
   when (difficulty) {
     HintDifficulty.Rookie ->
       when (language) {
-        AppLanguage.English -> "Every correct answer"
-        AppLanguage.Bulgarian -> "Всяки верен отговор"
-        AppLanguage.German -> "Jede richtige Antwort"
+        AppLanguage.English -> "Every 3-streak"
+        AppLanguage.Bulgarian -> "Всеки 3 поредни верни"
+        AppLanguage.German -> "Alle 3 in Folge"
       }
     HintDifficulty.Medium ->
       when (language) {
@@ -3073,9 +3151,9 @@ private fun localizedHintDifficultyDescription(
   when (difficulty) {
     HintDifficulty.Rookie ->
       when (language) {
-        AppLanguage.English -> "Collect 1 hint for every correct answer."
-        AppLanguage.Bulgarian -> "Събирай 1 жокер за всеки верен отговор."
-        AppLanguage.German -> "Sammle 1 Hinweis für jede richtige Antwort."
+        AppLanguage.English -> "Collect 1 hint for every 3 correct answers in a row."
+        AppLanguage.Bulgarian -> "Събирай 1 жокер за всеки 3 верни отговора подред."
+        AppLanguage.German -> "Sammle 1 Hinweis für je 3 richtige Antworten in Folge."
       }
     HintDifficulty.Medium ->
       when (language) {
@@ -4145,15 +4223,15 @@ private fun t(
       }
     UiText.HintUsed ->
       when (language) {
-        AppLanguage.English -> "Hint used (+0.5 point) - Hint streak is paused and stays X."
-        AppLanguage.Bulgarian -> "Използван жокер (+0.5 точки) - серията за жокери е на пауза и остава X."
-        AppLanguage.German -> "Hinweis verwendet (+0,5 Punkte) - die Hinweis-Serie pausiert und bleibt X."
+        AppLanguage.English -> "Hint streak is paused and stays X."
+        AppLanguage.Bulgarian -> "Серията за нов жокер е на пауза и остава X."
+        AppLanguage.German -> "Die Hinweis-Serie pausiert und bleibt X."
       }
     UiText.NoHintUsed ->
       when (language) {
-        AppLanguage.English -> "No hint used (+1 point) - Hint streak is now X."
-        AppLanguage.Bulgarian -> "Без използван жокер (+1 точка) - серията за жокери вече е X."
-        AppLanguage.German -> "Kein Hinweis verwendet (+1 Punkt) - die Hinweis-Serie ist jetzt X."
+        AppLanguage.English -> "No hint used - Streak is now X."
+        AppLanguage.Bulgarian -> "Без използван жокер - серията за нов жокер вече е X."
+        AppLanguage.German -> "Kein Hinweis verwendet - die Hinweis-Serie ist jetzt X."
       }
     UiText.CompletedTests -> cleanText(language, UiText.CompletedTests)
     UiText.Level -> cleanText(language, UiText.Level)
@@ -4256,7 +4334,7 @@ private fun legacyT(
         UiText.Correct -> "Correct"
         UiText.YourAnswer -> "Your answer"
         UiText.NoAnswer -> "No answer"
-        UiText.HintUsed -> "Hint used (+0.5 point) - Hint streak is paused and stays X."
+        UiText.HintUsed -> "Hint streak is paused and stays X."
         UiText.NoHintUsed -> "No hint used"
         UiText.NextLevelRequirements -> "Next level requirements"
         UiText.Open -> "Open"

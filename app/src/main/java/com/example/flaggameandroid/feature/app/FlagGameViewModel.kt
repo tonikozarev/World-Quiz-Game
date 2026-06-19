@@ -617,13 +617,26 @@ class FlagGameViewModel(
               locked = true,
             ),
           )
+        currentQuestion?.variant == QuizVariant.TypeCountryName &&
+          currentDraft.typedAnswer.isBlank() &&
+          currentDraft.status != QuestionStatus.Answered ->
+          quiz.questionStates.replaceAt(quiz.currentQuestionIndex, currentDraft.copy(status = QuestionStatus.Skipped))
         currentQuestion?.variant != QuizVariant.TypeCountryName && currentDraft.status == QuestionStatus.Unanswered ->
           quiz.questionStates.replaceAt(quiz.currentQuestionIndex, currentDraft.copy(status = QuestionStatus.Skipped))
         quiz.mode == GameMode.Training && currentDraft.status == QuestionStatus.Answered ->
           quiz.questionStates.replaceAt(quiz.currentQuestionIndex, currentDraft.copy(locked = true))
         else -> quiz.questionStates
       }
-    val targetIndex = (quiz.currentQuestionIndex + 1).takeIf { it <= quiz.questions.lastIndex } ?: return
+    val targetIndex =
+      (quiz.currentQuestionIndex + 1).takeIf { it <= quiz.questions.lastIndex }
+        ?: run {
+          _uiState.update {
+            it.copy(
+              quiz = quiz.copy(questionStates = updatedQuestionStates).loadQuestionDraft(quiz.currentQuestionIndex),
+            )
+          }
+          return
+        }
     _uiState.update {
       it.copy(
         quiz = quiz.copy(questionStates = updatedQuestionStates).loadQuestionDraft(targetIndex),

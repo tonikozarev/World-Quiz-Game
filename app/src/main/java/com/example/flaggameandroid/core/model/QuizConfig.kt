@@ -56,7 +56,7 @@ enum class HintDifficulty(
 ) {
   Rookie(
     title = "Rookie",
-    correctStreakRequired = 1,
+    correctStreakRequired = 3,
     variantWeights =
       mapOf(
         QuizVariant.FlagToCountry to 45,

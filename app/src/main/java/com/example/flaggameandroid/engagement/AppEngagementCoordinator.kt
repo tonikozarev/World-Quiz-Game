@@ -135,13 +135,13 @@ class AppEngagementCoordinator(
   private fun ensureNotificationChannel() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
-    val channel =
+      val channel =
       NotificationChannel(
         NotificationChannelId,
         "Daily reminders",
         NotificationManager.IMPORTANCE_DEFAULT,
       ).apply {
-        description = "13:00 reminder to return to the flag quiz."
+        description = "12:00 reminder to return to the flag quiz."
       }
 
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return

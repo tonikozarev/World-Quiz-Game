@@ -21,7 +21,7 @@ object DailyEngagementRules {
     val now = Instant.ofEpochMilli(nowEpochMillis).atZone(zoneId)
     val todayReminder =
       now.toLocalDate()
-        .atTime(13, 0)
+        .atTime(12, 0)
         .atZone(zoneId)
 
     val target = if (now.isBefore(todayReminder)) todayReminder else todayReminder.plusDays(1)
