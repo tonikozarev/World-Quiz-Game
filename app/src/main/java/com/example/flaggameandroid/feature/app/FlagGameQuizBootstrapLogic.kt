@@ -34,6 +34,7 @@ internal fun buildStartedQuizState(
     questions = questions,
     questionStates = questionStates,
     players = players,
+    startedAtEpochMillis = System.currentTimeMillis(),
   ).loadQuestionDraft(0)
 }
 

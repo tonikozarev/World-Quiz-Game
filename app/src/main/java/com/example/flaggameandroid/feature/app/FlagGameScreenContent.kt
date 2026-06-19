@@ -172,6 +172,7 @@ internal fun FlagGameScreenContent(
         quiz = uiState.quiz,
         language = uiState.settings.language,
         levelProgress = uiState.levelProgress,
+        completedAtEpochMillis = uiState.lastPlayedAtEpochMillis,
         onPlayAgain = onPlayAgain,
         onBackToMenu = onBackToMenuClick,
         onLevelUpSeen = onLevelUpSeen,

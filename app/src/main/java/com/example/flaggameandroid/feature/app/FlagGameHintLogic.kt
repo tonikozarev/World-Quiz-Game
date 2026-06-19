@@ -6,6 +6,7 @@ import com.example.flaggameandroid.core.model.QuizVariant
 internal data class HintApplicationResult(
   val quiz: QuizState,
   val hintCount: Int,
+  val speedRunPenaltySeconds: Int = 0,
 )
 
 internal fun applyHintToCurrentQuestion(
@@ -23,6 +24,12 @@ internal fun applyHintToCurrentQuestion(
 
   val isTypedQuestion = question.variant == QuizVariant.TypeCountryName
   val firstHint = currentDraft.hintUses == 0
+  val speedRunPenaltySeconds =
+    if (quiz.mode == GameMode.SpeedRun) {
+      if (firstHint) 5 else 10
+    } else {
+      0
+    }
   val fullCountryName = question.correctCountry.localizedName(state.settings.language)
   val hiddenCodes =
     when {
@@ -77,10 +84,12 @@ internal fun applyHintToCurrentQuestion(
         questionStates = quiz.questionStates.replaceAt(quiz.currentQuestionIndex, updatedQuestionState),
         selectedCountry = updatedQuestionState.selectedCountry,
         typedAnswer = updatedQuestionState.typedAnswer,
-        hiddenOptionCodes = updatedQuestionState.hiddenOptionCodes,
-        typedHintPrefix = updatedQuestionState.typedHintPrefix,
-        hintUsedOnCurrentQuestion = updatedQuestionState.hintUses > 0,
-      ),
+      hiddenOptionCodes = updatedQuestionState.hiddenOptionCodes,
+      typedHintPrefix = updatedQuestionState.typedHintPrefix,
+      hintUsedOnCurrentQuestion = updatedQuestionState.hintUses > 0,
+      speedRunPenaltySeconds = quiz.speedRunPenaltySeconds + speedRunPenaltySeconds,
+    ),
     hintCount = newHintCount,
+    speedRunPenaltySeconds = speedRunPenaltySeconds,
   )
 }

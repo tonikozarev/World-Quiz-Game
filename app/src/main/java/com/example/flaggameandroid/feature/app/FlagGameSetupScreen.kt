@@ -112,7 +112,11 @@ fun SetupScreen(
       }
     }
 
-    if (setup.mode == GameMode.Continents || setup.multiplayerBase == MultiplayerQuizBase.Continents && setup.mode == GameMode.LocalMultiplayer) {
+    if (
+      setup.mode == GameMode.Continents ||
+      setup.mode == GameMode.SpeedRun ||
+      setup.multiplayerBase == MultiplayerQuizBase.Continents && setup.mode == GameMode.LocalMultiplayer
+    ) {
       SectionCard(title = cleanText(language, UiText.Continents)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
           availableContinents.forEach { continent ->

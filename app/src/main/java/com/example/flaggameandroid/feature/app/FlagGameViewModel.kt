@@ -279,6 +279,7 @@ class FlagGameViewModel(
   fun onVerifyTypedAnswer() {
     val state = _uiState.value
     val quiz = state.quiz
+    if (quiz.mode != GameMode.Training) return
     if (quiz.currentQuestion?.variant != QuizVariant.TypeCountryName) return
     if (quiz.currentQuestionState.typedAnswer.isBlank() || quiz.currentQuestionState.locked) return
 

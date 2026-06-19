@@ -42,7 +42,7 @@ object ProgressionRules {
     distinctCountries: Int,
     availableCountriesForSelectedContinent: Int,
   ): Boolean =
-    mode == GameMode.Continents &&
+    (mode == GameMode.Continents || mode == GameMode.SpeedRun) &&
       selectedContinents.size == 1 &&
       !usedHint &&
       totalQuestions == correctAnswers &&

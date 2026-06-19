@@ -74,7 +74,7 @@ data class SetupState(
     get() = questionCountInput.toIntOrNull()
 
   val needsContinents: Boolean
-    get() = mode == GameMode.Continents
+    get() = mode == GameMode.Continents || mode == GameMode.SpeedRun
 
   val needsPlayers: Boolean
     get() = mode == GameMode.LocalMultiplayer
@@ -112,6 +112,8 @@ data class QuizState(
   val hiddenOptionCodes: Set<String> = emptySet(),
   val typedHintPrefix: String? = null,
   val hintUsedOnCurrentQuestion: Boolean = false,
+  val startedAtEpochMillis: Long = 0L,
+  val speedRunPenaltySeconds: Int = 0,
   val results: List<QuestionResult> = emptyList(),
 ) {
   val currentQuestion: FlagQuestion?

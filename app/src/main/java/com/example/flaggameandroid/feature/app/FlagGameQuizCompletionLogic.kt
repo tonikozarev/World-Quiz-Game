@@ -60,7 +60,7 @@ internal fun buildQuizCompletionSummary(
       0
     }
   val shouldProgressLevel =
-    (quiz.mode == GameMode.Continents || quiz.mode == GameMode.AllIn) && !qualifiesForPerfectNoBluffLevel
+    (quiz.mode == GameMode.Continents || quiz.mode == GameMode.SpeedRun || quiz.mode == GameMode.AllIn) && !qualifiesForPerfectNoBluffLevel
   val eligibleQuizCompletions = if (shouldProgressLevel && completedResults.size >= 10) 1 else 0
   val progressResult =
     advanceLevelProgress(

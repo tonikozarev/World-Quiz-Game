@@ -159,10 +159,10 @@ internal fun validateSetup(
   countryPoolFor: (SetupState) -> List<FlagCountry>,
 ): String? {
   if (setup.variants.isEmpty()) return "Choose at least one question variant."
-  if ((setup.mode == GameMode.Continents || setup.usesContinentsBase()) && setup.selectedContinents.isEmpty()) {
+  if ((setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) && setup.selectedContinents.isEmpty()) {
     return "Choose at least one continent."
   }
-  if ((setup.mode == GameMode.Continents || setup.usesContinentsBase()) && countryPoolFor(setup).size < 4) {
+  if ((setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) && countryPoolFor(setup).size < 4) {
     return "Choose continents with at least 4 countries."
   }
   if (!setup.surpriseMe) {
@@ -227,7 +227,7 @@ internal fun countryPoolFor(
   setup: SetupState,
   countries: List<FlagCountry>,
 ): List<FlagCountry> =
-  if (setup.mode == GameMode.Continents || setup.usesContinentsBase()) {
+  if (setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) {
     countries.filter { it.continent in setup.selectedContinents }
   } else {
     countries
@@ -351,6 +351,13 @@ internal fun awardAchievementsIfEligible(
 
   if (medalEligiblePerfectQuiz && QuizVariant.entries.all { variant -> completedResults.any { it.question.variant == variant } }) {
     updatedAchievements = updatedAchievements.unlock(AchievementId.VariantMaster, completedAtEpochMillis)
+  }
+
+  if (quiz.mode == GameMode.SpeedRun && completedResults.isNotEmpty()) {
+    updatedAchievements = updatedAchievements.unlock(AchievementId.SpeedRunStarter, completedAtEpochMillis)
+    if (completedResults.all { it.isCorrect } && completedResults.none { it.hintUsed }) {
+      updatedAchievements = updatedAchievements.unlock(AchievementId.SpeedRunPurist, completedAtEpochMillis)
+    }
   }
 
   if (perfectQuiz && completedResults.size == totalCatalogCountries && distinctCountries == totalCatalogCountries) {

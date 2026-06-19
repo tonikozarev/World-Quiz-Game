@@ -59,4 +59,35 @@ class FlagGameQuizBootstrapLogicTest {
     assertEquals("Choose at least one continent.", result.validationError)
     assertNull(result.quiz)
   }
+
+  @Test
+  fun buildStartedQuizState_speedRunStartsWithTimerAndContinentPool() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.SpeedRun,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        questionCountInput = "10",
+        variants = setOf(QuizVariant.FlagToCountry),
+      )
+
+    val quiz =
+      buildStartedQuizState(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(23)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(24),
+        hintCount = 4,
+        displayName = "Tony",
+      )
+
+    assertEquals(GameMode.SpeedRun, quiz.mode)
+    assertTrue(quiz.startedAtEpochMillis > 0L)
+    assertEquals(10, quiz.totalQuestions)
+    assertEquals(4, quiz.currentPlayer.hintPoints)
+  }
 }

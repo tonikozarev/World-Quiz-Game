@@ -60,6 +60,12 @@ internal fun localizedModeTitle(
         AppLanguage.Bulgarian -> "Континенти"
         AppLanguage.German -> "Kontinente"
       }
+    GameMode.SpeedRun ->
+      when (language) {
+        AppLanguage.English -> "Speed run"
+        AppLanguage.Bulgarian -> "Скоростна игра"
+        AppLanguage.German -> "Schnelllauf"
+      }
     GameMode.AllIn ->
       when (language) {
         AppLanguage.English -> "No Bluff, All Tough"
@@ -91,6 +97,12 @@ internal fun localizedModeDescription(
         AppLanguage.Bulgarian -> "Създай тест от континентите, които искаш да упражняваш."
         AppLanguage.German -> "Erstelle ein Quiz aus den Kontinenten, die du üben möchtest."
       }
+    GameMode.SpeedRun ->
+      when (language) {
+        AppLanguage.English -> "Same setup as the continent quiz, but the clock keeps running. Hints and reveals add time."
+        AppLanguage.Bulgarian -> "Същата настройка като теста по континенти, но с таймер. Подсказките и разкритията добавят време."
+        AppLanguage.German -> "Dasselbe Setup wie das Kontinenten-Quiz, aber die Zeit läuft weiter. Hinweise und Aufdeckungen kosten Zeit."
+      }
     GameMode.AllIn ->
       when (language) {
         AppLanguage.English -> "All countries with only the variants you choose."
@@ -121,6 +133,12 @@ internal fun localizedModeShortLabel(
         AppLanguage.English -> "Pick continents."
         AppLanguage.Bulgarian -> "Избери континенти."
         AppLanguage.German -> "Kontinente wählen."
+      }
+    GameMode.SpeedRun ->
+      when (language) {
+        AppLanguage.English -> "Beat the clock."
+        AppLanguage.Bulgarian -> "Победи времето."
+        AppLanguage.German -> "Schlage die Zeit."
       }
     GameMode.AllIn ->
       when (language) {
@@ -379,6 +397,12 @@ internal fun cleanModeTitle(
         AppLanguage.Bulgarian -> "Континенти"
         AppLanguage.German -> "Kontinente"
       }
+    GameMode.SpeedRun ->
+      when (language) {
+        AppLanguage.English -> "Speed run"
+        AppLanguage.Bulgarian -> "Скоростна игра"
+        AppLanguage.German -> "Schnelllauf"
+      }
     GameMode.AllIn ->
       when (language) {
         AppLanguage.English -> "No Bluff, All Tough"
@@ -409,6 +433,12 @@ internal fun cleanModeShortLabel(
         AppLanguage.English -> "Pick continents."
         AppLanguage.Bulgarian -> "Избери континенти."
         AppLanguage.German -> "Kontinente wählen."
+      }
+    GameMode.SpeedRun ->
+      when (language) {
+        AppLanguage.English -> "Race the timer."
+        AppLanguage.Bulgarian -> "Надпревари времето."
+        AppLanguage.German -> "Renne gegen die Zeit."
       }
     GameMode.AllIn ->
       when (language) {
@@ -441,6 +471,12 @@ internal fun cleanModeDescription(
         AppLanguage.Bulgarian -> "Създай тест от континентите, които искаш да упражняваш."
         AppLanguage.German -> "Erstelle ein Quiz aus den Kontinenten, die du üben möchtest."
       }
+    GameMode.SpeedRun ->
+      when (language) {
+        AppLanguage.English -> "Same quiz setup as continents, but time is always ticking. Hints and reveals cost seconds."
+        AppLanguage.Bulgarian -> "Същата настройка като при континентите, но времето тече. Подсказките и разкритията струват секунди."
+        AppLanguage.German -> "Dasselbe Setup wie bei Kontinente, aber die Zeit läuft. Hinweise und Aufdeckungen kosten Sekunden."
+      }
     GameMode.AllIn ->
       when (language) {
         AppLanguage.English -> "All countries with only the variants you choose."
@@ -454,4 +490,3 @@ internal fun cleanModeDescription(
         AppLanguage.German -> "Bis zu 5 Spieler teilen sich ein Gerät und spielen reihum."
       }
   }
-

@@ -218,6 +218,7 @@ internal fun displayModeTitle(
   when (mode) {
     GameMode.Training -> cleanModeTitle(GameMode.Training, language)
     GameMode.Continents -> cleanModeTitle(GameMode.Continents, language)
+    GameMode.SpeedRun -> cleanModeTitle(GameMode.SpeedRun, language)
     GameMode.AllIn -> cleanModeTitle(GameMode.AllIn, language)
     GameMode.LocalMultiplayer -> cleanModeTitle(GameMode.LocalMultiplayer, language)
     null ->
@@ -243,3 +244,18 @@ internal fun levelUpBody(language: AppLanguage, level: Int): String =
     AppLanguage.Bulgarian -> "Достигна ниво $level и получи 5 безплатни жокера."
     AppLanguage.German -> "Du hast Level $level erreicht und 5 kostenlose Hinweise erhalten."
   }
+
+internal fun speedRunElapsedMillis(
+  quiz: QuizState,
+  nowMillis: Long,
+) : Long {
+  if (quiz.mode != GameMode.SpeedRun || quiz.startedAtEpochMillis <= 0L) return 0L
+  return (nowMillis - quiz.startedAtEpochMillis + (quiz.speedRunPenaltySeconds * 1000L)).coerceAtLeast(0L)
+}
+
+internal fun formatElapsedTime(totalMillis: Long): String {
+  val totalSeconds = (totalMillis / 1000L).coerceAtLeast(0L)
+  val minutes = totalSeconds / 60L
+  val seconds = totalSeconds % 60L
+  return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+}

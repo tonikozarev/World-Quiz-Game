@@ -12,6 +12,10 @@ enum class GameMode(
     title = "Continents",
     description = "Build a quiz from the continents you want to practice.",
   ),
+  SpeedRun(
+    title = "Speed run",
+    description = "A continent-based quiz against the clock. Hints and reveals add time.",
+  ),
   AllIn(
     title = "No Bluff, All Tough",
     description = "All countries with only the variants you choose.",

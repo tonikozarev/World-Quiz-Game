@@ -22,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,11 +78,26 @@ fun QuizScreen(
     }
   var showQuitDialog by remember { mutableStateOf(false) }
   var showQuizInfo by remember { mutableStateOf(false) }
+  var nowMillis by remember { mutableStateOf(System.currentTimeMillis()) }
   BackHandler { showQuitDialog = true }
+  LaunchedEffect(quiz.mode, quiz.startedAtEpochMillis) {
+    if (quiz.mode == GameMode.SpeedRun && quiz.startedAtEpochMillis > 0L) {
+      while (true) {
+        nowMillis = System.currentTimeMillis()
+        kotlinx.coroutines.delay(1_000)
+      }
+    }
+  }
   val canGoBack = quiz.currentQuestionIndex > 0
   val canGoForward = quiz.currentQuestionIndex < quiz.questions.lastIndex
   val unansweredQuestions = quiz.questionStates.mapIndexedNotNull { index, state -> if (state.status == QuestionStatus.Unanswered) index + 1 else null }
   val skippedQuestions = quiz.questionStates.mapIndexedNotNull { index, state -> if (state.status == QuestionStatus.Skipped) index + 1 else null }
+  val speedRunElapsedLabel =
+    if (quiz.mode == GameMode.SpeedRun) {
+      formatElapsedTime(speedRunElapsedMillis(quiz, nowMillis))
+    } else {
+      null
+    }
 
   if (showQuitDialog) {
     AlertDialog(
@@ -115,6 +131,36 @@ fun QuizScreen(
       )
       Button(onClick = onFinishQuiz, enabled = quiz.canFinish) {
         Text(cleanText(language, UiText.Finish))
+      }
+    }
+
+    if (speedRunElapsedLabel != null) {
+      Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth(),
+      ) {
+        Row(
+          modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Text(
+            text =
+              when (language) {
+                AppLanguage.English -> "Speed run"
+                AppLanguage.Bulgarian -> "Скоростна игра"
+                AppLanguage.German -> "Schnelllauf"
+              },
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+          )
+          Text(
+            text = speedRunElapsedLabel,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+          )
+        }
       }
     }
 
@@ -266,7 +312,7 @@ fun QuizScreen(
       unskipLabel = localizedUnskipButtonLabel(language),
       canUnskip = skippedQuestions.isNotEmpty(),
       onUnskipQuestion = onUnskipQuestion,
-      verifyLabel = if (question.variant == QuizVariant.TypeCountryName) localizedVerifyButtonLabel(language) else null,
+      verifyLabel = if (quiz.mode == GameMode.Training && question.variant == QuizVariant.TypeCountryName) localizedVerifyButtonLabel(language) else null,
       canVerify = quiz.typedAnswer.isNotBlank() && !isTrainingLocked,
       onVerifyTypedAnswer = onVerifyTypedAnswer,
     )
@@ -292,6 +338,7 @@ fun ResultsScreen(
   quiz: QuizState,
   language: AppLanguage,
   levelProgress: LevelProgressState,
+  completedAtEpochMillis: Long,
   onPlayAgain: () -> Unit,
   onBackToMenu: () -> Unit,
   onLevelUpSeen: () -> Unit,
@@ -302,6 +349,23 @@ fun ResultsScreen(
 
     if (levelProgress.levelUpVisible) {
       LevelUpBanner(level = levelProgress.level, language = language, onLevelUpSeen = onLevelUpSeen)
+    }
+
+    if (quiz.mode == GameMode.SpeedRun) {
+      SectionCard(title = when (language) {
+        AppLanguage.English -> "Speed run time"
+        AppLanguage.Bulgarian -> "Време за скоростна игра"
+        AppLanguage.German -> "Zeit im Schnelllauf"
+      }) {
+        Text(
+          text =
+            when (language) {
+              AppLanguage.English -> "Final time: ${formatElapsedTime(speedRunElapsedMillis(quiz, completedAtEpochMillis))}"
+              AppLanguage.Bulgarian -> "Краен резултат: ${formatElapsedTime(speedRunElapsedMillis(quiz, completedAtEpochMillis))}"
+              AppLanguage.German -> "Endzeit: ${formatElapsedTime(speedRunElapsedMillis(quiz, completedAtEpochMillis))}"
+            },
+        )
+      }
     }
 
     SectionCard(title = when (language) {
