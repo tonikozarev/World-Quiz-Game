@@ -1,4 +1,4 @@
-package com.example.flaggameandroid.feature.app
+﻿package com.example.flaggameandroid.feature.app
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -227,7 +227,7 @@ fun QuizScreen(
                 when (language) {
                   AppLanguage.English -> "Hint: starts with $it"
                   AppLanguage.Bulgarian -> "Подсказка: започва с $it"
-                  AppLanguage.German -> "Hinweis: beginnt mit $it"
+                    AppLanguage.German -> "Hinweis: beginnt mit $it"
                 },
               )
             }
@@ -338,6 +338,7 @@ fun ResultsScreen(
   quiz: QuizState,
   language: AppLanguage,
   levelProgress: LevelProgressState,
+  countryPracticeStats: Map<String, com.example.flaggameandroid.core.model.CountryPracticeStats>,
   completedAtEpochMillis: Long,
   onPlayAgain: () -> Unit,
   onBackToMenu: () -> Unit,
@@ -391,7 +392,11 @@ fun ResultsScreen(
       AppLanguage.German -> "Antwortübersicht"
     }) {
       quiz.results.forEachIndexed { index, result ->
-        ResultRow(index = index + 1, result = result, language = language)
+        ResultRow(
+          index = index + 1,
+          result = result,
+          language = language,
+        )
       }
     }
 
@@ -417,3 +422,4 @@ fun ResultsScreen(
     }
   }
 }
+

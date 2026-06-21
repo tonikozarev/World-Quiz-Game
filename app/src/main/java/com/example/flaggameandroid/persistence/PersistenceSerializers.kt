@@ -6,7 +6,17 @@ import com.example.flaggameandroid.core.model.MedalTier
 import com.example.flaggameandroid.core.model.RatingsProgress
 
 internal fun RatingsProgress.serialize(): String =
-  MedalFields.joinToString(separator = "|") { (key, tier) -> "$key=${countFor(tier)}" }
+  buildList {
+    add("bronze=$bronzeCount")
+    add("silver=$silverCount")
+    add("gold=$goldCount")
+    add("titanium=$titaniumCount")
+    add("diamond=$diamondCount")
+    add("streak7Count=$streak7Count")
+    add("streak30Count=$streak30Count")
+    add("streak7ProgressDays=$streak7ProgressDays")
+    add("streak30ProgressDays=$streak30ProgressDays")
+  }.joinToString(separator = "|")
 
 internal fun String.toRatingsProgress(): RatingsProgress {
   if (isBlank()) return RatingsProgress()
@@ -26,6 +36,10 @@ internal fun String.toRatingsProgress(): RatingsProgress {
     goldCount = values["gold"] ?: 0,
     titaniumCount = values["titanium"] ?: 0,
     diamondCount = values["diamond"] ?: 0,
+    streak7Count = values["streak7Count"] ?: 0,
+    streak30Count = values["streak30Count"] ?: 0,
+    streak7ProgressDays = values["streak7ProgressDays"] ?: 0,
+    streak30ProgressDays = values["streak30ProgressDays"] ?: 0,
   )
 }
 
@@ -47,12 +61,3 @@ internal fun String.toAchievementsProgress(): AchievementsProgress {
       }.toMap()
   return AchievementsProgress(unlockedAtEpochMillisById = unlocked)
 }
-
-private val MedalFields =
-  listOf(
-    "bronze" to MedalTier.Bronze,
-    "silver" to MedalTier.Silver,
-    "gold" to MedalTier.Gold,
-    "titanium" to MedalTier.Titanium,
-    "diamond" to MedalTier.Diamond,
-  )

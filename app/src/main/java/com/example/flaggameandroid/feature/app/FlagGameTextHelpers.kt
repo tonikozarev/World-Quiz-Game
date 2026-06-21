@@ -8,16 +8,19 @@ import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuizVariant
 
+private fun tr(language: AppLanguage, english: String, bulgarian: String, german: String): String =
+  when (language) {
+    AppLanguage.English -> english
+    AppLanguage.Bulgarian -> bulgarian
+    AppLanguage.German -> german
+  }
+
 internal fun wrongOptionLabel(
   country: FlagCountry,
   variant: QuizVariant,
   language: AppLanguage,
 ): String =
-  if (variant == QuizVariant.CountryToFlag) {
-    country.emoji
-  } else {
-    country.localizedName(language)
-  }
+  if (variant == QuizVariant.CountryToFlag) country.emoji else country.localizedName(language)
 
 internal val AvatarOptions =
   listOf(
@@ -83,99 +86,51 @@ internal fun languageFlag(language: AppLanguage): String =
   }
 
 internal fun languageName(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "English"
-    AppLanguage.Bulgarian -> "Български"
-    AppLanguage.German -> "Deutsch"
-  }
+  tr(language, "English", "Български", "Deutsch")
 
 internal fun languageDescription(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "English (UK)"
-    AppLanguage.Bulgarian -> "Български (BG)"
-    AppLanguage.German -> "Deutsch (DE)"
-  }
+  tr(language, "English (UK)", "Български (BG)", "Deutsch (DE)")
 
 internal fun localizedHintButtonLabel(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "Hint"
-    AppLanguage.Bulgarian -> "Жокер"
-    AppLanguage.German -> "Hinweis"
-  }
+  tr(language, "Hint", "Жокер", "Hinweis")
+
+internal fun localizedTimeZoneTitle(language: AppLanguage): String =
+  tr(language, "Time zone", "Часова зона", "Zeitzone")
+
+internal fun localizedTimeZoneInfo(language: AppLanguage): String =
+  tr(
+    language,
+    "Daily Challenge, streaks, reminders, and played-today checks reset at 00:00 in the selected time zone.",
+    "Дневното предизвикателство, сериите, напомнянията и проверката дали е играно днес се нулират в 00:00 според избраната часова зона.",
+    "Daily Challenge, Serien, Erinnerungen und die Heute-gespielt-Prüfung werden um 00:00 in der gewählten Zeitzone zurückgesetzt.",
+  )
 
 internal fun localizedRevealButtonLabel(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "Reveal"
-    AppLanguage.Bulgarian -> "Разкрий"
-    AppLanguage.German -> "Aufdecken"
-  }
+  tr(language, "Reveal", "Разкрий", "Aufdecken")
 
 internal fun localizedVerifyButtonLabel(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "Verify"
-    AppLanguage.Bulgarian -> "Провери"
-    AppLanguage.German -> "Prüfen"
-  }
+  tr(language, "Verify", "Провери", "Prüfen")
 
 internal fun localizedQuizInfoButtonLabel(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "Info \uD835\uDC8A"
-    AppLanguage.Bulgarian -> "Инфо \uD835\uDC8A"
-    AppLanguage.German -> "Info \uD835\uDC8A"
-  }
+  tr(language, "Info \uD835\uDC8A", "Инфо \uD835\uDC8A", "Info \uD835\uDC8A")
 
 internal fun localizedUnskipButtonLabel(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "Unskip \u21B7"
-    AppLanguage.Bulgarian -> "Върни \u21B7"
-    AppLanguage.German -> "Zurück \u21B7"
-  }
+  tr(language, "Unskip \u21B7", "Върни \u21B7", "Zurück \u21B7")
 
 internal fun formatScore(score: Int): String =
-  if (score % 2 == 0) {
-    (score / 2).toString()
-  } else {
-    "${score / 2}.5"
-  }
+  if (score % 2 == 0) (score / 2).toString() else "${score / 2}.5"
 
 internal fun modeSelectionTitle(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "Choose mode"
-    AppLanguage.Bulgarian -> "Избери режим"
-    AppLanguage.German -> "Modus wählen"
-  }
+  cleanModeSelectionTitle(language)
 
 internal fun quizCompleteTitle(language: AppLanguage): String =
-  when (language) {
-    AppLanguage.English -> "Quiz complete"
-    AppLanguage.Bulgarian -> "Тестът е завършен"
-    AppLanguage.German -> "Quiz beendet"
-  }
+  tr(language, "Quiz complete", "Тестът е завършен", "Quiz beendet")
 
 internal fun localizedHeroPill(
   index: Int,
   language: AppLanguage,
 ): String =
-  when (index) {
-    0 ->
-      when (language) {
-        AppLanguage.English -> "Global"
-        AppLanguage.Bulgarian -> "Глобално"
-        AppLanguage.German -> "Global"
-      }
-    1 ->
-      when (language) {
-        AppLanguage.English -> "Continents"
-        AppLanguage.Bulgarian -> "Континенти"
-        AppLanguage.German -> "Kontinente"
-      }
-    else ->
-      when (language) {
-        AppLanguage.English -> "Flags"
-        AppLanguage.Bulgarian -> "Флагове"
-        AppLanguage.German -> "Flaggen"
-      }
-  }
+  cleanHeroPill(index, language)
 
 internal fun allInRewardInfo(
   language: AppLanguage,
@@ -195,7 +150,7 @@ internal fun allInRewardInfo(
       }
     AppLanguage.Bulgarian ->
       if (hasAllVariants) {
-        "Настройка за жокери: $hintSettingLabel. Наградата за перфектен тест е активна. Завърши без грешка с всичките 3 варианта, за да вземеш $rewardLevels пълно ниво." +
+        "Настройка за жокери: $hintSettingLabel. Наградата за перфектен тест е активна. Завърши без грешка с всички 3 варианта, за да вземеш $rewardLevels пълно ниво." +
           if (isImpossible) "" else " Ако включиш 'The impossible one', ще получиш още +1 ниво, общо +2."
       } else {
         "Настройка за жокери: $hintSettingLabel. Наградата за перфектен тест е неактивна, защото не са избрани и 3-те варианта. Включи всички варианти, за да вземеш $rewardLevels пълно ниво." +
@@ -218,37 +173,34 @@ internal fun displayModeTitle(
   when (mode) {
     GameMode.Training -> cleanModeTitle(GameMode.Training, language)
     GameMode.Continents -> cleanModeTitle(GameMode.Continents, language)
+    GameMode.DailyChallenge -> cleanModeTitle(GameMode.DailyChallenge, language)
+    GameMode.MistakeReview -> cleanModeTitle(GameMode.MistakeReview, language)
     GameMode.SpeedRun -> cleanModeTitle(GameMode.SpeedRun, language)
     GameMode.AllIn -> cleanModeTitle(GameMode.AllIn, language)
     GameMode.LocalMultiplayer -> cleanModeTitle(GameMode.LocalMultiplayer, language)
-    null ->
-      when (language) {
-        AppLanguage.English -> "Quiz"
-        AppLanguage.Bulgarian -> "Тест"
-        AppLanguage.German -> "Quiz"
-      }
+    null -> tr(language, "Quiz", "Тест", "Quiz")
   }
 
 @Composable
-internal fun buttonContentColor(background: Color): Color {
-  return when (background) {
+internal fun buttonContentColor(background: Color): Color =
+  when (background) {
     MaterialTheme.colorScheme.primary -> MaterialTheme.colorScheme.onPrimary
     MaterialTheme.colorScheme.surfaceVariant -> MaterialTheme.colorScheme.onSurface
     else -> if (background.luminance() > 0.5f) Color.Black else Color.White
   }
-}
 
 internal fun levelUpBody(language: AppLanguage, level: Int): String =
-  when (language) {
-    AppLanguage.English -> "You reached level $level and earned 5 free hints."
-    AppLanguage.Bulgarian -> "Достигна ниво $level и получи 5 безплатни жокера."
-    AppLanguage.German -> "Du hast Level $level erreicht und 5 kostenlose Hinweise erhalten."
-  }
+  tr(
+    language,
+    "You reached level $level and earned 5 free hints.",
+    "Достигна ниво $level и получи 5 безплатни жокера.",
+    "Du hast Level $level erreicht und 5 kostenlose Hinweise erhalten.",
+  )
 
 internal fun speedRunElapsedMillis(
   quiz: QuizState,
   nowMillis: Long,
-) : Long {
+): Long {
   if (quiz.mode != GameMode.SpeedRun || quiz.startedAtEpochMillis <= 0L) return 0L
   return (nowMillis - quiz.startedAtEpochMillis + (quiz.speedRunPenaltySeconds * 1000L)).coerceAtLeast(0L)
 }

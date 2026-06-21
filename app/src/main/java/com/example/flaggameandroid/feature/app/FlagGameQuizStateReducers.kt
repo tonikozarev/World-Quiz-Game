@@ -65,6 +65,24 @@ internal fun QuizState.withPreviewAdvancedQuestion(): QuizState {
 }
 
 internal fun QuizState.withNextSkippedQuestionLoaded(): QuizState {
-  val targetIndex = nextSkippedQuestionIndex() ?: return this
-  return loadQuestionDraft(targetIndex)
+  val committedCurrent = withCurrentQuestionSubmitted() ?: this
+  val targetIndex = committedCurrent.nextSkippedQuestionIndex() ?: return committedCurrent
+  return committedCurrent.loadQuestionDraft(targetIndex)
+}
+
+internal fun QuizState.withCurrentQuestionSubmitted(): QuizState? {
+  val draft = currentQuestionState
+  if (!currentQuestionHasPendingAnswer) return null
+
+  val updatedDraft =
+    draft.copy(
+      status = QuestionStatus.Answered,
+      locked = draft.locked || mode == GameMode.Training,
+    )
+
+  return copy(
+    questionStates = questionStates.replaceAt(currentQuestionIndex, updatedDraft),
+    selectedCountry = updatedDraft.selectedCountry,
+    typedAnswer = updatedDraft.typedAnswer,
+  )
 }

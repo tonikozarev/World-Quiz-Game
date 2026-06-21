@@ -1,6 +1,7 @@
 package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.model.AllInType
+import com.example.flaggameandroid.core.model.ActivityDayRecord
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
@@ -23,6 +24,9 @@ internal data class QuizCompletionSummary(
   val finalProgress: LevelProgressState,
   val totalBonusHints: Int,
   val finalPlayers: List<PlayerProgress>,
+  val updatedCountryPracticeStats: Map<String, com.example.flaggameandroid.core.model.CountryPracticeStats>,
+  val updatedActivityCalendar: Map<Long, ActivityDayRecord>,
+  val updatedDailyChallengeCache: com.example.flaggameandroid.core.model.DailyChallengeCache?,
 )
 
 internal data class QuizCompletionResult(
@@ -113,6 +117,36 @@ internal fun buildQuizCompletionSummary(
   val newHintCount = state.hintCount + releasedHints + totalBonusHints
   val finalPlayers =
     scoredPlayers.map { player -> player.copy(hintPoints = newHintCount, earnedHintPoints = 0) }
+  val updatedCountryPracticeStats =
+    updateCountryPracticeStats(
+      previous = state.countryPracticeStats,
+      results = completedResults,
+      completedAtEpochMillis = completionTime,
+    )
+  val updatedActivityCalendar =
+    updateActivityCalendar(
+      previous = state.activityCalendar,
+      completedAtEpochMillis = completionTime,
+      mode = quiz.mode ?: GameMode.Training,
+      timeZone = state.settings.timeZone,
+    )
+  val updatedRatingsWithStreaks =
+    awardStreakMedalsIfEligible(
+      ratings = updatedRatings,
+      previousActivityCalendar = state.activityCalendar,
+      updatedActivityCalendar = updatedActivityCalendar,
+      completedAtEpochMillis = completionTime,
+      timeZone = state.settings.timeZone,
+    )
+  val updatedDailyChallengeCache =
+    if (quiz.mode == GameMode.DailyChallenge) {
+      state.dailyChallengeCache?.copy(
+        completed = true,
+        completedAtEpochMillis = completionTime,
+      ) ?: state.dailyChallengeCache
+    } else {
+      state.dailyChallengeCache
+    }
 
   return QuizCompletionSummary(
     completionTime = completionTime,
@@ -122,11 +156,14 @@ internal fun buildQuizCompletionSummary(
     scoredPlayers = scoredPlayers,
     releasedHints = releasedHints,
     quizWithResults = quizWithResults,
-    updatedRatings = updatedRatings,
+    updatedRatings = updatedRatingsWithStreaks,
     updatedAchievements = updatedAchievements,
     finalProgress = finalProgress,
     totalBonusHints = totalBonusHints,
     finalPlayers = finalPlayers,
+    updatedCountryPracticeStats = updatedCountryPracticeStats,
+    updatedActivityCalendar = updatedActivityCalendar,
+    updatedDailyChallengeCache = updatedDailyChallengeCache,
   )
 }
 
@@ -152,7 +189,36 @@ internal fun buildQuizCompletionResult(
         levelProgress = summary.finalProgress,
         lastPlayedAtEpochMillis = summary.completionTime,
         inactiveIconActive = false,
+        countryPracticeStats = summary.updatedCountryPracticeStats,
+        activityCalendar = summary.updatedActivityCalendar,
+        dailyChallengeCache = summary.updatedDailyChallengeCache,
       ),
     summary = summary,
+  )
+}
+
+internal fun awardStreakMedalsIfEligible(
+  ratings: RatingsProgress,
+  previousActivityCalendar: Map<Long, ActivityDayRecord>,
+  updatedActivityCalendar: Map<Long, ActivityDayRecord>,
+  completedAtEpochMillis: Long,
+  timeZone: com.example.flaggameandroid.core.model.AppTimeZone,
+): RatingsProgress {
+  val dayKey = localDayKey(completedAtEpochMillis, timeZone)
+  if ((previousActivityCalendar[dayKey]?.quizzesCompleted ?: 0) > 0) {
+    return ratings
+  }
+
+  val consecutiveStreak =
+    (previousActivityCalendar[dayKey - 1]?.quizzesCompleted ?: 0) > 0
+
+  val next7Progress = if (consecutiveStreak) ratings.streak7ProgressDays + 1 else 1
+  val next30Progress = if (consecutiveStreak) ratings.streak30ProgressDays + 1 else 1
+
+  return ratings.withStreakProgress(
+    streak7ProgressDays = if (next7Progress >= 7) 0 else next7Progress,
+    streak30ProgressDays = if (next30Progress >= 30) 0 else next30Progress,
+    streak7Count = ratings.streak7Count + if (next7Progress >= 7) 1 else 0,
+    streak30Count = ratings.streak30Count + if (next30Progress >= 30) 1 else 0,
   )
 }

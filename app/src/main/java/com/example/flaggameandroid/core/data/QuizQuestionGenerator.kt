@@ -3,8 +3,10 @@ package com.example.flaggameandroid.core.data
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.AllInType
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuizConfig
+import com.example.flaggameandroid.core.model.QuizPoolSource
 import com.example.flaggameandroid.core.model.QuizVariant
 import java.text.Normalizer
 import kotlin.random.Random
@@ -15,6 +17,7 @@ class QuizQuestionGenerator(
   fun buildQuestions(
     countries: List<FlagCountry>,
     config: QuizConfig,
+    practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
   ): List<FlagQuestion> {
     val pool = countries.distinctBy { it.code }
     require(pool.size >= 4) { "Need at least 4 countries to build a quiz." }
@@ -28,18 +31,11 @@ class QuizQuestionGenerator(
     val variants = buildWeightedVariants(config, targetCount)
     val correctCountries =
       if (config.mode == GameMode.Training) {
-        if (targetCount <= pool.size) {
-          pool.shuffled(random).take(targetCount)
-        } else {
-          buildList {
-            repeat(targetCount / pool.size) {
-              addAll(pool.shuffled(random))
-            }
-            addAll(pool.shuffled(random).take(targetCount % pool.size))
-          }.take(targetCount)
-        }
+        buildTrainingCountries(pool, targetCount)
+      } else if (config.poolSource == QuizPoolSource.MistakeReview) {
+        buildRepeatedReviewCountries(pool, targetCount)
       } else {
-        pool.shuffled(random).take(targetCount)
+        pickWeightedCountries(pool, targetCount, practiceStats)
       }
 
     return correctCountries.mapIndexed { index, correctCountry ->
@@ -55,7 +51,77 @@ class QuizQuestionGenerator(
         options = (wrongOptions + correctCountry).shuffled(random),
         variant = variant,
       )
-    }.shuffled(random)
+      }.shuffled(random)
+  }
+
+  private fun buildTrainingCountries(
+    pool: List<FlagCountry>,
+    targetCount: Int,
+  ): List<FlagCountry> =
+    if (targetCount <= pool.size) {
+      pool.shuffled(random).take(targetCount)
+    } else {
+      buildList {
+        repeat(targetCount / pool.size) {
+          addAll(pool.shuffled(random))
+        }
+        addAll(pool.shuffled(random).take(targetCount % pool.size))
+      }.take(targetCount)
+    }
+
+  private fun pickWeightedCountries(
+    pool: List<FlagCountry>,
+    targetCount: Int,
+    practiceStats: Map<String, CountryPracticeStats>,
+  ): List<FlagCountry> {
+    if (targetCount >= pool.size) {
+      return pool.shuffled(random).take(targetCount)
+    }
+
+    val available = pool.toMutableList()
+    val picked = mutableListOf<FlagCountry>()
+    while (picked.size < targetCount && available.isNotEmpty()) {
+      val weightedIndices =
+        available.mapIndexed { index, country ->
+          index to countrySelectionWeight(country, practiceStats)
+        }
+      val totalWeight = weightedIndices.sumOf { it.second }.coerceAtLeast(1)
+      var draw = random.nextInt(totalWeight)
+      var selectedIndex = 0
+      for ((index, weight) in weightedIndices) {
+        draw -= weight
+        if (draw < 0) {
+          selectedIndex = index
+          break
+        }
+      }
+      picked += available.removeAt(selectedIndex)
+    }
+    return picked
+  }
+
+  private fun buildRepeatedReviewCountries(
+    pool: List<FlagCountry>,
+    targetCount: Int,
+  ): List<FlagCountry> {
+    if (pool.isEmpty()) return emptyList()
+    return buildList {
+      repeat(targetCount) {
+        add(pool[random.nextInt(pool.size)])
+      }
+    }
+  }
+
+  private fun countrySelectionWeight(
+    country: FlagCountry,
+    practiceStats: Map<String, CountryPracticeStats>,
+  ): Int {
+    val stats = practiceStats[country.code]
+    var weight = 1
+    if (stats?.favorite == true) weight += 3
+    if (stats?.isWeak == true) weight += 4
+    if ((stats?.wrongCount ?: 0) > 0) weight += minOf(3, stats?.wrongCount ?: 0)
+    return weight
   }
 
   private fun buildWeightedVariants(

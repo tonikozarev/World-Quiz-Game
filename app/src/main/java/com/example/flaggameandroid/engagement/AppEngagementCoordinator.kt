@@ -3,6 +3,7 @@ package com.example.flaggameandroid.engagement
 import android.content.Context
 import com.example.flaggameandroid.persistence.ProgressStore
 import com.example.flaggameandroid.persistence.SettingsStore
+import kotlinx.coroutines.runBlocking
 
 class AppEngagementCoordinator(
   private val context: Context,
@@ -17,7 +18,7 @@ class AppEngagementCoordinator(
   fun onAppOpened() {
     recordAppOpened(progressStore, nowProvider)
     reminderNotifier.ensureNotificationChannel()
-    reminderScheduler.scheduleDailyCheck()
+    scheduleDailyCheck()
   }
 
   fun syncLauncherIconToPersistedState() {
@@ -32,11 +33,12 @@ class AppEngagementCoordinator(
       launcherIconController = launcherIconController,
       nowProvider = nowProvider,
     )
-    reminderScheduler.scheduleDailyCheck()
+    scheduleDailyCheck()
   }
 
   fun scheduleDailyCheck() {
-    reminderScheduler.scheduleDailyCheck()
+    val zoneId = runBlocking { settingsStore.loadTimeZone().zoneId }
+    reminderScheduler.scheduleDailyCheck(zoneId)
   }
 
   fun triggerTestingReminderNotification() {

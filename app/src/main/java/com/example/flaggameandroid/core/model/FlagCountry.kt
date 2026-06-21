@@ -6,4 +6,6 @@ data class FlagCountry(
   val emoji: String,
   val continent: String,
   val aliases: List<String> = emptyList(),
+  val capital: String? = null,
+  val tags: Set<CountryTag> = emptySet(),
 )

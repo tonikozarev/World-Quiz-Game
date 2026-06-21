@@ -12,6 +12,14 @@ enum class GameMode(
     title = "Continents",
     description = "Build a quiz from the continents you want to practice.",
   ),
+  DailyChallenge(
+    title = "Daily challenge",
+    description = "One short themed quiz per day. The challenge stays the same for the whole day.",
+  ),
+  MistakeReview(
+    title = "Mistake review",
+    description = "Practice only the countries you missed before.",
+  ),
   SpeedRun(
     title = "Speed run",
     description = "A continent-based quiz against the clock. Hints and reveals add time.",

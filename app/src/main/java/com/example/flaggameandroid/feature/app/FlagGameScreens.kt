@@ -57,6 +57,7 @@ fun FlagGameRoute(
       AppScreen.GameModes,
       AppScreen.Medals,
       AppScreen.Achievements,
+      AppScreen.Favorites,
       AppScreen.Settings,
       AppScreen.Results -> resolvedViewModel.onBackToMenu()
       AppScreen.Setup -> resolvedViewModel.onBackToGameModes()
@@ -69,6 +70,7 @@ fun FlagGameRoute(
     onStartClicked = resolvedViewModel::onStartClicked,
     onMedalsClicked = resolvedViewModel::onMedalsClicked,
     onAchievementsClicked = resolvedViewModel::onAchievementsClicked,
+    onFavoritesClicked = resolvedViewModel::onFavoritesClicked,
     onSettingsClicked = resolvedViewModel::onSettingsClicked,
     onQuitClicked = { showExitDialog = true },
     onLevelUpSeen = resolvedViewModel::onLevelUpSeen,
@@ -79,6 +81,7 @@ fun FlagGameRoute(
     onBackToGameModes = resolvedViewModel::onBackToGameModes,
     onHintDifficultySelected = resolvedViewModel::onHintDifficultySelected,
     onLanguageSelected = resolvedViewModel::onLanguageSelected,
+    onTimeZoneSelected = resolvedViewModel::onTimeZoneSelected,
     onReminderEnabledChanged = { enabled ->
       resolvedViewModel.onReminderEnabledChanged(enabled)
       if (enabled &&
@@ -95,6 +98,7 @@ fun FlagGameRoute(
     onUnlockRandomAchievementClick = resolvedViewModel::onUnlockRandomAchievementClicked,
     onLockAllAchievementsClick = resolvedViewModel::onLockAllAchievementsClicked,
     onResetAchievementsAndMedalsClick = resolvedViewModel::onResetAchievementsAndMedalsClicked,
+    onResetDailyChallengeClick = resolvedViewModel::onResetDailyChallengeClicked,
     onToggleTestingIconClick = resolvedViewModel::onToggleTestingIconClicked,
     onTriggerTestingReminderClick = resolvedViewModel::onTriggerTestingReminderClicked,
     onVariantToggled = resolvedViewModel::onVariantToggled,
@@ -120,5 +124,6 @@ fun FlagGameRoute(
     onBackToGameModesClick = resolvedViewModel::onBackToGameModes,
     onQuestionBack = resolvedViewModel::onQuestionBack,
     onQuestionForward = resolvedViewModel::onQuestionForward,
+    onToggleFavoriteCountry = resolvedViewModel::onToggleFavoriteCountry,
   )
 }

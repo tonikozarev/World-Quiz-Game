@@ -9,9 +9,11 @@ import com.example.flaggameandroid.core.data.FlagCatalogRepository
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
 import com.example.flaggameandroid.core.model.AllInType
+import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.ProgressionRules
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.engagement.AppEngagementCoordinator
@@ -109,6 +111,10 @@ class FlagGameViewModel(
     navigateTo(AppScreen.Achievements)
   }
 
+  fun onFavoritesClicked() {
+    navigateTo(AppScreen.Favorites)
+  }
+
   fun onBackToGameModes() {
     navigateTo(AppScreen.GameModes)
   }
@@ -139,6 +145,11 @@ class FlagGameViewModel(
 
   fun onLanguageSelected(language: AppLanguage) {
     updateStateAndPersistProgress { it.copy(settings = it.settings.copy(language = language)) }
+  }
+
+  fun onTimeZoneSelected(timeZone: AppTimeZone) {
+    updateSettings { it.copy(timeZone = timeZone) }
+    engagementCoordinator?.scheduleDailyCheck()
   }
 
   fun onAccountNameChanged(name: String) {
@@ -188,10 +199,30 @@ class FlagGameViewModel(
     updateStateAndPersistProgress { it.withMedalsReset() }
   }
 
+  fun onResetDailyChallengeClicked() {
+    updateStateAndPersistProgress {
+      it.copy(
+        dailyChallengeCache =
+          it.dailyChallengeCache?.copy(
+            completed = false,
+            completedAtEpochMillis = 0L,
+          ),
+      )
+    }
+  }
+
   fun onToggleTestingIconClicked() {
     val nextActiveState = !_uiState.value.inactiveIconActive
     engagementCoordinator?.setInactiveLauncherIcon(nextActiveState)
     updateStateAndPersistProgress { it.withInactiveIconActive(nextActiveState) }
+  }
+
+  fun onToggleFavoriteCountry(countryCode: String) {
+    updateStateAndPersistProgress { state ->
+      val current = state.countryPracticeStats[countryCode] ?: CountryPracticeStats()
+      val updated = current.copy(favorite = !current.favorite)
+      state.copy(countryPracticeStats = state.countryPracticeStats + (countryCode to updated))
+    }
   }
 
   fun onTriggerTestingReminderClicked() {
@@ -252,6 +283,10 @@ class FlagGameViewModel(
         random = random,
         hintCount = state.hintCount,
         displayName = state.profile.displayName,
+        practiceStats = state.countryPracticeStats,
+        dailyChallengeCache = state.dailyChallengeCache,
+        nowEpochMillis = System.currentTimeMillis(),
+        timeZone = state.settings.timeZone,
       )
     if (result.validationError != null) {
       updateState { it.copy(setupError = result.validationError) }
@@ -263,6 +298,7 @@ class FlagGameViewModel(
       it.copy(
         screen = AppScreen.Quiz,
         quiz = quiz,
+        dailyChallengeCache = result.dailyChallengeCache ?: it.dailyChallengeCache,
         setupError = null,
       )
     }
@@ -310,7 +346,7 @@ class FlagGameViewModel(
     val state = _uiState.value
     val quiz = state.quiz
     if (!quiz.canFinish) return
-    completeQuiz(state, quiz)
+    completeQuiz(state, quiz.withCurrentQuestionSubmitted() ?: quiz)
   }
 
   fun onPreviousQuestion() {
@@ -372,8 +408,9 @@ class FlagGameViewModel(
             runBlocking {
               val hintDifficulty = container.settingsStore.loadHintDifficulty()
               val reminderEnabled = container.settingsStore.loadReminderEnabled()
+              val timeZone = container.settingsStore.loadTimeZone()
               val progress = container.progressStore.loadProgress()
-              progress.copy(hintDifficulty = hintDifficulty, reminderEnabled = reminderEnabled)
+              progress.copy(hintDifficulty = hintDifficulty, reminderEnabled = reminderEnabled, timeZone = timeZone)
             }
           FlagGameViewModel(
             settingsStore = container.settingsStore,

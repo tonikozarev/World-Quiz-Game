@@ -17,6 +17,7 @@ internal fun buildInitialUiState(
         hintDifficulty = initialPersistedState.hintDifficulty,
         reminderEnabled = initialPersistedState.reminderEnabled,
         language = initialPersistedState.language,
+        timeZone = initialPersistedState.timeZone,
       ),
     availableContinents = allContinents,
     setup = SetupState(selectedContinents = selectableContinents.toSet()),
@@ -26,6 +27,7 @@ internal fun buildInitialUiState(
         accountName = initialPersistedState.accountName,
         avatarIndex = initialPersistedState.avatarIndex.coerceIn(0, ProgressionRules.TotalAvatarCount - 1),
       ),
+    countries = countries,
     hintCount = initialPersistedState.hintCount,
     ratings = initialPersistedState.ratings,
     achievements = initialPersistedState.achievements,
@@ -39,6 +41,9 @@ internal fun buildInitialUiState(
     lastOpenedAtEpochMillis = initialPersistedState.lastOpenedAtEpochMillis,
     lastPlayedAtEpochMillis = initialPersistedState.lastPlayedAtEpochMillis,
     inactiveIconActive = initialPersistedState.inactiveIconActive,
+    countryPracticeStats = initialPersistedState.countryPracticeStats,
+    activityCalendar = initialPersistedState.activityCalendar,
+    dailyChallengeCache = initialPersistedState.dailyChallengeCache,
   )
 
 internal fun FlagGameUiState.resetToMenu(
@@ -59,6 +64,7 @@ internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
     hintDifficulty = settings.hintDifficulty,
     reminderEnabled = settings.reminderEnabled,
     language = settings.language,
+    timeZone = settings.timeZone,
     accountName = profile.accountName,
     avatarIndex = profile.avatarIndex,
     hintCount = hintCount,
@@ -71,6 +77,9 @@ internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
     lastOpenedAtEpochMillis = lastOpenedAtEpochMillis,
     lastPlayedAtEpochMillis = lastPlayedAtEpochMillis,
     inactiveIconActive = inactiveIconActive,
+    countryPracticeStats = countryPracticeStats,
+    activityCalendar = activityCalendar,
+    dailyChallengeCache = dailyChallengeCache,
   )
 
 internal fun buildSetupForMode(
@@ -81,7 +90,24 @@ internal fun buildSetupForMode(
 ): SetupState =
   SetupState(
     mode = mode,
-    selectedContinents = selectableContinents.toSet(),
-    questionCountInput = if (mode == GameMode.AllIn) countries.size.toString() else "10",
+    selectedContinents =
+      when (mode) {
+        GameMode.Continents,
+        GameMode.SpeedRun,
+        GameMode.LocalMultiplayer ->
+          selectableContinents.toSet()
+        GameMode.AllIn ->
+          selectableContinents.toSet()
+        GameMode.DailyChallenge,
+        GameMode.MistakeReview,
+        GameMode.Training -> emptySet()
+      },
+    questionCountInput =
+      when (mode) {
+        GameMode.AllIn -> countries.size.toString()
+        GameMode.DailyChallenge -> "10"
+        GameMode.MistakeReview -> "10"
+        else -> "10"
+      },
     playerNames = listOf(displayName, "Player 2"),
   )

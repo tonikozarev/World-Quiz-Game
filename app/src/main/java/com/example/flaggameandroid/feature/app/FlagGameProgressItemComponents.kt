@@ -61,6 +61,43 @@ internal fun MedalTierRow(
 }
 
 @Composable
+internal fun StreakMedalRow(
+  title: String,
+  count: Int,
+  progressText: String,
+  badge: String,
+) {
+  Surface(
+    color = MaterialTheme.colorScheme.surfaceVariant,
+    shape = RoundedCornerShape(16.dp),
+    modifier = Modifier.fillMaxWidth(),
+  ) {
+    Row(
+      modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Row(
+        modifier = Modifier.weight(1f),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(text = badge, fontSize = 24.sp)
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+          Text(text = progressText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+      }
+      Text(
+        text = count.toString(),
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
+      )
+    }
+  }
+}
+
+@Composable
 internal fun AchievementCardItem(
   achievementId: AchievementId,
   title: String,

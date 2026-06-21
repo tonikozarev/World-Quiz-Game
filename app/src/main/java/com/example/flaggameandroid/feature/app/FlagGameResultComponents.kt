@@ -1,7 +1,8 @@
-package com.example.flaggameandroid.feature.app
+﻿package com.example.flaggameandroid.feature.app
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,6 +68,7 @@ internal fun ResultRow(
   index: Int,
   result: QuestionResult,
   language: AppLanguage,
+  isWeak: Boolean = false,
 ) {
   val background =
     when {
@@ -101,15 +103,29 @@ internal fun ResultRow(
     modifier = Modifier.fillMaxWidth(),
   ) {
     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Text(
-        text =
-          when (language) {
-            AppLanguage.English -> "Question $index$hintSuffix"
-            AppLanguage.Bulgarian -> "Въпрос $index$hintSuffix"
-            AppLanguage.German -> "Frage $index$hintSuffix"
-          },
-        style = MaterialTheme.typography.titleMedium,
-      )
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+          text =
+            when (language) {
+              AppLanguage.English -> "Question $index$hintSuffix"
+              AppLanguage.Bulgarian -> "Въпрос $index$hintSuffix"
+              AppLanguage.German -> "Frage $index$hintSuffix"
+            },
+          style = MaterialTheme.typography.titleMedium,
+          modifier = Modifier.weight(1f),
+        )
+      }
+      if (isWeak) {
+        Text(
+          text =
+            when (language) {
+              AppLanguage.English -> "Often missed"
+              AppLanguage.Bulgarian -> "Често пропускана"
+              AppLanguage.German -> "Oft verfehlt"
+            },
+          style = MaterialTheme.typography.labelMedium,
+        )
+      }
       Text(
         text =
           when (language) {
@@ -155,3 +171,5 @@ internal fun ResultRow(
     }
   }
 }
+
+

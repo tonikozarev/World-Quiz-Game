@@ -35,6 +35,7 @@ private fun PreviewTestingToolsCard() {
         onUnlockRandomAchievementClick = {},
         onLockAllAchievementsClick = {},
         onResetAchievementsAndMedalsClick = {},
+        onResetDailyChallengeClick = {},
         onToggleTestingIconClick = {},
         onTriggerTestingReminderClick = {},
       )

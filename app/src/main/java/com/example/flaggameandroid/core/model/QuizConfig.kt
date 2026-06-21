@@ -9,6 +9,8 @@ data class QuizConfig(
   val allInType: AllInType? = null,
   val hintDifficulty: HintDifficulty = HintDifficulty.Medium,
   val players: List<String> = listOf("Solo"),
+  val poolSource: QuizPoolSource = QuizPoolSource.Standard,
+  val dailyChallengeTheme: DailyChallengeTheme? = null,
 )
 
 data class PlayerProgress(

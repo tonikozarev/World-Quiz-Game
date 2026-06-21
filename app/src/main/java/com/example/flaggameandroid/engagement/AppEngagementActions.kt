@@ -26,8 +26,9 @@ internal fun triggerDailyEngagementNudge(
   runBlocking {
     val now = nowProvider()
     val settingsReminderEnabled = settingsStore.loadReminderEnabled()
+    val timeZone = settingsStore.loadTimeZone()
     val progress = progressStore.loadProgress()
-    val shouldNudge = DailyEngagementRules.shouldTriggerDailyNudge(progress.lastOpenedAtEpochMillis, now)
+    val shouldNudge = DailyEngagementRules.shouldTriggerDailyNudge(progress.lastOpenedAtEpochMillis, now, timeZone.zoneId)
     if (!shouldNudge) return@runBlocking
 
     val updatedProgress = progress.copy(inactiveIconActive = true)

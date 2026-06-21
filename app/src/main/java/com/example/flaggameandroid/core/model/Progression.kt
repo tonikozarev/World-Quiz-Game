@@ -68,6 +68,10 @@ data class RatingsProgress(
   val goldCount: Int = 0,
   val titaniumCount: Int = 0,
   val diamondCount: Int = 0,
+  val streak7Count: Int = 0,
+  val streak30Count: Int = 0,
+  val streak7ProgressDays: Int = 0,
+  val streak30ProgressDays: Int = 0,
 ) {
   fun countFor(tier: MedalTier): Int =
     when (tier) {
@@ -78,6 +82,13 @@ data class RatingsProgress(
       MedalTier.Diamond -> diamondCount
     }
 
+  fun countForStreak(days: Int): Int =
+    when (days) {
+      7 -> streak7Count
+      30 -> streak30Count
+      else -> 0
+    }
+
   fun increment(tier: MedalTier): RatingsProgress =
     when (tier) {
       MedalTier.Bronze -> copy(bronzeCount = bronzeCount + 1)
@@ -86,6 +97,19 @@ data class RatingsProgress(
       MedalTier.Titanium -> copy(titaniumCount = titaniumCount + 1)
       MedalTier.Diamond -> copy(diamondCount = diamondCount + 1)
     }
+
+  fun withStreakProgress(
+    streak7ProgressDays: Int,
+    streak30ProgressDays: Int,
+    streak7Count: Int = this.streak7Count,
+    streak30Count: Int = this.streak30Count,
+  ): RatingsProgress =
+    copy(
+      streak7ProgressDays = streak7ProgressDays,
+      streak30ProgressDays = streak30ProgressDays,
+      streak7Count = streak7Count,
+      streak30Count = streak30Count,
+    )
 }
 
 data class AchievementsProgress(

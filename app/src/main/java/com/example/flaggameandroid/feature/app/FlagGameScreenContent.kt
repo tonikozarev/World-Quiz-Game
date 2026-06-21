@@ -1,4 +1,4 @@
-package com.example.flaggameandroid.feature.app
+﻿package com.example.flaggameandroid.feature.app
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.flaggameandroid.core.model.AllInType
+import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
@@ -17,6 +18,7 @@ internal fun FlagGameScreenContent(
   onStartClicked: () -> Unit,
   onMedalsClicked: () -> Unit,
   onAchievementsClicked: () -> Unit,
+  onFavoritesClicked: () -> Unit,
   onSettingsClicked: () -> Unit,
   onQuitClicked: () -> Unit,
   onLevelUpSeen: () -> Unit,
@@ -27,6 +29,7 @@ internal fun FlagGameScreenContent(
   onBackToGameModes: () -> Unit,
   onHintDifficultySelected: (HintDifficulty) -> Unit,
   onLanguageSelected: (AppLanguage) -> Unit,
+  onTimeZoneSelected: (AppTimeZone) -> Unit,
   onReminderEnabledChanged: (Boolean) -> Unit,
   onResetHintsClick: () -> Unit,
   onAddTestingHintsClick: () -> Unit,
@@ -35,6 +38,7 @@ internal fun FlagGameScreenContent(
   onUnlockRandomAchievementClick: () -> Unit,
   onLockAllAchievementsClick: () -> Unit,
   onResetAchievementsAndMedalsClick: () -> Unit,
+  onResetDailyChallengeClick: () -> Unit,
   onToggleTestingIconClick: () -> Unit,
   onTriggerTestingReminderClick: () -> Unit,
   onVariantToggled: (QuizVariant) -> Unit,
@@ -60,6 +64,7 @@ internal fun FlagGameScreenContent(
   onBackToGameModesClick: () -> Unit,
   onQuestionBack: () -> Unit,
   onQuestionForward: () -> Unit,
+  onToggleFavoriteCountry: (String) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   when (uiState.screen) {
@@ -68,9 +73,13 @@ internal fun FlagGameScreenContent(
         levelProgress = uiState.levelProgress,
         profile = uiState.profile,
         language = uiState.settings.language,
+        timeZone = uiState.settings.timeZone,
+        activityCalendar = uiState.activityCalendar,
+        countryPracticeStats = uiState.countryPracticeStats,
         onStartClick = onStartClicked,
         onMedalsClick = onMedalsClicked,
         onAchievementsClick = onAchievementsClicked,
+        onFavoritesClick = onFavoritesClicked,
         onSettingsClick = onSettingsClicked,
         onQuitClick = onQuitClicked,
         onLevelUpSeen = onLevelUpSeen,
@@ -92,9 +101,19 @@ internal fun FlagGameScreenContent(
         onBack = onBackToMenuClick,
         modifier = modifier,
       )
+    AppScreen.Favorites ->
+      FavoritesScreen(
+        countries = uiState.countries,
+        countryPracticeStats = uiState.countryPracticeStats,
+        language = uiState.settings.language,
+        onBack = onBackToMenuClick,
+        onToggleFavoriteCountry = onToggleFavoriteCountry,
+        modifier = modifier,
+      )
     AppScreen.GameModes ->
       GameModesScreen(
         language = uiState.settings.language,
+        dailyChallengeCache = uiState.dailyChallengeCache,
         onBack = onBackToMenuClick,
         onModeSelected = onModeSelected,
         modifier = modifier,
@@ -110,6 +129,7 @@ internal fun FlagGameScreenContent(
         onBack = onBackToMenuClick,
         onHintDifficultySelected = onHintDifficultySelected,
         onLanguageSelected = onLanguageSelected,
+        onTimeZoneSelected = onTimeZoneSelected,
         onReminderEnabledChanged = { enabled ->
           onReminderEnabledChanged(enabled)
           if (enabled &&
@@ -126,6 +146,7 @@ internal fun FlagGameScreenContent(
         onUnlockRandomAchievementClick = onUnlockRandomAchievementClick,
         onLockAllAchievementsClick = onLockAllAchievementsClick,
         onResetAchievementsAndMedalsClick = onResetAchievementsAndMedalsClick,
+        onResetDailyChallengeClick = onResetDailyChallengeClick,
         onToggleTestingIconClick = onToggleTestingIconClick,
         onTriggerTestingReminderClick = onTriggerTestingReminderClick,
         modifier = modifier,
@@ -172,6 +193,7 @@ internal fun FlagGameScreenContent(
         quiz = uiState.quiz,
         language = uiState.settings.language,
         levelProgress = uiState.levelProgress,
+        countryPracticeStats = uiState.countryPracticeStats,
         completedAtEpochMillis = uiState.lastPlayedAtEpochMillis,
         onPlayAgain = onPlayAgain,
         onBackToMenu = onBackToMenuClick,
@@ -180,3 +202,4 @@ internal fun FlagGameScreenContent(
       )
   }
 }
+

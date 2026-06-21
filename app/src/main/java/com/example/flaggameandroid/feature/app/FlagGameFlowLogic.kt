@@ -4,6 +4,7 @@ import com.example.flaggameandroid.core.data.QuizAnswerChecker
 import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.AchievementsProgress
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
@@ -12,6 +13,7 @@ import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.ProgressionRules
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizConfig
+import com.example.flaggameandroid.core.model.QuizPoolSource
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
 import kotlin.random.Random
@@ -46,12 +48,12 @@ internal fun QuizState.previewAdvanceQuestionStates(): List<QuestionDraftState> 
   val currentDraft = currentQuestionState
   val currentQuestion = currentQuestion
   return when {
-    currentQuestion?.variant == QuizVariant.TypeCountryName && currentDraft.typedAnswer.isNotBlank() ->
+    currentQuestionHasPendingAnswer ->
       questionStates.replaceAt(
         currentQuestionIndex,
         currentDraft.copy(
           status = QuestionStatus.Answered,
-          locked = true,
+          locked = currentDraft.locked || mode == GameMode.Training,
         ),
       )
 
@@ -169,7 +171,7 @@ internal fun validateSetup(
     val questionCount = setup.questionCount ?: return "Write how many questions you want."
     if (questionCount <= 0) return "Question count must be at least 1."
     val maxQuestions = countryPoolFor(setup).size
-    val limit = if (setup.mode == GameMode.Training) 999 else maxQuestions
+    val limit = if (setup.mode == GameMode.Training || setup.mode == GameMode.MistakeReview) 999 else maxQuestions
     if (questionCount > limit) return "Question count must be between 1 and $limit."
   }
 
@@ -192,6 +194,10 @@ internal fun configFor(
   val questionCount =
     if (setup.mode == GameMode.AllIn || setup.usesAllInBase()) {
       poolSize
+    } else if (setup.mode == GameMode.DailyChallenge) {
+      (setup.questionCount?.coerceIn(1, minOf(poolSize, 10)) ?: minOf(poolSize, 10)).coerceAtLeast(1)
+    } else if (setup.mode == GameMode.MistakeReview) {
+      setup.questionCount?.coerceIn(1, 999) ?: 10
     } else if (setup.mode == GameMode.Training) {
       if (setup.surpriseMe) {
         random.nextInt(from = 1, until = 1000)
@@ -220,6 +226,13 @@ internal fun configFor(
     allInType = setup.allInType,
     hintDifficulty = hintDifficulty,
     players = players,
+    poolSource =
+      when (setup.mode) {
+        GameMode.DailyChallenge -> QuizPoolSource.DailyChallenge
+        GameMode.MistakeReview -> QuizPoolSource.MistakeReview
+        else -> QuizPoolSource.Standard
+      },
+    dailyChallengeTheme = setup.dailyChallengeTheme,
   )
 }
 
@@ -229,6 +242,8 @@ internal fun countryPoolFor(
 ): List<FlagCountry> =
   if (setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) {
     countries.filter { it.continent in setup.selectedContinents }
+  } else if (setup.mode == GameMode.DailyChallenge || setup.mode == GameMode.MistakeReview) {
+    countries
   } else {
     countries
   }
@@ -239,6 +254,10 @@ internal fun questionLimitFor(
 ): Int =
   if (setup.mode == GameMode.Training) {
     999
+  } else if (setup.mode == GameMode.MistakeReview) {
+    999
+  } else if (setup.mode == GameMode.DailyChallenge) {
+    10
   } else {
     countryPoolFor(setup, countries).size
   }

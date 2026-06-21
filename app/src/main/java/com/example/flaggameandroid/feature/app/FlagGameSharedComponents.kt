@@ -130,6 +130,7 @@ internal fun ModeCard(
   mode: GameMode,
   language: AppLanguage,
   infoExpanded: Boolean,
+  openEnabled: Boolean,
   onInfoClick: () -> Unit,
   onClick: () -> Unit,
 ) {
@@ -148,7 +149,18 @@ internal fun ModeCard(
           Text(text = cleanModeShortLabel(mode, language), style = MaterialTheme.typography.bodySmall)
         }
         InfoButton(onClick = onInfoClick)
-        Button(onClick = onClick, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
+        Button(
+          onClick = onClick,
+          enabled = openEnabled,
+          colors =
+            ButtonDefaults.buttonColors(
+              containerColor = if (openEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = if (openEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+              disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+              disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+            ),
+          contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+        ) {
           Text(
             cleanText(language, UiText.Open),
           )
@@ -331,6 +343,7 @@ private fun PreviewModeCard() {
         mode = GameMode.Training,
         language = AppLanguage.English,
         infoExpanded = true,
+        openEnabled = true,
         onInfoClick = {},
         onClick = {},
       )
@@ -366,6 +379,7 @@ private fun PreviewResultRow() {
             hintStreak = 1,
           ),
         language = AppLanguage.English,
+        isWeak = true,
       )
     }
   }

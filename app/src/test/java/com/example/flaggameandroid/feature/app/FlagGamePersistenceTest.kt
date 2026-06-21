@@ -2,6 +2,9 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
+import com.example.flaggameandroid.core.model.AppTimeZone
+import com.example.flaggameandroid.core.model.DailyChallengeCache
+import com.example.flaggameandroid.core.model.DailyChallengeTheme
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -62,6 +65,16 @@ class FlagGamePersistenceTest {
   }
 
   @Test
+  fun changingTimeZone_savesToSettingsStore() {
+    val settingsStore = RecordingSettingsStore()
+    val viewModel = viewModel(settingsStore = settingsStore)
+
+    viewModel.onTimeZoneSelected(AppTimeZone.UtcPlus3)
+
+    assertEquals(AppTimeZone.UtcPlus3, settingsStore.savedTimeZone)
+  }
+
+  @Test
   fun togglingTestingIcon_updatesUiStateAndSavedProgress() {
     val progressStore = RecordingProgressStore()
     val viewModel = viewModel(progressStore = progressStore)
@@ -99,6 +112,35 @@ class FlagGamePersistenceTest {
     assertEquals(10, progressStore.recordedHistories.single().correctAnswers)
   }
 
+  @Test
+  fun resettingDailyChallenge_clearsCompletionFlagInUiStateAndPersistence() {
+    val progressStore = RecordingProgressStore()
+    val viewModel =
+      viewModel(
+        progressStore = progressStore,
+        initialPersistedState =
+          PersistedAppState(
+            dailyChallengeCache =
+              DailyChallengeCache(
+                dayKey = 123L,
+                theme = DailyChallengeTheme.Europe,
+                questionCount = 10,
+                seed = 42L,
+                completed = true,
+                completedAtEpochMillis = 1_234_567L,
+              ),
+          ),
+      )
+
+    viewModel.onResetDailyChallengeClicked()
+
+    val resetCache = viewModel.uiState.value.dailyChallengeCache
+    assertEquals(false, resetCache?.completed)
+    assertEquals(0L, resetCache?.completedAtEpochMillis)
+    assertEquals(false, progressStore.savedProgressSnapshots.last().dailyChallengeCache?.completed)
+    assertEquals(0L, progressStore.savedProgressSnapshots.last().dailyChallengeCache?.completedAtEpochMillis)
+  }
+
   private fun viewModel(
     settingsStore: SettingsStore = RecordingSettingsStore(),
     progressStore: ProgressStore = RecordingProgressStore(),
@@ -116,10 +158,13 @@ class FlagGamePersistenceTest {
   private class RecordingSettingsStore : SettingsStore {
     var savedHintDifficulty: HintDifficulty? = null
     var savedReminderEnabled: Boolean? = null
+    var savedTimeZone: AppTimeZone? = null
 
     override suspend fun loadHintDifficulty(): HintDifficulty = HintDifficulty.Medium
 
     override suspend fun loadReminderEnabled(): Boolean = true
+
+    override suspend fun loadTimeZone(): AppTimeZone = AppTimeZone.Utc
 
     override suspend fun saveHintDifficulty(hintDifficulty: HintDifficulty) {
       savedHintDifficulty = hintDifficulty
@@ -127,6 +172,10 @@ class FlagGamePersistenceTest {
 
     override suspend fun saveReminderEnabled(enabled: Boolean) {
       savedReminderEnabled = enabled
+    }
+
+    override suspend fun saveTimeZone(timeZone: AppTimeZone) {
+      savedTimeZone = timeZone
     }
   }
 

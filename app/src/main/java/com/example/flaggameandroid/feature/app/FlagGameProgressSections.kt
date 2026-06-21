@@ -62,6 +62,58 @@ internal fun RatingsSection(
       }
     }
   }
+
+  SectionCard(
+    title =
+      when (language) {
+        AppLanguage.English -> "Streak medals"
+        AppLanguage.Bulgarian -> "Медали за поредица"
+        AppLanguage.German -> "Streak-Medaillen"
+      },
+  ) {
+    Text(
+      text =
+        when (language) {
+          AppLanguage.English -> "Only completed-day streaks count here."
+          AppLanguage.Bulgarian -> "Тук се броят само поредиците от напълно завършени дни."
+          AppLanguage.German -> "Hier zählen nur vollständig abgeschlossene Tagesserien."
+        },
+      style = MaterialTheme.typography.bodySmall,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    StreakMedalRow(
+      title =
+        when (language) {
+          AppLanguage.English -> "7 consecutive days"
+          AppLanguage.Bulgarian -> "7 последователни дни"
+          AppLanguage.German -> "7 Tage in Folge"
+        },
+      count = ratings.streak7Count,
+      progressText =
+        when (language) {
+          AppLanguage.English -> "Progress: ${ratings.streak7ProgressDays}/7"
+          AppLanguage.Bulgarian -> "Напредък: ${ratings.streak7ProgressDays}/7"
+          AppLanguage.German -> "Fortschritt: ${ratings.streak7ProgressDays}/7"
+        },
+      badge = "\uD83D\uDD25",
+    )
+    StreakMedalRow(
+      title =
+        when (language) {
+          AppLanguage.English -> "30 consecutive days"
+          AppLanguage.Bulgarian -> "30 последователни дни"
+          AppLanguage.German -> "30 Tage in Folge"
+        },
+      count = ratings.streak30Count,
+      progressText =
+        when (language) {
+          AppLanguage.English -> "Progress: ${ratings.streak30ProgressDays}/30"
+          AppLanguage.Bulgarian -> "Напредък: ${ratings.streak30ProgressDays}/30"
+          AppLanguage.German -> "Fortschritt: ${ratings.streak30ProgressDays}/30"
+        },
+      badge = "\uD83C\uDF1F",
+    )
+  }
 }
 
 @Composable

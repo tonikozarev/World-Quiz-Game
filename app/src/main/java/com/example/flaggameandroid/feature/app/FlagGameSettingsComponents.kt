@@ -74,6 +74,7 @@ internal fun TestingToolsCard(
   onUnlockRandomAchievementClick: () -> Unit,
   onLockAllAchievementsClick: () -> Unit,
   onResetAchievementsAndMedalsClick: () -> Unit,
+  onResetDailyChallengeClick: () -> Unit,
   onToggleTestingIconClick: () -> Unit,
   onTriggerTestingReminderClick: () -> Unit,
   modifier: Modifier = Modifier,
@@ -210,6 +211,20 @@ internal fun TestingToolsCard(
           },
         )
       }
+    }
+    OutlinedButton(
+      onClick = onResetDailyChallengeClick,
+      modifier = Modifier.fillMaxWidth(),
+      contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+    ) {
+      Text(
+        when (language) {
+          AppLanguage.English -> "Reset daily challenge"
+          AppLanguage.Bulgarian -> "Нулирай дневното предизвикателство"
+          AppLanguage.German -> "Tägliche Herausforderung zurücksetzen"
+        },
+        textAlign = TextAlign.Center,
+      )
     }
     OutlinedButton(
       onClick = onTriggerTestingReminderClick,

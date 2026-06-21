@@ -9,6 +9,8 @@ import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
 import com.example.flaggameandroid.persistence.PersistedAppState
+import com.example.flaggameandroid.persistence.PersistedQuizHistory
+import com.example.flaggameandroid.persistence.ProgressStore
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -28,6 +30,18 @@ class FlagGameViewModelTest {
       catalogRepository = StaticFlagCatalogRepository(),
       questionGenerator = QuizQuestionGenerator(Random(3)),
       random = Random(4),
+      initialPersistedState = initialPersistedState,
+    )
+
+  private fun viewModel(
+    initialPersistedState: PersistedAppState,
+    progressStore: ProgressStore,
+  ): FlagGameViewModel =
+    FlagGameViewModel(
+      catalogRepository = StaticFlagCatalogRepository(),
+      questionGenerator = QuizQuestionGenerator(Random(3)),
+      random = Random(4),
+      progressStore = progressStore,
       initialPersistedState = initialPersistedState,
     )
 
@@ -877,6 +891,35 @@ class FlagGameViewModelTest {
     assertTrue(viewModel.uiState.value.quiz.results.first().isCorrect)
   }
 
+  @Test
+  fun togglingFavoriteCountry_updatesPracticeStatsAndPersists() {
+    val progressStore = RecordingProgressStore()
+    val viewModel = viewModel(PersistedAppState(), progressStore)
+
+    viewModel.onToggleFavoriteCountry("DE")
+
+    val state = viewModel.uiState.value
+    assertTrue(state.countryPracticeStats["DE"]?.favorite == true)
+    assertTrue(progressStore.savedProgressSnapshots.last().countryPracticeStats["DE"]?.favorite == true)
+  }
+
+  @Test
+  fun finishQuiz_completesLastQuestionEvenBeforeNextIsPressed() {
+    val viewModel = viewModel()
+
+    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 1)
+    val question = viewModel.uiState.value.quiz.currentQuestion!!
+    viewModel.onCountryAnswerSelected(question.correctCountry)
+
+    assertTrue(viewModel.uiState.value.quiz.canFinish)
+
+    viewModel.onFinishQuiz()
+
+    assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
+    assertEquals(1, viewModel.uiState.value.quiz.results.size)
+    assertTrue(viewModel.uiState.value.quiz.results.first().isCorrect)
+  }
+
   private fun startSingleVariantQuiz(
     viewModel: FlagGameViewModel,
     variant: QuizVariant,
@@ -931,6 +974,21 @@ class FlagGameViewModelTest {
       QuizVariant.TypeCountryName -> viewModel.onTypedAnswerChanged("wrong answer")
       QuizVariant.FlagToCountry,
       QuizVariant.CountryToFlag -> viewModel.onCountryAnswerSelected(question.options.first { it.code != question.correctCountry.code })
+    }
+  }
+
+  private class RecordingProgressStore : ProgressStore {
+    val savedProgressSnapshots = mutableListOf<PersistedAppState>()
+    val recordedHistories = mutableListOf<PersistedQuizHistory>()
+
+    override suspend fun loadProgress(): PersistedAppState = PersistedAppState()
+
+    override suspend fun saveProgress(progress: PersistedAppState) {
+      savedProgressSnapshots += progress
+    }
+
+    override suspend fun recordQuiz(history: PersistedQuizHistory) {
+      recordedHistories += history
     }
   }
 }

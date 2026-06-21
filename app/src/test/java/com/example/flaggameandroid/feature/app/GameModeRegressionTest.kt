@@ -32,7 +32,7 @@ class GameModeRegressionTest {
 
   @Test
   fun eachGameModeCanStartAQuizFromDefaultSetup() {
-    GameMode.entries.forEach { mode ->
+    GameMode.entries.filterNot { it == GameMode.MistakeReview }.forEach { mode ->
       val viewModel = viewModel()
 
       viewModel.onModeSelected(mode)

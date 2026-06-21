@@ -2,6 +2,7 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
+import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -9,6 +10,7 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
+import java.time.Instant
 import kotlin.random.Random
 
 class FlagGameQuizBootstrapLogicTest {
@@ -58,6 +60,83 @@ class FlagGameQuizBootstrapLogicTest {
 
     assertEquals("Choose at least one continent.", result.validationError)
     assertNull(result.quiz)
+  }
+
+  @Test
+  fun dailyChallenge_isDeterministicForTheSameLocalDaySeed() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup = buildSetupForMode(GameMode.DailyChallenge, listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"), countries, "Tony")
+    val now = 1_717_900_000_000L
+
+    val first =
+      buildQuizStartResult(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(1)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(2),
+        hintCount = 0,
+        displayName = "Tony",
+        nowEpochMillis = now,
+      ).quiz!!
+    val second =
+      buildQuizStartResult(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(9)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(10),
+        hintCount = 0,
+        displayName = "Tony",
+        nowEpochMillis = now,
+      ).quiz!!
+
+    assertEquals(
+      first.questions.map { it.correctCountry.code to it.variant },
+      second.questions.map { it.correctCountry.code to it.variant },
+    )
+  }
+
+  @Test
+  fun dailyChallenge_completedInstance_staysLockedAfterTimeZoneChange() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup = buildSetupForMode(GameMode.DailyChallenge, listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"), countries, "Tony")
+    val now = Instant.parse("2026-06-21T12:00:00Z").toEpochMilli()
+
+    val generatedCache =
+      buildQuizStartResult(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(1)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(2),
+        hintCount = 0,
+        displayName = "Tony",
+        nowEpochMillis = now,
+        timeZone = AppTimeZone.UtcPlus3,
+      ).dailyChallengeCache!!
+
+    val completedCache =
+      generatedCache.copy(
+        completed = true,
+        completedAtEpochMillis = now,
+      )
+
+    val resultAfterTimeZoneChange =
+      buildQuizStartResult(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(3)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(4),
+        hintCount = 0,
+        displayName = "Tony",
+        dailyChallengeCache = completedCache,
+        nowEpochMillis = now,
+        timeZone = AppTimeZone.Utc,
+      )
+
+    assertEquals("Daily challenge already completed for today.", resultAfterTimeZoneChange.validationError)
   }
 
   @Test

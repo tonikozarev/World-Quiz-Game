@@ -1,13 +1,18 @@
 package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.model.AllInType
+import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.AchievementsProgress
+import com.example.flaggameandroid.core.model.ActivityDayRecord
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.ProgressionRules
+import com.example.flaggameandroid.core.model.CountryPracticeStats
+import com.example.flaggameandroid.core.model.DailyChallengeCache
+import com.example.flaggameandroid.core.model.DailyChallengeTheme
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
@@ -20,6 +25,8 @@ sealed interface AppScreen {
   data object Medals : AppScreen
 
   data object Achievements : AppScreen
+
+  data object Favorites : AppScreen
 
   data object Settings : AppScreen
 
@@ -58,6 +65,7 @@ data class SettingsState(
   val reminderEnabled: Boolean = true,
   val testingToolsVisible: Boolean = false,
   val language: AppLanguage = AppLanguage.English,
+  val timeZone: AppTimeZone = AppTimeZone.default(),
 )
 
 data class SetupState(
@@ -69,6 +77,7 @@ data class SetupState(
   val allInType: AllInType = AllInType.NoBluffAllTough,
   val multiplayerBase: MultiplayerQuizBase = MultiplayerQuizBase.Continents,
   val playerNames: List<String> = listOf("Player 1", "Player 2"),
+  val dailyChallengeTheme: DailyChallengeTheme? = null,
 ) {
   val questionCount: Int?
     get() = questionCountInput.toIntOrNull()
@@ -114,6 +123,8 @@ data class QuizState(
   val hintUsedOnCurrentQuestion: Boolean = false,
   val startedAtEpochMillis: Long = 0L,
   val speedRunPenaltySeconds: Int = 0,
+  val poolSource: com.example.flaggameandroid.core.model.QuizPoolSource = com.example.flaggameandroid.core.model.QuizPoolSource.Standard,
+  val dailyChallengeTheme: com.example.flaggameandroid.core.model.DailyChallengeTheme? = null,
   val results: List<QuestionResult> = emptyList(),
 ) {
   val currentQuestion: FlagQuestion?
@@ -135,7 +146,27 @@ data class QuizState(
     get() = players.size > 1
 
   val canFinish: Boolean
-    get() = questions.isNotEmpty() && questionStates.size == questions.size && questionStates.all { it.status == QuestionStatus.Answered }
+    get() {
+      if (questions.isEmpty() || questionStates.size != questions.size) return false
+      return questionStates.withIndex().all { (index, state) ->
+        when {
+          index == currentQuestionIndex ->
+            state.status == QuestionStatus.Answered ||
+              (state.status == QuestionStatus.Unanswered && currentQuestionHasPendingAnswer)
+          else -> state.status == QuestionStatus.Answered
+        }
+      }
+    }
+
+  val currentQuestionHasPendingAnswer: Boolean
+    get() =
+      currentQuestion?.let { question ->
+        when (question.variant) {
+          QuizVariant.TypeCountryName -> typedAnswer.isNotBlank()
+          QuizVariant.FlagToCountry,
+          QuizVariant.CountryToFlag -> selectedCountry != null
+        }
+      } == true
 }
 
 data class LevelProgressState(
@@ -162,11 +193,14 @@ data class LevelProgressState(
       if (isMaxLevel) {
         1f
       } else {
-        minOf(
-          hintsTowardNextLevel.toFloat() / hintsNeeded,
-          correctAnswersTowardNextLevel.toFloat() / correctAnswersNeeded,
-          eligibleQuizzesTowardNextLevel.toFloat() / eligibleQuizzesNeeded,
-        ).coerceIn(0f, 1f)
+        val hintProgress = (hintsTowardNextLevel.toFloat() / hintsNeeded).coerceIn(0f, 1f)
+        val correctProgress = (correctAnswersTowardNextLevel.toFloat() / correctAnswersNeeded).coerceIn(0f, 1f)
+        val quizProgress = (eligibleQuizzesTowardNextLevel.toFloat() / eligibleQuizzesNeeded).coerceIn(0f, 1f)
+        (
+          (hintProgress * 0.33f) +
+            (correctProgress * 0.34f) +
+            (quizProgress * 0.33f)
+          ).coerceIn(0f, 1f)
       }
 }
 
@@ -179,6 +213,7 @@ data class FlagGameUiState(
   val questionCountLimit: Int = 195,
   val levelProgress: LevelProgressState = LevelProgressState(),
   val profile: ProfileState = ProfileState(),
+  val countries: List<FlagCountry> = emptyList(),
   val hintCount: Int = 0,
   val ratings: RatingsProgress = RatingsProgress(),
   val achievements: AchievementsProgress = AchievementsProgress(),
@@ -186,4 +221,7 @@ data class FlagGameUiState(
   val lastOpenedAtEpochMillis: Long = 0L,
   val lastPlayedAtEpochMillis: Long = 0L,
   val inactiveIconActive: Boolean = false,
+  val countryPracticeStats: Map<String, CountryPracticeStats> = emptyMap(),
+  val activityCalendar: Map<Long, ActivityDayRecord> = emptyMap(),
+  val dailyChallengeCache: DailyChallengeCache? = null,
 )

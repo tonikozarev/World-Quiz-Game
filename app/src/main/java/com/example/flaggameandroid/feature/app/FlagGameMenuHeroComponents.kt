@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,6 +42,7 @@ internal fun HeroPanel(
   onStartClick: () -> Unit,
   onMedalsClick: () -> Unit,
   onAchievementsClick: () -> Unit,
+  onFavoritesClick: () -> Unit,
   onSettingsClick: () -> Unit,
   onQuitClick: () -> Unit,
 ) {
@@ -131,11 +132,12 @@ internal fun HeroPanel(
             }
             HeroNavButton(cleanText(language, UiText.Medals), onMedalsClick, widthFraction = 0.78f)
             HeroNavButton(cleanText(language, UiText.Achievements), onAchievementsClick, widthFraction = 0.78f)
+            HeroNavButton(cleanText(language, UiText.Favorites), onFavoritesClick, widthFraction = 0.78f)
             HeroNavButton(cleanText(language, UiText.Settings), onSettingsClick, widthFraction = 0.78f)
             HeroNavButton(cleanText(language, UiText.Quit), onQuitClick, widthFraction = 0.78f)
-            }
           }
         }
+      }
     }
   }
 }
@@ -153,9 +155,10 @@ internal fun HeroGoldPill(
   ) {
     Text(
       text = text,
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 6.dp, vertical = 7.dp),
+      modifier =
+        Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 6.dp, vertical = 7.dp),
       style = MaterialTheme.typography.labelMedium.copy(fontSize = 10.sp),
       fontWeight = FontWeight.SemiBold,
       color = Color(0xFF172033),

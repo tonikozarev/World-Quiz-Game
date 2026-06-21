@@ -28,7 +28,7 @@ class FlagGameProgressStateReducersTest {
   fun withMedalsReset_clearsOnlyMedals() {
     val state =
       FlagGameUiState(
-        ratings = RatingsProgress(bronzeCount = 4, silverCount = 2),
+        ratings = RatingsProgress(bronzeCount = 4, silverCount = 2, streak7Count = 1, streak30ProgressDays = 8),
         achievements =
           AchievementsProgress(
             unlockedAtEpochMillisById =
@@ -42,6 +42,45 @@ class FlagGameProgressStateReducersTest {
 
     assertEquals(0, updated.ratings.bronzeCount)
     assertEquals(0, updated.ratings.silverCount)
+    assertEquals(0, updated.ratings.streak7Count)
+    assertEquals(0, updated.ratings.streak30ProgressDays)
     assertTrue(updated.achievements.isUnlocked(AchievementId.FirstPerfect))
+  }
+
+  @Test
+  fun progressFraction_uses33_34_33Weighting() {
+    val hintsOnly =
+      LevelProgressState(
+        level = 1,
+        hintsTowardNextLevel = 10,
+        correctAnswersTowardNextLevel = 0,
+        eligibleQuizzesTowardNextLevel = 0,
+      )
+    val correctOnly =
+      LevelProgressState(
+        level = 1,
+        hintsTowardNextLevel = 0,
+        correctAnswersTowardNextLevel = 100,
+        eligibleQuizzesTowardNextLevel = 0,
+      )
+    val quizzesOnly =
+      LevelProgressState(
+        level = 1,
+        hintsTowardNextLevel = 0,
+        correctAnswersTowardNextLevel = 0,
+        eligibleQuizzesTowardNextLevel = 10,
+      )
+    val full =
+      LevelProgressState(
+        level = 1,
+        hintsTowardNextLevel = 10,
+        correctAnswersTowardNextLevel = 100,
+        eligibleQuizzesTowardNextLevel = 10,
+      )
+
+    assertEquals(0.33f, hintsOnly.progressFraction, 0.01f)
+    assertEquals(0.34f, correctOnly.progressFraction, 0.01f)
+    assertEquals(0.33f, quizzesOnly.progressFraction, 0.01f)
+    assertEquals(1f, full.progressFraction, 0.0001f)
   }
 }

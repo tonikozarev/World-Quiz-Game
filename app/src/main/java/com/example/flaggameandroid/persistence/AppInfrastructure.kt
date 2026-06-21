@@ -32,3 +32,12 @@ internal val Migration3To4 =
       database.execSQL("ALTER TABLE progress ADD COLUMN languageName TEXT NOT NULL DEFAULT 'English'")
     }
   }
+
+internal val Migration4To5 =
+  object : Migration(4, 5) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+      database.execSQL("ALTER TABLE progress ADD COLUMN countryPracticeSerialized TEXT NOT NULL DEFAULT ''")
+      database.execSQL("ALTER TABLE progress ADD COLUMN activityCalendarSerialized TEXT NOT NULL DEFAULT ''")
+      database.execSQL("ALTER TABLE progress ADD COLUMN dailyChallengeSerialized TEXT NOT NULL DEFAULT ''")
+    }
+  }

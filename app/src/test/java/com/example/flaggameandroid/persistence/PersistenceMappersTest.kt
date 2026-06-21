@@ -23,7 +23,14 @@ class PersistenceMappersTest {
         lastOpenedAtEpochMillis = 1234L,
         lastPlayedAtEpochMillis = 5678L,
         inactiveIconActive = true,
-        ratings = RatingsProgress(bronzeCount = 2, goldCount = 1),
+        ratings = RatingsProgress(
+          bronzeCount = 2,
+          goldCount = 1,
+          streak7Count = 3,
+          streak30Count = 1,
+          streak7ProgressDays = 4,
+          streak30ProgressDays = 12,
+        ),
         achievements =
           AchievementsProgress(
             unlockedAtEpochMillisById =
