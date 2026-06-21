@@ -2,20 +2,24 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
+import com.example.flaggameandroid.core.model.visibleGameModes
+import com.example.flaggameandroid.persistence.PersistedAppState
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import kotlin.random.Random
 
 class GameModeRegressionTest {
-  private fun viewModel(): FlagGameViewModel =
+  private fun viewModel(initialPersistedState: PersistedAppState = PersistedAppState()): FlagGameViewModel =
     FlagGameViewModel(
       catalogRepository = StaticFlagCatalogRepository(),
       questionGenerator = QuizQuestionGenerator(Random(11)),
       random = Random(12),
+      initialPersistedState = initialPersistedState,
     )
 
   @Test
@@ -32,7 +36,7 @@ class GameModeRegressionTest {
 
   @Test
   fun eachGameModeCanStartAQuizFromDefaultSetup() {
-    GameMode.entries.filterNot { it == GameMode.MistakeReview }.forEach { mode ->
+    visibleGameModes().filterNot { it == GameMode.MistakeReview }.forEach { mode ->
       val viewModel = viewModel()
 
       viewModel.onModeSelected(mode)
@@ -43,6 +47,54 @@ class GameModeRegressionTest {
       assertEquals(mode, viewModel.uiState.value.quiz.mode)
       assertTrue(viewModel.uiState.value.quiz.totalQuestions > 0)
     }
+  }
+
+  @Test
+  fun visibleGameModes_useStableExplicitOrder() {
+    assertEquals(
+      listOf(
+        GameMode.Training,
+        GameMode.DailyChallenge,
+        GameMode.Continents,
+        GameMode.SpeedRun,
+        GameMode.LocalMultiplayer,
+        GameMode.AllIn,
+        GameMode.MistakeReview,
+      ),
+      visibleGameModes(),
+    )
+  }
+
+  @Test
+  fun mistakeReviewSession_reducesReviewedCountriesToFiveAndKeepsModeUnlocked() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val initialStats =
+      countries.take(10).associate { country ->
+        country.code to CountryPracticeStats(wrongCount = 10)
+      }
+    val viewModel =
+      viewModel(
+        initialPersistedState =
+          PersistedAppState(
+            countryPracticeStats = initialStats,
+            mistakeReviewUnlocked = true,
+          ),
+      )
+
+    viewModel.onModeSelected(GameMode.MistakeReview)
+    viewModel.onQuestionCountChanged(10)
+    viewModel.onStartQuiz()
+
+    val reviewedCountryCode = viewModel.uiState.value.quiz.currentQuestion!!.correctCountry.code
+    repeat(viewModel.uiState.value.quiz.totalQuestions) {
+      val question = viewModel.uiState.value.quiz.currentQuestion!!
+      viewModel.onCountryAnswerSelected(question.correctCountry)
+      viewModel.onNextQuestion()
+    }
+
+    assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
+    assertEquals(5, viewModel.uiState.value.countryPracticeStats[reviewedCountryCode]?.wrongCount)
+    assertTrue(viewModel.uiState.value.mistakeReviewUnlocked)
   }
 
   @Test

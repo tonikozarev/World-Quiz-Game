@@ -31,6 +31,9 @@ internal fun buildInitialUiState(
     hintCount = initialPersistedState.hintCount,
     ratings = initialPersistedState.ratings,
     achievements = initialPersistedState.achievements,
+    mistakeReviewUnlocked =
+      initialPersistedState.mistakeReviewUnlocked ||
+        mistakeReviewEligibleCountryCount(initialPersistedState.countryPracticeStats) >= com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount,
     levelProgress =
       LevelProgressState(
         level = initialPersistedState.level,
@@ -80,6 +83,7 @@ internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
     countryPracticeStats = countryPracticeStats,
     activityCalendar = activityCalendar,
     dailyChallengeCache = dailyChallengeCache,
+    mistakeReviewUnlocked = mistakeReviewUnlocked,
   )
 
 internal fun buildSetupForMode(

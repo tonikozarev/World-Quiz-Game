@@ -114,6 +114,7 @@ internal fun FlagGameScreenContent(
       GameModesScreen(
         language = uiState.settings.language,
         dailyChallengeCache = uiState.dailyChallengeCache,
+        mistakeReviewUnlocked = uiState.mistakeReviewUnlocked,
         onBack = onBackToMenuClick,
         onModeSelected = onModeSelected,
         modifier = modifier,

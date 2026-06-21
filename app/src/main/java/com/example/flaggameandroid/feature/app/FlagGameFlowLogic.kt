@@ -290,13 +290,18 @@ internal fun advanceLevelProgress(
     eligibleQuizzes -= requirements.eligibleQuizzesNeeded
   }
 
+  val finalRequirements = ProgressionRules.requirementsForLevel(level)
+  val clampedHints = hints.coerceAtMost(finalRequirements.hintsNeeded)
+  val clampedCorrect = correct.coerceAtMost(finalRequirements.correctAnswersNeeded)
+  val clampedEligibleQuizzes = eligibleQuizzes.coerceAtMost(finalRequirements.eligibleQuizzesNeeded)
+
   return LevelProgressResult(
     progress =
       progress.copy(
         level = level,
-        hintsTowardNextLevel = if (levelUps > 0) 0 else hints,
-        correctAnswersTowardNextLevel = correct,
-        eligibleQuizzesTowardNextLevel = eligibleQuizzes,
+        hintsTowardNextLevel = if (levelUps > 0) 0 else clampedHints,
+        correctAnswersTowardNextLevel = clampedCorrect,
+        eligibleQuizzesTowardNextLevel = clampedEligibleQuizzes,
         levelUpVisible = levelUps > 0,
       ),
     bonusHints = levelUps * 5,

@@ -47,6 +47,7 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.RatingsProgress
+import com.example.flaggameandroid.core.model.visibleGameModes
 import kotlinx.coroutines.delay
 
 @Composable
@@ -118,6 +119,7 @@ fun MenuScreen(
 fun GameModesScreen(
   language: AppLanguage,
   dailyChallengeCache: DailyChallengeCache?,
+  mistakeReviewUnlocked: Boolean,
   onBack: () -> Unit,
   onModeSelected: (GameMode) -> Unit,
   modifier: Modifier = Modifier,
@@ -127,12 +129,22 @@ fun GameModesScreen(
   ScreenShell(modifier = modifier) {
     HeaderRow(title = cleanModeSelectionTitle(language))
 
-    GameMode.entries.forEach { mode ->
+    visibleGameModes().forEach { mode ->
       ModeCard(
         mode = mode,
         language = language,
         infoExpanded = expandedInfoMode == mode,
-        openEnabled = mode != GameMode.DailyChallenge || dailyChallengeCache?.completed != true,
+        openEnabled =
+          when (mode) {
+            GameMode.DailyChallenge -> dailyChallengeCache?.completed != true
+            GameMode.MistakeReview -> mistakeReviewUnlocked
+            else -> true
+          },
+        openLabel =
+          when (mode) {
+            GameMode.DailyChallenge -> cleanText(language, UiText.Start)
+            else -> cleanText(language, UiText.Open)
+          },
         onInfoClick = {
           expandedInfoMode = if (expandedInfoMode == mode) null else mode
         },

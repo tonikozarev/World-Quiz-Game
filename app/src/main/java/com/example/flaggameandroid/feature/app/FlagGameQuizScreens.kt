@@ -401,16 +401,26 @@ fun ResultsScreen(
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-      Button(onClick = onPlayAgain, modifier = Modifier.weight(1f)) {
-        Text(
-          when (language) {
-            AppLanguage.English -> "Play again"
-            AppLanguage.Bulgarian -> "Играй отново"
-            AppLanguage.German -> "Nochmal spielen"
-          },
-        )
+      if (quiz.mode != GameMode.DailyChallenge && quiz.mode != GameMode.MistakeReview) {
+        Button(onClick = onPlayAgain, modifier = Modifier.weight(1f)) {
+          Text(
+            when (language) {
+              AppLanguage.English -> "Play again"
+              AppLanguage.Bulgarian -> "Играй отново"
+              AppLanguage.German -> "Nochmal spielen"
+            },
+          )
+        }
       }
-      OutlinedButton(onClick = onBackToMenu, modifier = Modifier.weight(1f)) {
+      OutlinedButton(
+        onClick = onBackToMenu,
+        modifier =
+          if (quiz.mode != GameMode.DailyChallenge) {
+            Modifier.weight(1f)
+          } else {
+            Modifier.fillMaxWidth()
+          },
+      ) {
         Text(
           when (language) {
             AppLanguage.English -> "Menu"

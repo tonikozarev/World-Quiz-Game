@@ -124,14 +124,51 @@ class FlagGameViewModel(
   }
 
   fun onModeSelected(mode: GameMode) {
-    updateState {
-      val setup = buildSetupForMode(mode, selectableContinents, countries, it.profile.displayName)
-      it.copy(
-        screen = AppScreen.Setup,
+    val setup = buildSetupForMode(mode, selectableContinents, countries, _uiState.value.profile.displayName)
+    if (mode == GameMode.DailyChallenge) {
+      val state = _uiState.value.copy(
         setup = setup,
         questionCountLimit = questionLimitFor(setup, countries),
-        setupError = null,
       )
+      val result =
+        buildQuizStartResult(
+          setup = setup,
+          countries = countries,
+          questionGenerator = questionGenerator,
+          hintDifficulty = state.settings.hintDifficulty,
+          random = random,
+          hintCount = state.hintCount,
+          displayName = state.profile.displayName,
+          practiceStats = state.countryPracticeStats,
+          dailyChallengeCache = state.dailyChallengeCache,
+          nowEpochMillis = System.currentTimeMillis(),
+          timeZone = state.settings.timeZone,
+          mistakeReviewUnlocked = state.mistakeReviewUnlocked,
+        )
+      if (result.validationError != null) {
+        updateState { it.copy(setupError = result.validationError) }
+        return
+      }
+      updateState {
+        val quiz = requireNotNull(result.quiz)
+        it.copy(
+          screen = AppScreen.Quiz,
+          setup = setup,
+          questionCountLimit = questionLimitFor(setup, countries),
+          quiz = quiz,
+          dailyChallengeCache = result.dailyChallengeCache ?: it.dailyChallengeCache,
+          setupError = null,
+        )
+      }
+    } else {
+      updateState {
+        it.copy(
+          screen = AppScreen.Setup,
+          setup = setup,
+          questionCountLimit = questionLimitFor(setup, countries),
+          setupError = null,
+        )
+      }
     }
   }
 
@@ -287,6 +324,7 @@ class FlagGameViewModel(
         dailyChallengeCache = state.dailyChallengeCache,
         nowEpochMillis = System.currentTimeMillis(),
         timeZone = state.settings.timeZone,
+        mistakeReviewUnlocked = state.mistakeReviewUnlocked,
       )
     if (result.validationError != null) {
       updateState { it.copy(setupError = result.validationError) }

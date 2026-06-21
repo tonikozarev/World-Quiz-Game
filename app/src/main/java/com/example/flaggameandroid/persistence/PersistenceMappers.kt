@@ -29,6 +29,7 @@ internal fun ProgressEntity.toPersistedAppState(hintDifficultyName: String): Per
     accountName = accountName,
     avatarIndex = avatarIndex,
     language = AppLanguage.entries.firstOrNull { it.name == languageName } ?: AppLanguage.English,
+    mistakeReviewUnlocked = mistakeReviewUnlocked,
   )
 
 internal fun PersistedAppState.toProgressEntity(): ProgressEntity =
@@ -49,6 +50,7 @@ internal fun PersistedAppState.toProgressEntity(): ProgressEntity =
     accountName = accountName,
     avatarIndex = avatarIndex,
     languageName = language.name,
+    mistakeReviewUnlocked = mistakeReviewUnlocked,
   )
 
 internal fun PersistedQuizHistory.toEntity(): QuizHistoryEntity =

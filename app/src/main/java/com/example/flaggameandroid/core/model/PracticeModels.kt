@@ -1,5 +1,9 @@
 package com.example.flaggameandroid.core.model
 
+internal const val MistakeReviewUnlockCountryCount = 10
+internal const val MistakeReviewMissThreshold = 10
+internal const val MistakeReviewRecoveryWrongCount = 5
+
 data class CountryPracticeStats(
   val correctCount: Int = 0,
   val wrongCount: Int = 0,
@@ -8,6 +12,9 @@ data class CountryPracticeStats(
 ) {
   val isWeak: Boolean
     get() = wrongCount >= 2 && wrongCount > correctCount
+
+  val isMistakeReviewEligible: Boolean
+    get() = wrongCount >= MistakeReviewMissThreshold
 }
 
 data class ActivityDayRecord(

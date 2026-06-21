@@ -648,7 +648,7 @@ class FlagGameViewModelTest {
     val beforeFinalRun = viewModel.uiState.value.levelProgress
     assertEquals(2, beforeFinalRun.level)
     assertEquals(14, beforeFinalRun.eligibleQuizzesTowardNextLevel)
-    assertEquals(42, beforeFinalRun.hintsTowardNextLevel)
+    assertEquals(15, beforeFinalRun.hintsTowardNextLevel)
     assertEquals(140, beforeFinalRun.correctAnswersTowardNextLevel)
 
     completePerfectContinentsQuiz(viewModel, questionCount = 10)

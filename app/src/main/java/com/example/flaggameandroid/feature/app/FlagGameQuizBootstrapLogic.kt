@@ -9,6 +9,7 @@ import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.DailyChallengeCache
 import kotlin.random.Random
+import com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount
 
 internal data class QuizStartResult(
   val quiz: QuizState? = null,
@@ -76,6 +77,7 @@ internal fun buildQuizStartResult(
   dailyChallengeCache: DailyChallengeCache? = null,
   nowEpochMillis: Long = System.currentTimeMillis(),
   timeZone: AppTimeZone = AppTimeZone.default(),
+  mistakeReviewUnlocked: Boolean = false,
 ): QuizStartResult {
   val poolResolution =
     resolveQuizPool(
@@ -88,6 +90,12 @@ internal fun buildQuizStartResult(
     )
   if (setup.mode == GameMode.DailyChallenge && poolResolution.pool.isEmpty()) {
     return QuizStartResult(validationError = "Daily challenge already completed for today.")
+  }
+  if (setup.mode == GameMode.MistakeReview) {
+    val eligibleCount = mistakeReviewEligibleCountryCount(practiceStats)
+    if (!mistakeReviewUnlocked && eligibleCount < MistakeReviewUnlockCountryCount) {
+      return QuizStartResult(validationError = "No missed countries to review yet.")
+    }
   }
   if (setup.mode == GameMode.MistakeReview && poolResolution.pool.isEmpty()) {
     return QuizStartResult(validationError = "No missed countries to review yet.")

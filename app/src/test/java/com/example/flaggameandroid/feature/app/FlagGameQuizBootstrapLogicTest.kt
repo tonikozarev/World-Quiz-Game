@@ -3,10 +3,12 @@ package com.example.flaggameandroid.feature.app
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
 import com.example.flaggameandroid.core.model.AppTimeZone
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
@@ -137,6 +139,69 @@ class FlagGameQuizBootstrapLogicTest {
       )
 
     assertEquals("Daily challenge already completed for today.", resultAfterTimeZoneChange.validationError)
+  }
+
+  @Test
+  fun mistakeReview_requiresTenCountriesBeforeUnlocking() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.MistakeReview,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      )
+    val lockedStats =
+      countries.take(9).associate { country ->
+        country.code to CountryPracticeStats(wrongCount = 10)
+      }
+
+    val lockedResult =
+      buildQuizStartResult(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(31)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(32),
+        hintCount = 0,
+        displayName = "Tony",
+        practiceStats = lockedStats,
+      )
+
+    assertEquals("No missed countries to review yet.", lockedResult.validationError)
+    assertNull(lockedResult.quiz)
+  }
+
+  @Test
+  fun mistakeReview_staysAvailableAfterBeingUnlocked() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.MistakeReview,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      )
+    val unlockedStats =
+      countries.take(5).associate { country ->
+        country.code to CountryPracticeStats(wrongCount = 10)
+      }
+
+    val unlockedResult =
+      buildQuizStartResult(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(33)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(34),
+        hintCount = 0,
+        displayName = "Tony",
+        practiceStats = unlockedStats,
+        mistakeReviewUnlocked = true,
+      )
+
+    assertNotNull(unlockedResult.quiz)
+    assertEquals(null, unlockedResult.validationError)
   }
 
   @Test

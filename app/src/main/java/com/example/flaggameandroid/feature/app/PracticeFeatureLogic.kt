@@ -9,6 +9,7 @@ import com.example.flaggameandroid.core.model.DailyChallengeTheme
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuestionResult
+import com.example.flaggameandroid.core.model.MistakeReviewRecoveryWrongCount
 import java.time.Instant
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -46,7 +47,7 @@ internal fun resolveQuizPool(
         } else {
           dailyChallengePool(countries, generatedDailyChallengeCache, nowEpochMillis, timeZone)
         }
-      GameMode.MistakeReview -> countries.filter { country -> (practiceStats[country.code]?.wrongCount ?: 0) > 0 }
+      GameMode.MistakeReview -> countries.filter { country -> practiceStats[country.code]?.isMistakeReviewEligible == true }
       GameMode.Continents,
       GameMode.SpeedRun,
       GameMode.LocalMultiplayer,
@@ -147,21 +148,50 @@ internal fun updateCountryPracticeStats(
   previous: Map<String, CountryPracticeStats>,
   results: List<QuestionResult>,
   completedAtEpochMillis: Long,
+  mode: GameMode,
 ): Map<String, CountryPracticeStats> =
-  results.fold(previous) { statsByCode, result ->
-    val code = result.question.correctCountry.code
-    val current = statsByCode[code] ?: CountryPracticeStats()
+  if (mode == GameMode.Training) {
+    previous
+  } else {
     val updated =
-      if (result.isCorrect) {
-        current.copy(correctCount = current.correctCount + 1)
-      } else {
-        current.copy(
-          wrongCount = current.wrongCount + 1,
-          lastMissedAtEpochMillis = completedAtEpochMillis,
-        )
+      results.fold(previous) { statsByCode, result ->
+        val code = result.question.correctCountry.code
+        val current = statsByCode[code] ?: CountryPracticeStats()
+        val next =
+          if (result.isCorrect) {
+            current.copy(correctCount = current.correctCount + 1)
+          } else {
+            current.copy(
+              wrongCount = current.wrongCount + 1,
+              lastMissedAtEpochMillis = completedAtEpochMillis,
+            )
+          }
+        statsByCode + (code to next)
       }
-    statsByCode + (code to updated)
+
+    if (mode != GameMode.MistakeReview) {
+      updated
+    } else {
+      val reviewedCodes = results.map { it.question.correctCountry.code }.toSet()
+      updated.mapValues { (code, stats) ->
+        if (code in reviewedCodes) {
+          stats.copy(wrongCount = MistakeReviewRecoveryWrongCount)
+        } else {
+          stats
+        }
+      }
+    }
   }
+
+internal fun mistakeReviewEligibleCountryCount(
+  practiceStats: Map<String, CountryPracticeStats>,
+): Int = practiceStats.values.count { it.isMistakeReviewEligible }
+
+internal fun mistakeReviewEligibleCountries(
+  countries: List<FlagCountry>,
+  practiceStats: Map<String, CountryPracticeStats>,
+): List<FlagCountry> =
+  countries.filter { country -> practiceStats[country.code]?.isMistakeReviewEligible == true }
 
 internal fun updateActivityCalendar(
   previous: Map<Long, ActivityDayRecord>,

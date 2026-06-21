@@ -31,6 +31,7 @@ class FlagGamePersistenceTest {
             hintsTowardNextLevel = 4,
             correctAnswersTowardNextLevel = 18,
             eligibleQuizzesTowardNextLevel = 2,
+            mistakeReviewUnlocked = true,
           ),
       )
 
@@ -42,6 +43,7 @@ class FlagGamePersistenceTest {
     assertEquals(4, state.levelProgress.hintsTowardNextLevel)
     assertEquals(18, state.levelProgress.correctAnswersTowardNextLevel)
     assertEquals(2, state.levelProgress.eligibleQuizzesTowardNextLevel)
+    assertEquals(true, state.mistakeReviewUnlocked)
   }
 
   @Test

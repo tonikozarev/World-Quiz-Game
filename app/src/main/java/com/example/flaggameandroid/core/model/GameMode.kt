@@ -34,6 +34,17 @@ enum class GameMode(
   ),
 }
 
+internal fun visibleGameModes(): List<GameMode> =
+  listOf(
+    GameMode.Training,
+    GameMode.DailyChallenge,
+    GameMode.Continents,
+    GameMode.SpeedRun,
+    GameMode.LocalMultiplayer,
+    GameMode.AllIn,
+    GameMode.MistakeReview,
+  )
+
 enum class QuizVariant(
   val title: String,
   val description: String,

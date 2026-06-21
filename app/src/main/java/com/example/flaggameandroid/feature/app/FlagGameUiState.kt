@@ -179,11 +179,20 @@ data class LevelProgressState(
   val hintsNeeded: Int
     get() = ProgressionRules.requirementsForLevel(level).hintsNeeded
 
+  val hintsTowardNextLevelDisplay: Int
+    get() = hintsTowardNextLevel.coerceAtMost(hintsNeeded)
+
   val correctAnswersNeeded: Int
     get() = ProgressionRules.requirementsForLevel(level).correctAnswersNeeded
 
+  val correctAnswersTowardNextLevelDisplay: Int
+    get() = correctAnswersTowardNextLevel.coerceAtMost(correctAnswersNeeded)
+
   val eligibleQuizzesNeeded: Int
     get() = ProgressionRules.requirementsForLevel(level).eligibleQuizzesNeeded
+
+  val eligibleQuizzesTowardNextLevelDisplay: Int
+    get() = eligibleQuizzesTowardNextLevel.coerceAtMost(eligibleQuizzesNeeded)
 
   val isMaxLevel: Boolean
     get() = ProgressionRules.isMaxLevel(level)
@@ -193,9 +202,9 @@ data class LevelProgressState(
       if (isMaxLevel) {
         1f
       } else {
-        val hintProgress = (hintsTowardNextLevel.toFloat() / hintsNeeded).coerceIn(0f, 1f)
-        val correctProgress = (correctAnswersTowardNextLevel.toFloat() / correctAnswersNeeded).coerceIn(0f, 1f)
-        val quizProgress = (eligibleQuizzesTowardNextLevel.toFloat() / eligibleQuizzesNeeded).coerceIn(0f, 1f)
+        val hintProgress = (hintsTowardNextLevelDisplay.toFloat() / hintsNeeded).coerceIn(0f, 1f)
+        val correctProgress = (correctAnswersTowardNextLevelDisplay.toFloat() / correctAnswersNeeded).coerceIn(0f, 1f)
+        val quizProgress = (eligibleQuizzesTowardNextLevelDisplay.toFloat() / eligibleQuizzesNeeded).coerceIn(0f, 1f)
         (
           (hintProgress * 0.33f) +
             (correctProgress * 0.34f) +
@@ -224,4 +233,5 @@ data class FlagGameUiState(
   val countryPracticeStats: Map<String, CountryPracticeStats> = emptyMap(),
   val activityCalendar: Map<Long, ActivityDayRecord> = emptyMap(),
   val dailyChallengeCache: DailyChallengeCache? = null,
+  val mistakeReviewUnlocked: Boolean = false,
 )

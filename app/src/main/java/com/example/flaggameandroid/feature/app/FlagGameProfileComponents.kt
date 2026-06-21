@@ -119,9 +119,18 @@ internal fun ProfileEditorDialog(
               style = MaterialTheme.typography.titleSmall,
               fontWeight = FontWeight.Bold,
             )
-            Text("${levelProgress.hintsTowardNextLevel}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}")
-            Text("${levelProgress.correctAnswersTowardNextLevel}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}")
-            Text("${levelProgress.eligibleQuizzesTowardNextLevel}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}")
+            Text(
+              "${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
+                if (levelProgress.hintsTowardNextLevelDisplay >= levelProgress.hintsNeeded) " ✔" else "",
+            )
+            Text(
+              "${levelProgress.correctAnswersTowardNextLevelDisplay}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}" +
+                if (levelProgress.correctAnswersTowardNextLevelDisplay >= levelProgress.correctAnswersNeeded) " ✔" else "",
+            )
+            Text(
+              "${levelProgress.eligibleQuizzesTowardNextLevelDisplay}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}" +
+                if (levelProgress.eligibleQuizzesTowardNextLevelDisplay >= levelProgress.eligibleQuizzesNeeded) " ✔" else "",
+            )
           }
         }
       }

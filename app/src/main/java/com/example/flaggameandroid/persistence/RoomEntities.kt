@@ -23,6 +23,7 @@ data class ProgressEntity(
   val accountName: String = "",
   val avatarIndex: Int = 0,
   val languageName: String = AppLanguage.English.name,
+  val mistakeReviewUnlocked: Boolean = false,
 ) {
   companion object {
     const val SingletonId: Int = 1

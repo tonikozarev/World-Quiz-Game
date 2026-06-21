@@ -83,4 +83,41 @@ class FlagGameProgressStateReducersTest {
     assertEquals(0.33f, quizzesOnly.progressFraction, 0.01f)
     assertEquals(1f, full.progressFraction, 0.0001f)
   }
+
+  @Test
+  fun levelProgress_displayValues_areClampedToCurrentRequirement() {
+    val progress =
+      LevelProgressState(
+        level = 2,
+        hintsTowardNextLevel = 26,
+        correctAnswersTowardNextLevel = 260,
+        eligibleQuizzesTowardNextLevel = 26,
+      )
+
+    assertEquals(15, progress.hintsTowardNextLevelDisplay)
+    assertEquals(150, progress.correctAnswersTowardNextLevelDisplay)
+    assertEquals(15, progress.eligibleQuizzesTowardNextLevelDisplay)
+  }
+
+  @Test
+  fun advanceLevelProgress_capsOverflowWhenNotEnoughForLevelUp() {
+    val result =
+      advanceLevelProgress(
+        progress =
+          LevelProgressState(
+            level = 2,
+            hintsTowardNextLevel = 14,
+            correctAnswersTowardNextLevel = 260,
+            eligibleQuizzesTowardNextLevel = 26,
+          ),
+        earnedHints = 0,
+        correctAnswers = 0,
+        eligibleQuizCompletions = 0,
+      )
+
+    assertEquals(2, result.progress.level)
+    assertEquals(14, result.progress.hintsTowardNextLevel)
+    assertEquals(150, result.progress.correctAnswersTowardNextLevel)
+    assertEquals(15, result.progress.eligibleQuizzesTowardNextLevel)
+  }
 }

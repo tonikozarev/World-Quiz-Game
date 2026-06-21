@@ -30,6 +30,7 @@ data class PersistedAppState(
   val avatarIndex: Int = 0,
   val language: AppLanguage = AppLanguage.English,
   val timeZone: AppTimeZone = AppTimeZone.default(),
+  val mistakeReviewUnlocked: Boolean = false,
 )
 
 data class PersistedQuizHistory(

@@ -131,6 +131,7 @@ internal fun ModeCard(
   language: AppLanguage,
   infoExpanded: Boolean,
   openEnabled: Boolean,
+  openLabel: String,
   onInfoClick: () -> Unit,
   onClick: () -> Unit,
 ) {
@@ -162,7 +163,7 @@ internal fun ModeCard(
           contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
         ) {
           Text(
-            cleanText(language, UiText.Open),
+            openLabel,
           )
         }
       }
@@ -344,6 +345,7 @@ private fun PreviewModeCard() {
         language = AppLanguage.English,
         infoExpanded = true,
         openEnabled = true,
+        openLabel = "Start",
         onInfoClick = {},
         onClick = {},
       )

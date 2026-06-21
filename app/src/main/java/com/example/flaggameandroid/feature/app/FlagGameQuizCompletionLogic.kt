@@ -10,6 +10,7 @@ import com.example.flaggameandroid.core.model.ProgressionRules
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
+import com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount
 
 internal data class QuizCompletionSummary(
   val completionTime: Long,
@@ -25,6 +26,7 @@ internal data class QuizCompletionSummary(
   val totalBonusHints: Int,
   val finalPlayers: List<PlayerProgress>,
   val updatedCountryPracticeStats: Map<String, com.example.flaggameandroid.core.model.CountryPracticeStats>,
+  val updatedMistakeReviewUnlocked: Boolean,
   val updatedActivityCalendar: Map<Long, ActivityDayRecord>,
   val updatedDailyChallengeCache: com.example.flaggameandroid.core.model.DailyChallengeCache?,
 )
@@ -122,7 +124,11 @@ internal fun buildQuizCompletionSummary(
       previous = state.countryPracticeStats,
       results = completedResults,
       completedAtEpochMillis = completionTime,
+      mode = quiz.mode ?: GameMode.Training,
     )
+  val updatedMistakeReviewUnlocked =
+    state.mistakeReviewUnlocked ||
+      mistakeReviewEligibleCountryCount(updatedCountryPracticeStats) >= MistakeReviewUnlockCountryCount
   val updatedActivityCalendar =
     updateActivityCalendar(
       previous = state.activityCalendar,
@@ -162,6 +168,7 @@ internal fun buildQuizCompletionSummary(
     totalBonusHints = totalBonusHints,
     finalPlayers = finalPlayers,
     updatedCountryPracticeStats = updatedCountryPracticeStats,
+    updatedMistakeReviewUnlocked = updatedMistakeReviewUnlocked,
     updatedActivityCalendar = updatedActivityCalendar,
     updatedDailyChallengeCache = updatedDailyChallengeCache,
   )
@@ -190,6 +197,7 @@ internal fun buildQuizCompletionResult(
         lastPlayedAtEpochMillis = summary.completionTime,
         inactiveIconActive = false,
         countryPracticeStats = summary.updatedCountryPracticeStats,
+        mistakeReviewUnlocked = summary.updatedMistakeReviewUnlocked,
         activityCalendar = summary.updatedActivityCalendar,
         dailyChallengeCache = summary.updatedDailyChallengeCache,
       ),
