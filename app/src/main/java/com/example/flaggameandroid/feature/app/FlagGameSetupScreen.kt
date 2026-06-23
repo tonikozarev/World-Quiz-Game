@@ -23,9 +23,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.AllInType
@@ -69,9 +71,36 @@ fun SetupScreen(
   var saveQuizName by remember { mutableStateOf("") }
   var saveFeedbackMessage by remember { mutableStateOf<String?>(null) }
   var replaceConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.NameConflict?>(null) }
+  fun showSaveFeedback(message: String) {
+    if (saveFeedbackMessage == null) {
+      saveFeedbackMessage = message
+    }
+  }
+  val context = LocalContext.current
+  val createQuizPresetOrder =
+    remember {
+      listOf(
+        CreateQuizPreset.TwoColors,
+        CreateQuizPreset.ThreeColors,
+        CreateQuizPreset.FourPlusColors,
+        CreateQuizPreset.HorizontalStripes,
+        CreateQuizPreset.VerticalStripes,
+        CreateQuizPreset.Stars,
+        CreateQuizPreset.Crosses,
+        CreateQuizPreset.Animals,
+        CreateQuizPreset.Nato,
+        CreateQuizPreset.EuUnion,
+        CreateQuizPreset.WorldTradeOrganization,
+        CreateQuizPreset.CommonwealthOfNations,
+        CreateQuizPreset.AfricanUnion,
+        CreateQuizPreset.OrganisationOfIslamicCooperation,
+      )
+    }
+  val countriesByContinent = remember(countries) { countries.groupBy { it.continent } }
 
   LaunchedEffect(saveFeedbackMessage) {
     if (saveFeedbackMessage != null) {
+      Toast.makeText(context, saveFeedbackMessage!!, Toast.LENGTH_LONG).show()
       delay(5_000)
       saveFeedbackMessage = null
     }
@@ -182,22 +211,7 @@ fun SetupScreen(
           AppLanguage.Bulgarian -> "Готови филтри"
           AppLanguage.German -> "Vorlagenfilter"
         }) {
-          listOf(
-            CreateQuizPreset.TwoColors,
-            CreateQuizPreset.ThreeColors,
-            CreateQuizPreset.FourPlusColors,
-            CreateQuizPreset.HorizontalStripes,
-            CreateQuizPreset.VerticalStripes,
-            CreateQuizPreset.Stars,
-            CreateQuizPreset.Crosses,
-            CreateQuizPreset.Animals,
-            CreateQuizPreset.Nato,
-            CreateQuizPreset.EuUnion,
-            CreateQuizPreset.WorldTradeOrganization,
-            CreateQuizPreset.CommonwealthOfNations,
-            CreateQuizPreset.AfricanUnion,
-            CreateQuizPreset.OrganisationOfIslamicCooperation,
-          ).forEach { preset ->
+          createQuizPresetOrder.forEach { preset ->
             SelectableRow(
               title = localizedCreateQuizPresetTitle(preset, language),
               selected = setup.createQuizPreset == preset,
@@ -212,7 +226,7 @@ fun SetupScreen(
           AppLanguage.Bulgarian -> "Избери държави"
           AppLanguage.German -> "Länder wählen"
         }) {
-          countries.groupBy { it.continent }.forEach { (continent, list) ->
+          countriesByContinent.forEach { (continent, list) ->
             Text(
               text = localizedContinentName(continent, language),
               style = MaterialTheme.typography.titleSmall,
@@ -486,7 +500,6 @@ fun SetupScreen(
             }
           showSaveDialog = true
         },
-        enabled = saveFeedbackMessage == null,
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(18.dp),
       ) {
@@ -543,20 +556,20 @@ fun SetupScreen(
             onClick = {
               when (val result = onSaveCreateQuizClicked(saveQuizName, null)) {
                 is FlagGameViewModel.SaveQuizResult.Saved -> {
-                  saveFeedbackMessage = result.message
+                  showSaveFeedback(result.message)
                   showSaveDialog = false
                 }
 
                 is FlagGameViewModel.SaveQuizResult.DuplicateConfiguration -> {
-                  saveFeedbackMessage =
+                  showSaveFeedback(
                     when (language) {
-                      AppLanguage.English -> "That exact quiz is already saved as \"${result.existingName}\"."
-                      AppLanguage.Bulgarian -> "Същият тест вече е запазен като \"${result.existingName}\"."
-                      AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert."
+                      AppLanguage.English -> "That exact quiz is already saved as \"${result.existingName}\". The quiz was not saved."
+                      AppLanguage.Bulgarian -> "Същият тест вече е записан като \"${result.existingName}\". Тестът не беше записан."
+                      AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert. Der Test war nicht gespeichert."
                     }
+                  )
                   showSaveDialog = false
                 }
-
                 is FlagGameViewModel.SaveQuizResult.NameConflict -> {
                   replaceConflict = result
                   showSaveDialog = false
@@ -614,15 +627,15 @@ fun SetupScreen(
           TextButton(
             onClick = {
               when (val result = onSaveCreateQuizClicked(saveQuizName, conflict.existingTemplateId)) {
-                is FlagGameViewModel.SaveQuizResult.Saved -> saveFeedbackMessage = result.message
+                is FlagGameViewModel.SaveQuizResult.Saved -> showSaveFeedback(result.message)
                 is FlagGameViewModel.SaveQuizResult.DuplicateConfiguration ->
-                  saveFeedbackMessage =
+                  showSaveFeedback(
                     when (language) {
                       AppLanguage.English -> "That exact quiz is already saved as \"${result.existingName}\"."
-                      AppLanguage.Bulgarian -> "Същият тест вече е запазен като \"${result.existingName}\"."
+                      AppLanguage.Bulgarian -> "Същият тест вече е записан като \"${result.existingName}\"."
                       AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert."
                     }
-
+                  )
                 is FlagGameViewModel.SaveQuizResult.NameConflict,
                 FlagGameViewModel.SaveQuizResult.NoOp -> Unit
               }
@@ -650,10 +663,6 @@ fun SetupScreen(
           }
         },
       )
-    }
-
-    if (saveFeedbackMessage != null) {
-      InfoPanel(text = saveFeedbackMessage!!)
     }
 
     if (setup.mode == GameMode.AllIn) {

@@ -171,6 +171,7 @@ private fun List<SavedQuizTemplate>.serializeSavedQuizTemplates(): String =
       template.source.name,
       template.preset?.name.orEmpty(),
       template.selectedCountryCodes.joinToString(separator = "."),
+      template.questionCountryCodes.joinToString(separator = "."),
       template.variants.joinToString(separator = ".") { it.name },
       template.questionCount.toString(),
       template.seed.toString(),
@@ -189,8 +190,15 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
         if (parts.size < 11) return@mapNotNull null
         val source = CreateQuizSource.entries.firstOrNull { it.name == parts[3] } ?: CreateQuizSource.PresetFilter
         val preset = parts[4].takeIf { it.isNotBlank() }?.let { name -> CreateQuizPreset.entries.firstOrNull { it.name == name } }
+        val selectedCountryCodes = parts[5].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
+        val questionCountryCodes =
+          if (parts.size >= 12) {
+            parts[6].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
+          } else {
+            selectedCountryCodes
+          }
         val variants =
-          parts[6]
+          parts[if (parts.size >= 12) 7 else 6]
             .takeIf { it.isNotBlank() }
             ?.split(".")
             ?.mapNotNull { variantName -> com.example.flaggameandroid.core.model.QuizVariant.entries.firstOrNull { it.name == variantName } }
@@ -202,12 +210,13 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           title = parts[2],
           source = source,
           preset = preset,
-          selectedCountryCodes = parts[5].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty(),
+          selectedCountryCodes = selectedCountryCodes,
+          questionCountryCodes = questionCountryCodes,
           variants = variants,
-          questionCount = parts[7].toIntOrNull() ?: 10,
-          seed = parts[8].toLongOrNull() ?: 0L,
-          completionCount = parts[9].toIntOrNull() ?: 0,
-          difficulty = SavedQuizDifficulty.entries.firstOrNull { it.name == parts[10] } ?: SavedQuizDifficulty.ItIsOk,
+          questionCount = parts[if (parts.size >= 12) 8 else 7].toIntOrNull() ?: 10,
+          seed = parts[if (parts.size >= 12) 9 else 8].toLongOrNull() ?: 0L,
+          completionCount = parts[if (parts.size >= 12) 10 else 9].toIntOrNull() ?: 0,
+          difficulty = SavedQuizDifficulty.entries.firstOrNull { it.name == parts[if (parts.size >= 12) 11 else 10] } ?: SavedQuizDifficulty.ItIsOk,
         )
       }
       .toList()

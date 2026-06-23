@@ -339,6 +339,7 @@ fun ResultsScreen(
   language: AppLanguage,
   levelProgress: LevelProgressState,
   countryPracticeStats: Map<String, com.example.flaggameandroid.core.model.CountryPracticeStats>,
+  onToggleFavoriteCountry: (String) -> Unit,
   completedAtEpochMillis: Long,
   onPlayAgain: () -> Unit,
   onBackToMenu: () -> Unit,
@@ -397,10 +398,13 @@ fun ResultsScreen(
       AppLanguage.German -> "Antwortübersicht"
     }) {
       quiz.results.forEachIndexed { index, result ->
+        val isFavorite = countryPracticeStats[result.question.correctCountry.code]?.favorite == true
         ResultRow(
           index = index + 1,
           result = result,
           language = language,
+          isFavorite = isFavorite,
+          onToggleFavoriteCountry = onToggleFavoriteCountry,
         )
       }
     }

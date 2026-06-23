@@ -218,6 +218,7 @@ internal fun FlagGameScreenContent(
         language = uiState.settings.language,
         levelProgress = uiState.levelProgress,
         countryPracticeStats = uiState.countryPracticeStats,
+        onToggleFavoriteCountry = onToggleFavoriteCountry,
         completedAtEpochMillis = uiState.lastPlayedAtEpochMillis,
         onPlayAgain = onPlayAgain,
         onBackToMenu = onBackToGameModesClick,

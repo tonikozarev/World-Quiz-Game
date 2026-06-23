@@ -381,6 +381,8 @@ private fun PreviewResultRow() {
             hintStreak = 1,
           ),
         language = AppLanguage.English,
+        isFavorite = false,
+        onToggleFavoriteCountry = {},
         isWeak = true,
       )
     }

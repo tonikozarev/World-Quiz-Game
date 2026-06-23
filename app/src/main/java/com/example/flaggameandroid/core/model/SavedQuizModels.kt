@@ -42,6 +42,7 @@ data class SavedQuizTemplate(
   val source: CreateQuizSource,
   val preset: CreateQuizPreset? = null,
   val selectedCountryCodes: Set<String> = emptySet(),
+  val questionCountryCodes: Set<String> = emptySet(),
   val variants: Set<QuizVariant> = QuizVariant.entries.toSet(),
   val questionCount: Int = 10,
   val seed: Long = 0L,
@@ -50,10 +51,11 @@ data class SavedQuizTemplate(
 )
 
 internal fun SavedQuizTemplate.hasSameQuizConfiguration(other: SavedQuizTemplate): Boolean =
-  source == other.source &&
-    preset == other.preset &&
-    questionCount == other.questionCount &&
-    when (source) {
-      CreateQuizSource.ManualCountries -> selectedCountryCodes == other.selectedCountryCodes
-      CreateQuizSource.PresetFilter -> true
-    }
+  normalizedQuestionCountryCodes() == other.normalizedQuestionCountryCodes()
+
+private fun SavedQuizTemplate.normalizedQuestionCountryCodes(): Set<String> =
+  if (questionCountryCodes.isNotEmpty()) {
+    questionCountryCodes
+  } else {
+    selectedCountryCodes
+  }

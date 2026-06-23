@@ -537,6 +537,11 @@ class FlagGameViewModel(
     if (setup.mode != GameMode.CreateQuiz) return SaveQuizResult.NoOp
 
     val seed = if (setup.createQuizSeed != 0L) setup.createQuizSeed else random.nextLong()
+    val resolvedQuestionCountryCodes =
+      resolveCreateQuizQuestionCountryCodes(
+        setup = setup.copy(createQuizSeed = seed),
+        hintDifficulty = state.settings.hintDifficulty,
+      )
     val exactQuestionCount =
       when (setup.createQuizSource) {
         CreateQuizSource.ManualCountries -> setup.selectedCountryCodes.size.coerceAtLeast(1)
@@ -606,15 +611,11 @@ class FlagGameViewModel(
         source = setup.createQuizSource,
         preset = if (setup.createQuizSource == CreateQuizSource.PresetFilter) setup.createQuizPreset else null,
         selectedCountryCodes = setup.selectedCountryCodes,
+        questionCountryCodes = resolvedQuestionCountryCodes,
         variants = setup.variants,
         questionCount = exactQuestionCount.coerceAtLeast(1),
         seed = seed,
       )
-
-    val sameConfigurationTemplate = state.savedQuizTemplates.firstOrNull { it.hasSameQuizConfiguration(template) }
-    if (sameConfigurationTemplate != null) {
-      return SaveQuizResult.DuplicateConfiguration(existingName = sameConfigurationTemplate.title)
-    }
 
     val normalizedTargetName = template.title.trim().lowercase()
     val sameNameTemplate = state.savedQuizTemplates.firstOrNull { it.title.trim().lowercase() == normalizedTargetName }
@@ -623,6 +624,12 @@ class FlagGameViewModel(
         existingTemplateId = sameNameTemplate.id,
         existingName = sameNameTemplate.title,
       )
+    }
+
+    val sameConfigurationTemplate =
+      state.savedQuizTemplates.firstOrNull { it.hasSameQuizConfiguration(template) }
+    if (sameConfigurationTemplate != null && sameConfigurationTemplate.id != replaceTemplateId) {
+      return SaveQuizResult.DuplicateConfiguration(existingName = sameConfigurationTemplate.title)
     }
 
     updateStateAndPersistProgress { current ->
@@ -645,6 +652,23 @@ class FlagGameViewModel(
         AppLanguage.German -> "\"${template.title}\" wurde gespeichert."
       },
     )
+  }
+
+  private fun resolveCreateQuizQuestionCountryCodes(
+    setup: SetupState,
+    hintDifficulty: HintDifficulty,
+  ): Set<String> {
+    val quiz =
+      buildStartedQuizState(
+        setup = setup,
+        countries = countries,
+        questionGenerator = questionGenerator,
+        hintDifficulty = hintDifficulty,
+        random = Random(setup.createQuizSeed),
+        hintCount = 0,
+        displayName = _uiState.value.profile.displayName,
+      )
+    return quiz.questions.map { it.correctCountry.code }.toSet()
   }
 
   fun onRemoveSavedQuizTemplate(templateId: String) {

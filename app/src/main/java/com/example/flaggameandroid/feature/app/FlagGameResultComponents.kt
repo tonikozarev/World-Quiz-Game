@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -68,6 +69,8 @@ internal fun ResultRow(
   index: Int,
   result: QuestionResult,
   language: AppLanguage,
+  isFavorite: Boolean,
+  onToggleFavoriteCountry: (String) -> Unit,
   isWeak: Boolean = false,
 ) {
   val background =
@@ -103,7 +106,7 @@ internal fun ResultRow(
     modifier = Modifier.fillMaxWidth(),
   ) {
     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
           text =
             when (language) {
@@ -114,6 +117,16 @@ internal fun ResultRow(
           style = MaterialTheme.typography.titleMedium,
           modifier = Modifier.weight(1f),
         )
+        TextButton(
+          onClick = { onToggleFavoriteCountry(result.question.correctCountry.code) },
+          contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+        ) {
+          Text(
+            text = if (isFavorite) "★" else "☆",
+            style = MaterialTheme.typography.headlineSmall,
+            color = if (isFavorite) AccentGreen else MaterialTheme.colorScheme.onSurface,
+          )
+        }
       }
       if (isWeak) {
         Text(
