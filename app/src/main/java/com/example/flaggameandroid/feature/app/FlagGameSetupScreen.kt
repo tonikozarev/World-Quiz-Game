@@ -132,8 +132,15 @@ fun SetupScreen(
             modifier = Modifier.fillMaxWidth(),
           )
         }
+        val playerCount = setup.playerNames.size
+        val showRemovePlayer = playerCount > 2
+        val showAddPlayer = playerCount < 5
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-          OutlinedButton(onClick = onRemovePlayer, modifier = Modifier.weight(1f)) {
+          OutlinedButton(
+            onClick = onRemovePlayer,
+            enabled = showRemovePlayer,
+            modifier = Modifier.weight(1f),
+          ) {
             Text(
               when (language) {
                 AppLanguage.English -> "Remove"
@@ -142,7 +149,11 @@ fun SetupScreen(
               },
             )
           }
-          Button(onClick = onAddPlayer, modifier = Modifier.weight(1f)) {
+          Button(
+            onClick = onAddPlayer,
+            enabled = showAddPlayer,
+            modifier = Modifier.weight(1f),
+          ) {
             Text(
               when (language) {
                 AppLanguage.English -> "Add player"
