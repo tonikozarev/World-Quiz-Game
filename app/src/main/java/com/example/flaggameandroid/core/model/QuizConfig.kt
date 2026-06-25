@@ -6,6 +6,7 @@ data class QuizConfig(
   val selectedContinents: Set<String> = emptySet(),
   val questionCount: Int,
   val speedRunSecondsPerAnswer: Int = 3,
+  val countdownEnabled: Boolean = false,
   val surpriseMe: Boolean = false,
   val allInType: AllInType? = null,
   val hintDifficulty: HintDifficulty = HintDifficulty.Medium,

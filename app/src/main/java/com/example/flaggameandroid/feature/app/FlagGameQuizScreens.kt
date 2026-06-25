@@ -81,8 +81,8 @@ fun QuizScreen(
   var showQuizInfo by remember { mutableStateOf(false) }
   var nowMillis by remember { mutableStateOf(System.currentTimeMillis()) }
   BackHandler { showQuitDialog = true }
-  LaunchedEffect(quiz.mode, quiz.startedAtEpochMillis, quiz.speedRunPenaltySeconds, quiz.speedRunSecondsPerAnswer, quiz.questions.size) {
-    if (quiz.mode == GameMode.SpeedRun && quiz.startedAtEpochMillis > 0L) {
+  LaunchedEffect(quiz.countdownEnabled, quiz.startedAtEpochMillis, quiz.speedRunPenaltySeconds, quiz.speedRunSecondsPerAnswer, quiz.questions.size) {
+    if (quiz.countdownEnabled && quiz.startedAtEpochMillis > 0L) {
       while (true) {
         nowMillis = System.currentTimeMillis()
         if (speedRunRemainingMillis(quiz, nowMillis) <= 0L) {
@@ -97,8 +97,9 @@ fun QuizScreen(
   val canGoForward = quiz.currentQuestionIndex < quiz.questions.lastIndex
   val unansweredQuestions = quiz.questionStates.mapIndexedNotNull { index, state -> if (state.status == QuestionStatus.Unanswered) index + 1 else null }
   val skippedQuestions = quiz.questionStates.mapIndexedNotNull { index, state -> if (state.status == QuestionStatus.Skipped) index + 1 else null }
+  val canJump = skippedQuestions.isNotEmpty() || unansweredQuestions.isNotEmpty()
   val speedRunElapsedLabel =
-    if (quiz.mode == GameMode.SpeedRun) {
+    if (quiz.countdownEnabled) {
       formatElapsedTime(speedRunRemainingMillis(quiz, nowMillis))
     } else {
       null
@@ -310,7 +311,7 @@ fun QuizScreen(
       canUseHint = quiz.currentPlayer.hintPoints >= 1 && quiz.currentQuestionState.hintUses < 2 && !quiz.currentQuestionState.locked,
       onUseHint = onUseHint,
       unskipLabel = localizedUnskipButtonLabel(language),
-      canUnskip = skippedQuestions.isNotEmpty(),
+      canUnskip = canJump,
       onUnskipQuestion = onUnskipQuestion,
       verifyLabel = if (quiz.mode == GameMode.Training && question.variant == QuizVariant.TypeCountryName) localizedVerifyButtonLabel(language) else null,
       canVerify = quiz.typedAnswer.isNotBlank() && !isTrainingLocked,
@@ -353,20 +354,23 @@ fun ResultsScreen(
       LevelUpBanner(level = levelProgress.level, language = language, onLevelUpSeen = onLevelUpSeen)
     }
 
-    if (quiz.mode == GameMode.SpeedRun) {
-      val speedRunStartTime =
-        java.time.Instant.ofEpochMilli(quiz.startedAtEpochMillis)
-          .atZone(java.time.ZoneId.systemDefault())
-          .toLocalTime()
-          .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+    if (quiz.countdownEnabled) {
+      val speedRunTimerLabel =
+        when (language) {
+          AppLanguage.English -> "Timer"
+          AppLanguage.Bulgarian -> "Таймер"
+          AppLanguage.German -> "Timer"
+        }
+      val speedRunStartBudget = formatElapsedTime(speedRunTotalBudgetMillis(quiz))
+      val speedRunUsedAtFinish = formatElapsedTime(speedRunElapsedMillis(quiz, completedAtEpochMillis))
       val speedRunResultLabel =
-        "${localizedSpeedRunTimeStartLabel(language)}: $speedRunStartTime | ${localizedSpeedRunTimeLeftLabel(language)}: ${formatElapsedTime(speedRunRemainingMillis(quiz, completedAtEpochMillis))}"
+        "$speedRunTimerLabel: $speedRunUsedAtFinish / $speedRunStartBudget minutes"
       SectionCard(
         title =
           if (quiz.timedOut) {
             localizedSpeedRunGameOverLabel(language)
           } else {
-            cleanModeTitle(GameMode.SpeedRun, language)
+            cleanModeTitle(quiz.mode ?: GameMode.SpeedRun, language)
           },
       ) {
         Text(

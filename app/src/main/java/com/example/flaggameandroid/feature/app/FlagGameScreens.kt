@@ -82,8 +82,8 @@ fun FlagGameRoute(
     onBackToMenu = resolvedViewModel::onBackToMenu,
     onBackToGameModes = resolvedViewModel::onBackToGameModes,
     onRefreshDailyChallengeAvailability = resolvedViewModel::refreshDailyChallengeAvailability,
-  onHintDifficultySelected = resolvedViewModel::onHintDifficultySelected,
-  onLanguageSelected = resolvedViewModel::onLanguageSelected,
+    onHintDifficultySelected = resolvedViewModel::onHintDifficultySelected,
+    onLanguageSelected = resolvedViewModel::onLanguageSelected,
     onReminderEnabledChanged = { enabled ->
       resolvedViewModel.onReminderEnabledChanged(enabled)
       if (enabled &&
@@ -105,6 +105,8 @@ fun FlagGameRoute(
     onTriggerTestingReminderClick = resolvedViewModel::onTriggerTestingReminderClicked,
     onVariantToggled = resolvedViewModel::onVariantToggled,
     onContinentToggled = resolvedViewModel::onContinentToggled,
+    onWorldFlagsHardcoreToggled = resolvedViewModel::onWorldFlagsHardcoreToggled,
+    onWorldFlagsTimerToggled = resolvedViewModel::onWorldFlagsTimerToggled,
     onQuestionCountChanged = resolvedViewModel::onQuestionCountChanged,
     onSpeedRunSecondsChanged = resolvedViewModel::onSpeedRunSecondsChanged,
     onSurpriseMeClicked = resolvedViewModel::onSurpriseMeClicked,

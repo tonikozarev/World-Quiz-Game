@@ -55,6 +55,7 @@ class GameModeRegressionTest {
       listOf(
         GameMode.Training,
         GameMode.DailyChallenge,
+        GameMode.WorldFlags,
         GameMode.Continents,
         GameMode.SpeedRun,
         GameMode.LocalMultiplayer,

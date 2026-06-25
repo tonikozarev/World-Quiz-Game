@@ -8,6 +8,7 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
@@ -298,5 +299,70 @@ class FlagGameQuizBootstrapLogicTest {
     assertTrue(quiz.startedAtEpochMillis > 0L)
     assertEquals(10, quiz.totalQuestions)
     assertEquals(4, quiz.currentPlayer.hintPoints)
+  }
+
+  @Test
+  fun buildStartedQuizState_worldFlagsHardcoreUsesAllCountriesAndNoTimerByDefault() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.WorldFlags,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        worldFlagsHardcoreEnabled = true,
+        worldFlagsTimerEnabled = false,
+        variants = setOf(QuizVariant.FlagToCountry, QuizVariant.CountryToFlag),
+      )
+
+    val quiz =
+      buildStartedQuizState(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(41)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(42),
+        hintCount = 2,
+        displayName = "Tony",
+      )
+
+    assertEquals(GameMode.WorldFlags, quiz.mode)
+    assertEquals(countries.size, quiz.totalQuestions)
+    assertEquals(0, quiz.speedRunSecondsPerAnswer)
+    assertFalse(quiz.countdownEnabled)
+  }
+
+  @Test
+  fun buildStartedQuizState_worldFlagsTimerEnablesCountdownMode() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.WorldFlags,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        selectedContinents = setOf("Europe"),
+        worldFlagsTimerEnabled = true,
+        speedRunSecondsPerAnswerInput = "7",
+        variants = setOf(QuizVariant.FlagToCountry),
+      )
+
+    val quiz =
+      buildStartedQuizState(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(43)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(44),
+        hintCount = 2,
+        displayName = "Tony",
+      )
+
+    assertEquals(GameMode.WorldFlags, quiz.mode)
+    assertTrue(quiz.countdownEnabled)
+    assertEquals(7, quiz.speedRunSecondsPerAnswer)
+    assertTrue(quiz.totalQuestions > 0)
   }
 }

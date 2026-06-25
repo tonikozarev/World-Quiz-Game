@@ -16,6 +16,10 @@ enum class GameMode(
     title = "Continents",
     description = "Build a quiz from the continents you want to practice.",
   ),
+  WorldFlags(
+    title = "World Flags",
+    description = "Guess the country/flag.",
+  ),
   DailyChallenge(
     title = "Daily challenge",
     description = "One short themed quiz per UTC day. The challenge stays the same until midnight UTC.",
@@ -42,6 +46,7 @@ internal fun visibleGameModes(): List<GameMode> =
   listOf(
     GameMode.Training,
     GameMode.DailyChallenge,
+    GameMode.WorldFlags,
     GameMode.Continents,
     GameMode.SpeedRun,
     GameMode.LocalMultiplayer,
@@ -59,6 +64,7 @@ internal fun startQuizModes(): List<GameMode> =
 
 internal fun gameModesHubModes(): List<GameMode> =
   listOf(
+    GameMode.WorldFlags,
     GameMode.Continents,
     GameMode.SpeedRun,
     GameMode.AllIn,

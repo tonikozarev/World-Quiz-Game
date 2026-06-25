@@ -75,6 +75,8 @@ data class SetupState(
   val mode: GameMode = GameMode.Training,
   val variants: Set<QuizVariant> = QuizVariant.entries.toSet(),
   val selectedContinents: Set<String> = emptySet(),
+  val worldFlagsHardcoreEnabled: Boolean = false,
+  val worldFlagsTimerEnabled: Boolean = false,
   val createQuizSource: CreateQuizSource = CreateQuizSource.PresetFilter,
   val createQuizPreset: CreateQuizPreset = CreateQuizPreset.TwoColors,
   val selectedCountryCodes: Set<String> = emptySet(),
@@ -95,13 +97,19 @@ data class SetupState(
     get() = speedRunSecondsPerAnswerInput.toIntOrNull()
 
   val needsContinents: Boolean
-    get() = mode == GameMode.Continents || mode == GameMode.SpeedRun || (mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.PresetFilter)
+    get() = mode == GameMode.Continents || mode == GameMode.SpeedRun || mode == GameMode.WorldFlags || (mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.PresetFilter)
 
   val needsPlayers: Boolean
     get() = mode == GameMode.LocalMultiplayer
 
   val needsManualCountries: Boolean
     get() = mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.ManualCountries
+
+  val usesWorldFlagsHardcore: Boolean
+    get() = mode == GameMode.WorldFlags && worldFlagsHardcoreEnabled
+
+  val usesWorldFlagsTimer: Boolean
+    get() = mode == GameMode.WorldFlags && worldFlagsTimerEnabled
 }
 
 enum class QuestionStatus {
@@ -139,6 +147,7 @@ data class QuizState(
   val startedAtEpochMillis: Long = 0L,
   val speedRunSecondsPerAnswer: Int = 5,
   val speedRunPenaltySeconds: Int = 0,
+  val countdownEnabled: Boolean = false,
   val timedOut: Boolean = false,
   val poolSource: com.example.flaggameandroid.core.model.QuizPoolSource = com.example.flaggameandroid.core.model.QuizPoolSource.Standard,
   val dailyChallengeTheme: com.example.flaggameandroid.core.model.DailyChallengeTheme? = null,

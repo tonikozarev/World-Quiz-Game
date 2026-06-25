@@ -215,15 +215,17 @@ private fun WeekdayStreakStrip(
   modifier: Modifier = Modifier,
 ) {
   val weekDays = weekActivityDays(activityCalendar = activityCalendar)
+  val todayDayKey = localDayKey(System.currentTimeMillis())
   Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
     weekDays.forEach { record ->
+      val fillColor =
+        when {
+          record.dayKey > todayDayKey -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+          record.quizzesCompleted > 0 -> AccentGreen.copy(alpha = 0.92f)
+          else -> Color(0xFFB84A4A)
+        }
       Surface(
-        color =
-          if (record.quizzesCompleted > 0) {
-            AccentGreen.copy(alpha = 0.92f)
-          } else {
-            MaterialTheme.colorScheme.surfaceVariant
-          },
+        color = fillColor,
         shape = androidx.compose.foundation.shape.CircleShape,
         modifier = Modifier.weight(1f),
       ) {

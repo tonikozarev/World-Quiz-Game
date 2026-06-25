@@ -5,14 +5,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -51,14 +54,14 @@ internal fun PlayerResultRow(
           },
       )
       if (showHints) {
-        Text(
-          text =
-            when (language) {
-              AppLanguage.English -> "Hint points available: ${player.hintPoints}"
-              AppLanguage.Bulgarian -> "Налични жокери: ${player.hintPoints}"
-              AppLanguage.German -> "Verfügbare Hinweise: ${player.hintPoints}"
-            },
-        )
+      Text(
+        text =
+          when (language) {
+            AppLanguage.English -> "Gained hint points: ${player.earnedHintPoints}"
+            AppLanguage.Bulgarian -> "Спечелени жокер точки: ${player.earnedHintPoints}"
+            AppLanguage.German -> "Erhaltene Hinweis-Punkte: ${player.earnedHintPoints}"
+          },
+      )
       }
     }
   }
@@ -100,13 +103,23 @@ internal fun ResultRow(
     } else {
       result.question.options.filterNot { it.code == result.question.correctCountry.code }
     }
+  val netPointsInternal =
+    when {
+      !result.isCorrect || result.hintUses >= 2 -> 0
+      result.hintUses == 1 -> 1
+      else -> 2
+    }
   Surface(
     color = background,
     shape = RoundedCornerShape(8.dp),
     modifier = Modifier.fillMaxWidth(),
   ) {
     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
         Text(
           text =
             when (language) {
@@ -119,11 +132,12 @@ internal fun ResultRow(
         )
         TextButton(
           onClick = { onToggleFavoriteCountry(result.question.correctCountry.code) },
-          contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+          contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+          modifier = Modifier.size(28.dp),
         ) {
           Text(
             text = if (isFavorite) "★" else "☆",
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
             color = if (isFavorite) AccentGreen else MaterialTheme.colorScheme.onSurface,
           )
         }
@@ -179,6 +193,14 @@ internal fun ResultRow(
             AppLanguage.English -> "Used a hint? ${if (result.hintUsed) "Yes" else "No"}"
             AppLanguage.Bulgarian -> "Ползван жокер? ${if (result.hintUsed) "Да" else "Не"}"
             AppLanguage.German -> "Hinweis verwendet? ${if (result.hintUsed) "Ja" else "Nein"}"
+          },
+      )
+      Text(
+        text =
+          when (language) {
+            AppLanguage.English -> "NET points: ${formatScore(netPointsInternal)}"
+            AppLanguage.Bulgarian -> "NET точки: ${formatScore(netPointsInternal)}"
+            AppLanguage.German -> "NET-Punkte: ${formatScore(netPointsInternal)}"
           },
       )
     }

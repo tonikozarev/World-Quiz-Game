@@ -186,7 +186,7 @@ class FlagGameViewModelTest {
     val player = viewModel.uiState.value.quiz.players.first()
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
     assertEquals(1, player.hintPoints)
-    assertEquals(0, player.earnedHintPoints)
+    assertEquals(1, player.earnedHintPoints)
     assertEquals(1, viewModel.uiState.value.hintCount)
   }
 
@@ -264,7 +264,7 @@ class FlagGameViewModelTest {
     val player = state.quiz.players.first()
     assertEquals(AppScreen.Results, state.screen)
     assertEquals(11, player.score)
-    assertEquals(0, player.earnedHintPoints)
+    assertEquals(1, player.earnedHintPoints)
     assertEquals(5, state.hintCount)
     assertEquals(5, player.correctStreak)
     assertEquals(4, state.quiz.results[4].hintStreak)

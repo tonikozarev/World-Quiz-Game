@@ -115,7 +115,7 @@ internal fun localizedQuizInfoButtonLabel(language: AppLanguage): String =
   tr(language, "Info \uD835\uDC8A", "Инфо \uD835\uDC8A", "Info \uD835\uDC8A")
 
 internal fun localizedUnskipButtonLabel(language: AppLanguage): String =
-  tr(language, "Unskip \u21B7", "Върни \u21B7", "Zurück \u21B7")
+  tr(language, "Jump \u21B7", "Скочи \u21B7", "Springen \u21B7")
 
 internal fun formatScore(score: Int): String =
   if (score % 2 == 0) (score / 2).toString() else "${score / 2}.5"
@@ -174,6 +174,7 @@ internal fun displayModeTitle(
     GameMode.Training -> cleanModeTitle(GameMode.Training, language)
     GameMode.CreateQuiz -> cleanModeTitle(GameMode.CreateQuiz, language)
     GameMode.Continents -> cleanModeTitle(GameMode.Continents, language)
+    GameMode.WorldFlags -> cleanModeTitle(GameMode.WorldFlags, language)
     GameMode.DailyChallenge -> cleanModeTitle(GameMode.DailyChallenge, language)
     GameMode.MistakeReview -> cleanModeTitle(GameMode.MistakeReview, language)
     GameMode.SpeedRun -> cleanModeTitle(GameMode.SpeedRun, language)
@@ -202,12 +203,12 @@ internal fun speedRunElapsedMillis(
   quiz: QuizState,
   nowMillis: Long,
 ): Long {
-  if (quiz.mode != GameMode.SpeedRun || quiz.startedAtEpochMillis <= 0L) return 0L
+  if (!quiz.countdownEnabled || quiz.startedAtEpochMillis <= 0L) return 0L
   return (nowMillis - quiz.startedAtEpochMillis + (quiz.speedRunPenaltySeconds * 1000L)).coerceAtLeast(0L)
 }
 
 internal fun speedRunTotalBudgetMillis(quiz: QuizState): Long {
-  if (quiz.mode != GameMode.SpeedRun || quiz.questions.isEmpty()) return 0L
+  if (!quiz.countdownEnabled || quiz.questions.isEmpty()) return 0L
   val secondsPerAnswer = quiz.speedRunSecondsPerAnswer.coerceAtLeast(1)
   val totalSeconds =
     quiz.questions.sumOf { question ->
@@ -236,7 +237,7 @@ internal fun localizedSpeedRunTimeLeftLabel(language: AppLanguage): String =
   tr(language, "Time left", "Оставащо време", "Verbleibende Zeit")
 
 internal fun localizedSpeedRunTimeStartLabel(language: AppLanguage): String =
-  tr(language, "Time start", "Начало", "Startzeit")
+  tr(language, "Time to complete", "Начало", "Startzeit")
 
 internal fun localizedSpeedRunGameOverLabel(language: AppLanguage): String =
   tr(language, "Game over", "Край на играта", "Spiel vorbei")

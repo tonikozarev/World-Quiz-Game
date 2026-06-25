@@ -68,7 +68,7 @@ internal fun buildQuizCompletionSummary(
       0
     }
   val shouldProgressLevel =
-    (quiz.mode == GameMode.Continents || quiz.mode == GameMode.SpeedRun || quiz.mode == GameMode.AllIn) && !qualifiesForPerfectNoBluffLevel
+    (quiz.mode == GameMode.Continents || quiz.mode == GameMode.WorldFlags || quiz.mode == GameMode.SpeedRun || quiz.mode == GameMode.AllIn) && !qualifiesForPerfectNoBluffLevel
   val eligibleQuizCompletions = if (shouldProgressLevel && completedResults.size >= 10) 1 else 0
   val progressResult =
     advanceLevelProgress(
@@ -120,7 +120,7 @@ internal fun buildQuizCompletionSummary(
   val totalBonusHints = progressResult.bonusHints + noBluffBonusHints
   val newHintCount = state.hintCount + releasedHints + totalBonusHints
   val finalPlayers =
-    scoredPlayers.map { player -> player.copy(hintPoints = newHintCount, earnedHintPoints = 0) }
+    scoredPlayers.map { player -> player.copy(hintPoints = newHintCount) }
   val updatedCountryPracticeStats =
     updateCountryPracticeStats(
       previous = state.countryPracticeStats,

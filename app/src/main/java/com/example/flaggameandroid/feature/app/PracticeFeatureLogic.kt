@@ -54,6 +54,7 @@ internal fun resolveQuizPool(
       GameMode.CreateQuiz -> createQuizPool(setup, countries)
       GameMode.Continents,
       GameMode.SpeedRun,
+      GameMode.WorldFlags,
       GameMode.LocalMultiplayer,
       GameMode.AllIn,
       GameMode.Training -> countryPoolFor(setup, countries)

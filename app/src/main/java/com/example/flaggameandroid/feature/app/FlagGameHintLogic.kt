@@ -25,7 +25,7 @@ internal fun applyHintToCurrentQuestion(
   val isTypedQuestion = question.variant == QuizVariant.TypeCountryName
   val firstHint = currentDraft.hintUses == 0
   val speedRunPenaltySeconds =
-    if (quiz.mode == GameMode.SpeedRun) {
+    if (quiz.countdownEnabled) {
       if (firstHint) 1 else 2
     } else {
       0

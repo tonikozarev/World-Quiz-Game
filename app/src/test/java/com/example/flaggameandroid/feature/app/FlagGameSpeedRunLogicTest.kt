@@ -35,6 +35,7 @@ class FlagGameSpeedRunLogicTest {
           ),
         startedAtEpochMillis = 1_000L,
         speedRunSecondsPerAnswer = 3,
+        countdownEnabled = true,
       )
 
     assertEquals(9_000L, speedRunTotalBudgetMillis(quiz))
@@ -59,6 +60,7 @@ class FlagGameSpeedRunLogicTest {
         questionStates = List(10) { QuestionDraftState(status = QuestionStatus.Unanswered) },
         startedAtEpochMillis = 1_000L,
         speedRunSecondsPerAnswer = 1,
+        countdownEnabled = true,
       )
 
     assertEquals(15_000L, speedRunTotalBudgetMillis(quiz))

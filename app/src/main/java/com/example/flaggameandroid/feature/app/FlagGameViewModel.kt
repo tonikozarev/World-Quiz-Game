@@ -353,6 +353,14 @@ class FlagGameViewModel(
     updateState { it.withSpeedRunSecondsPerAnswerInput(seconds) }
   }
 
+  fun onWorldFlagsHardcoreToggled() {
+    updateState { it.withWorldFlagsHardcoreToggled(countries) }
+  }
+
+  fun onWorldFlagsTimerToggled() {
+    updateState { it.withWorldFlagsTimerEnabledToggled() }
+  }
+
   fun onSurpriseMeClicked() {
     updateState { it.withSurpriseMeToggled() }
   }
@@ -465,7 +473,7 @@ class FlagGameViewModel(
   fun onSpeedRunTimeExpired() {
     val state = _uiState.value
     val quiz = state.quiz
-    if (quiz.mode != GameMode.SpeedRun || quiz.timedOut) return
+    if (!quiz.countdownEnabled || quiz.timedOut) return
     updateState {
       it.copy(
         screen = AppScreen.Results,

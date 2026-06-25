@@ -78,7 +78,7 @@ internal fun QuizState.withPreviewAdvancedQuestion(): QuizState {
 
 internal fun QuizState.withNextSkippedQuestionLoaded(): QuizState {
   val committedCurrent = withCurrentQuestionSubmitted() ?: this
-  val targetIndex = committedCurrent.nextSkippedQuestionIndex() ?: return committedCurrent
+  val targetIndex = committedCurrent.nextSkippedQuestionIndex() ?: committedCurrent.nextUnansweredQuestionIndex() ?: return committedCurrent
   return committedCurrent.loadQuestionDraft(targetIndex)
 }
 

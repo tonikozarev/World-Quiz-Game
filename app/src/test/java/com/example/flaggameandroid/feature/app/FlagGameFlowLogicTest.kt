@@ -187,6 +187,53 @@ class FlagGameFlowLogicTest {
   }
 
   @Test
+  fun withNextSkippedQuestionLoaded_fallsBackToNextUnansweredQuestionWhenNoSkippedExists() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.Continents,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        questionCountInput = "3",
+        selectedContinents = setOf("Europe"),
+        variants = setOf(QuizVariant.FlagToCountry),
+      )
+
+    val quiz =
+      buildStartedQuizState(
+        setup = setup,
+        countries = countries,
+        questionGenerator = QuizQuestionGenerator(Random(31)),
+        hintDifficulty = HintDifficulty.Medium,
+        random = Random(32),
+        hintCount = 0,
+        displayName = "Tony",
+      )
+
+    val currentQuestion = quiz.currentQuestion!!
+    val updatedQuiz =
+      quiz.copy(
+        currentQuestionIndex = 0,
+        selectedCountry = currentQuestion.correctCountry,
+        questionStates =
+          quiz.questionStates.replaceAt(
+            0,
+            QuestionDraftState(
+              status = QuestionStatus.Answered,
+              selectedCountry = currentQuestion.correctCountry,
+            ),
+          ),
+      )
+
+    val jumpedQuiz = updatedQuiz.withNextSkippedQuestionLoaded()
+
+    assertEquals(1, jumpedQuiz.currentQuestionIndex)
+    assertEquals(QuestionStatus.Answered, jumpedQuiz.questionStates[0].status)
+  }
+
+  @Test
   fun canFinish_doesNotRequireBeingOnLastQuestionWhenAllQuestionsAreAnswered() {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =

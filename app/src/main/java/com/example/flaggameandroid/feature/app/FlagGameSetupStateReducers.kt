@@ -95,6 +95,23 @@ internal fun FlagGameUiState.withSpeedRunSecondsPerAnswerInput(speedRunSeconds: 
     it.copy(speedRunSecondsPerAnswerInput = speedRunSeconds.filter { char -> char.isDigit() })
   }
 
+internal fun FlagGameUiState.withWorldFlagsHardcoreToggled(countries: List<FlagCountry>): FlagGameUiState {
+  val nextSetup =
+    setup.copy(
+      worldFlagsHardcoreEnabled = !setup.worldFlagsHardcoreEnabled,
+    )
+  return copy(
+    setup = nextSetup,
+    questionCountLimit = questionLimitFor(nextSetup, countries),
+    setupError = null,
+  )
+}
+
+internal fun FlagGameUiState.withWorldFlagsTimerEnabledToggled(): FlagGameUiState =
+  withUpdatedSetup {
+    it.copy(worldFlagsTimerEnabled = !it.worldFlagsTimerEnabled)
+  }
+
 internal fun FlagGameUiState.withSurpriseMeToggled(): FlagGameUiState {
   val surpriseMe = !setup.surpriseMe
   return withUpdatedSetup {

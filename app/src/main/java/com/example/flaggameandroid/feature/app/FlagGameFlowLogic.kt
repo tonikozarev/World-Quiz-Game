@@ -83,6 +83,15 @@ internal fun QuizState.nextSkippedQuestionIndex(): Int? {
   return skippedIndices.firstOrNull { it > currentQuestionIndex } ?: skippedIndices.first()
 }
 
+internal fun QuizState.nextUnansweredQuestionIndex(): Int? {
+  val unansweredIndices =
+    questionStates.mapIndexedNotNull { index, questionState ->
+      if (questionState.status == QuestionStatus.Unanswered) index else null
+    }
+  if (unansweredIndices.isEmpty()) return null
+  return unansweredIndices.firstOrNull { it > currentQuestionIndex } ?: unansweredIndices.first()
+}
+
 internal fun buildQuizResults(
   quiz: QuizState,
   language: AppLanguage,
@@ -166,22 +175,32 @@ internal fun validateSetup(
   if (setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries && setup.selectedCountryCodes.isEmpty()) {
     return "Choose at least one country."
   }
-  if ((setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) && setup.selectedContinents.isEmpty()) {
+  val needsContinents =
+    (setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) ||
+      (setup.mode == GameMode.WorldFlags && !setup.usesWorldFlagsHardcore)
+  if (needsContinents && setup.selectedContinents.isEmpty()) {
     return "Choose at least one continent."
   }
-  if ((setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) && countryPoolFor(setup).size < 4) {
+  if (needsContinents && countryPoolFor(setup).size < 4) {
     return "Choose continents with at least 4 countries."
   }
-  if (setup.mode == GameMode.SpeedRun) {
+  val needsTimer = setup.mode == GameMode.SpeedRun || (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsTimer)
+  if (needsTimer) {
     val secondsPerAnswer = setup.speedRunSecondsPerAnswer ?: return "Write how many seconds each answer should get."
     if (secondsPerAnswer !in 1..10) return "Seconds per answer must be between 1 and 10."
   }
   if (!setup.surpriseMe) {
     val maxQuestions = countryPoolFor(setup).size
     if (setup.mode == GameMode.MistakeReview) return null
+    if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) return null
     val questionCount = setup.questionCount ?: return "Write how many questions you want."
     if (questionCount <= 0) return "Question count must be at least 1."
-    val limit = if (setup.mode == GameMode.Training) 999 else maxQuestions
+    val limit =
+      when {
+        setup.mode == GameMode.Training -> 999
+        setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore -> 195
+        else -> maxQuestions
+      }
     if (questionCount > limit) return "Question count must be between 1 and $limit."
   }
 
@@ -203,26 +222,24 @@ internal fun configFor(
   val variants = setup.variants
 
   val questionCount =
-    if (setup.mode == GameMode.AllIn || setup.usesAllInBase()) {
-      poolSize
-    } else if (setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries) {
-      poolSize
-    } else if (setup.mode == GameMode.DailyChallenge) {
-      (setup.questionCount?.coerceIn(1, minOf(poolSize, 10)) ?: minOf(poolSize, 10)).coerceAtLeast(1)
-    } else if (setup.mode == GameMode.MistakeReview) {
-      mistakeReviewEligibleCountryCount(practiceStats)
-    } else if (setup.mode == GameMode.Training) {
-      if (setup.surpriseMe) {
-        random.nextInt(from = 1, until = 1000)
-      } else {
-        setup.questionCount?.coerceIn(1, 999) ?: 1
-      }
-    } else if (setup.mode == GameMode.SpeedRun) {
-      setup.questionCount?.coerceIn(1, poolSize) ?: 1
-    } else if (setup.surpriseMe) {
-      random.nextInt(from = 1, until = poolSize + 1)
-    } else {
-      setup.questionCount?.coerceIn(1, poolSize) ?: 1
+    when {
+      setup.mode == GameMode.AllIn || setup.usesAllInBase() -> poolSize
+      setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore -> poolSize
+      setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries -> poolSize
+      setup.mode == GameMode.DailyChallenge -> (setup.questionCount?.coerceIn(1, minOf(poolSize, 10)) ?: minOf(poolSize, 10)).coerceAtLeast(1)
+      setup.mode == GameMode.MistakeReview -> mistakeReviewEligibleCountryCount(practiceStats)
+      setup.mode == GameMode.Training ->
+        if (setup.surpriseMe) {
+          random.nextInt(from = 1, until = 1000)
+        } else {
+          setup.questionCount?.coerceIn(1, 999) ?: 1
+        }
+      setup.mode == GameMode.SpeedRun ->
+        setup.questionCount?.coerceIn(1, poolSize) ?: 1
+      setup.mode == GameMode.WorldFlags ->
+        setup.questionCount?.coerceIn(1, poolSize) ?: 1
+      setup.surpriseMe -> random.nextInt(from = 1, until = poolSize + 1)
+      else -> setup.questionCount?.coerceIn(1, poolSize) ?: 1
     }
 
   val players =
@@ -238,6 +255,7 @@ internal fun configFor(
     selectedContinents = setup.selectedContinents,
     questionCount = questionCount,
     speedRunSecondsPerAnswer = setup.speedRunSecondsPerAnswer ?: 3,
+    countdownEnabled = setup.mode == GameMode.SpeedRun || (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsTimer),
     surpriseMe = setup.surpriseMe,
     allInType = setup.allInType,
     hintDifficulty = hintDifficulty,
@@ -261,7 +279,9 @@ internal fun countryPoolFor(
       CreateQuizSource.PresetFilter -> countries.filter { country -> matchesCreateQuizPreset(country, setup.createQuizPreset) }
       CreateQuizSource.ManualCountries -> countries.filter { country -> country.code in setup.selectedCountryCodes }
     }
-  } else if (setup.mode == GameMode.Continents || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) {
+  } else if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) {
+    countries
+  } else if (setup.mode == GameMode.Continents || setup.mode == GameMode.WorldFlags || setup.mode == GameMode.SpeedRun || setup.usesContinentsBase()) {
     countries.filter { it.continent in setup.selectedContinents }
   } else if (setup.mode == GameMode.DailyChallenge || setup.mode == GameMode.MistakeReview) {
     countries
@@ -280,6 +300,8 @@ internal fun questionLimitFor(
     countryPoolFor(setup, countries).size
   } else if (setup.mode == GameMode.MistakeReview) {
     mistakeReviewEligibleCountryCount(practiceStats)
+  } else if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) {
+    countries.size
   } else if (setup.mode == GameMode.DailyChallenge) {
     10
   } else {
