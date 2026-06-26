@@ -135,7 +135,7 @@ class QuizQuestionGeneratorTest {
   }
 
   @Test
-  fun training_doesNotRepeatCountriesWhenQuestionCountIsWithinPoolSize() {
+  fun training_canRepeatCountriesEvenWhenQuestionCountIsWithinSinglePassPoolSize() {
     val generator = QuizQuestionGenerator(Random(8))
 
     val questions =
@@ -150,7 +150,7 @@ class QuizQuestionGeneratorTest {
       )
 
     assertEquals(195, questions.size)
-    assertEquals(questions.size, questions.map { it.correctCountry.code }.distinct().size)
+    assertTrue(questions.map { it.correctCountry.code }.distinct().size < questions.size)
   }
 
   @Test

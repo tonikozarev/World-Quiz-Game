@@ -48,6 +48,7 @@ internal fun QuizActionButtonsRow(
   infoLabel: String,
   showInfo: Boolean,
   onInfoClick: () -> Unit,
+  showHintButton: Boolean,
   hintLabel: String,
   canUseHint: Boolean,
   onUseHint: () -> Unit,
@@ -65,19 +66,21 @@ internal fun QuizActionButtonsRow(
       modifier = Modifier.weight(1f),
       onClick = onInfoClick,
     )
-    OutlinedButton(
-      onClick = onUseHint,
-      enabled = canUseHint,
-      modifier = Modifier.weight(1f),
-      contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
-    ) {
-      Text(
-        text = hintLabel,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.SemiBold,
-        maxLines = 1,
-        softWrap = false,
-      )
+    if (showHintButton) {
+      OutlinedButton(
+        onClick = onUseHint,
+        enabled = canUseHint,
+        modifier = Modifier.weight(1f),
+        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
+      ) {
+        Text(
+          text = hintLabel,
+          fontSize = 12.sp,
+          fontWeight = FontWeight.SemiBold,
+          maxLines = 1,
+          softWrap = false,
+        )
+      }
     }
     OutlinedButton(
       onClick = onUnskipQuestion,

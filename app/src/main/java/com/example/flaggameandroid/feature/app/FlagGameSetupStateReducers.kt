@@ -151,9 +151,9 @@ internal fun FlagGameUiState.withCreateQuizManualHardcoreToggled(countries: List
   val nextSetup =
     setup.copy(
       createQuizManualHardcoreEnabled = enabled,
-      selectedCountryCodes = if (enabled) countries.map { it.code }.toSet() else setup.selectedCountryCodes,
+      createQuizTrainingEnabled = false,
       createQuizSeed = 0L,
-      questionCountInput = if (enabled) countries.size.toString() else setup.selectedCountryCodes.size.toString(),
+      questionCountInput = "1",
       surpriseMe = false,
     )
   return copy(
@@ -167,6 +167,23 @@ internal fun FlagGameUiState.withCreateQuizManualTimerEnabledToggled(): FlagGame
   withUpdatedSetup {
     it.copy(createQuizManualTimerEnabled = !it.createQuizManualTimerEnabled)
   }
+
+internal fun FlagGameUiState.withCreateQuizTrainingToggled(countries: List<FlagCountry>): FlagGameUiState {
+  val enabled = !setup.createQuizTrainingEnabled
+  val nextSetup =
+    setup.copy(
+      createQuizTrainingEnabled = enabled,
+      createQuizManualHardcoreEnabled = false,
+      createQuizSeed = 0L,
+      surpriseMe = false,
+      questionCountInput = "1",
+    )
+  return copy(
+    setup = nextSetup,
+    questionCountLimit = questionLimitFor(nextSetup, countries),
+    setupError = null,
+  )
+}
 
 internal fun FlagGameUiState.withCreateQuizAllCountriesToggled(countries: List<FlagCountry>): FlagGameUiState {
   val allCodes = countries.map { it.code }.toSet()

@@ -172,7 +172,13 @@ internal fun validateSetup(
   countryPoolFor: (SetupState) -> List<FlagCountry>,
 ): String? {
   if (setup.variants.isEmpty()) return "Choose at least one question variant."
-  if (setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries && setup.selectedCountryCodes.isEmpty()) {
+  if (
+    setup.mode == GameMode.CreateQuiz &&
+    !setup.usesCreateQuizTraining &&
+    !setup.usesCreateQuizManualHardcore &&
+    setup.createQuizSource == CreateQuizSource.ManualCountries &&
+    setup.selectedCountryCodes.isEmpty()
+  ) {
     return "Choose at least one country."
   }
   val needsContinents =
@@ -189,18 +195,20 @@ internal fun validateSetup(
       (setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualTimer)
   if (needsTimer) {
     val secondsPerAnswer = setup.speedRunSecondsPerAnswer ?: return "Write how many seconds each answer should get."
-    if (secondsPerAnswer !in 1..10) return "Seconds per answer must be between 1 and 10."
+    if (secondsPerAnswer !in 1..60) return "Seconds per answer must be between 1 and 60."
   }
   if (!setup.surpriseMe) {
     val maxQuestions = countryPoolFor(setup).size
     if (setup.mode == GameMode.MistakeReview) return null
     if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) return null
-    if (setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries) return null
+    if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.usesCreateQuizManualHardcore) return null
+    if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.createQuizSource == CreateQuizSource.ManualCountries) return null
     val questionCount = setup.questionCount ?: return "Write how many questions you want."
     if (questionCount <= 0) return "Question count must be at least 1."
     val limit =
       when {
         setup.mode == GameMode.Training -> 999
+        setup.usesCreateQuizTraining -> 999
         setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore -> 195
         else -> maxQuestions
       }
@@ -227,7 +235,8 @@ internal fun configFor(
   val questionCount =
     when {
       setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore -> poolSize
-      setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries -> poolSize
+      setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.usesCreateQuizManualHardcore -> poolSize
+      setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.createQuizSource == CreateQuizSource.ManualCountries -> poolSize
       setup.mode == GameMode.DailyChallenge -> (setup.questionCount?.coerceIn(1, minOf(poolSize, 10)) ?: minOf(poolSize, 10)).coerceAtLeast(1)
       setup.mode == GameMode.MistakeReview -> mistakeReviewEligibleCountryCount(practiceStats)
       setup.mode == GameMode.Training ->
@@ -236,6 +245,7 @@ internal fun configFor(
         } else {
           setup.questionCount?.coerceIn(1, 999) ?: 1
         }
+      setup.usesCreateQuizTraining -> setup.questionCount?.coerceIn(1, 999) ?: 1
       setup.mode == GameMode.WorldFlags ->
         setup.questionCount?.coerceIn(1, poolSize) ?: 1
       setup.mode == GameMode.LocalMultiplayer ->
@@ -252,7 +262,7 @@ internal fun configFor(
     }
 
   return QuizConfig(
-    mode = setup.mode,
+    mode = if (setup.usesCreateQuizTraining) GameMode.Training else setup.mode,
     variants = variants,
     selectedContinents = setup.selectedContinents,
     questionCount = questionCount,
@@ -279,7 +289,9 @@ internal fun countryPoolFor(
   countries: List<FlagCountry>,
 ): List<FlagCountry> =
   if (setup.mode == GameMode.CreateQuiz) {
-    when (setup.createQuizSource) {
+    if (setup.usesCreateQuizTraining) {
+      countries
+    } else when (setup.createQuizSource) {
       CreateQuizSource.PresetFilter -> {
         val selectedPresets = setup.createQuizPresets.ifEmpty { setOf(setup.createQuizPreset) }
         countries.filter { country -> selectedPresets.any { preset -> matchesCreateQuizPreset(country, preset) } }
@@ -309,6 +321,10 @@ internal fun questionLimitFor(
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
 ): Int =
   if (setup.mode == GameMode.Training) {
+    999
+  } else if (setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualHardcore) {
+    countries.size
+  } else if (setup.usesCreateQuizTraining) {
     999
   } else if (setup.mode == GameMode.CreateQuiz) {
     countryPoolFor(setup, countries).size

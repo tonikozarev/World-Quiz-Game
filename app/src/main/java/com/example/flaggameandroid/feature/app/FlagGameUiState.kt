@@ -78,6 +78,7 @@ data class SetupState(
   val instantCorrectionEnabled: Boolean = true,
   val worldFlagsHardcoreEnabled: Boolean = false,
   val worldFlagsTimerEnabled: Boolean = false,
+  val createQuizTrainingEnabled: Boolean = false,
   val createQuizManualHardcoreEnabled: Boolean = false,
   val createQuizManualTimerEnabled: Boolean = false,
   val createQuizSource: CreateQuizSource = CreateQuizSource.PresetFilter,
@@ -118,7 +119,10 @@ data class SetupState(
     get() = mode == GameMode.WorldFlags && worldFlagsTimerEnabled
 
   val usesCreateQuizManualHardcore: Boolean
-    get() = mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.ManualCountries && createQuizManualHardcoreEnabled
+    get() = mode == GameMode.CreateQuiz && createQuizManualHardcoreEnabled
+
+  val usesCreateQuizTraining: Boolean
+    get() = mode == GameMode.CreateQuiz && createQuizTrainingEnabled
 
   val usesCreateQuizManualTimer: Boolean
     get() = mode == GameMode.CreateQuiz && createQuizManualTimerEnabled
@@ -157,6 +161,7 @@ data class QuizState(
   val hiddenOptionCodes: Set<String> = emptySet(),
   val typedHintPrefix: String? = null,
   val hintUsedOnCurrentQuestion: Boolean = false,
+  val hintsAllowed: Boolean = true,
   val startedAtEpochMillis: Long = 0L,
   val speedRunSecondsPerAnswer: Int = 5,
   val speedRunPenaltySeconds: Int = 0,

@@ -59,6 +59,7 @@ internal fun buildStartedQuizState(
     variants = config.variants,
     selectedContinents = setup.selectedContinents,
     instantCorrectionEnabled = setup.instantCorrectionEnabled,
+    hintsAllowed = !setup.usesCreateQuizManualHardcore,
     questions = questions,
     questionStates = questionStates,
     players = players,

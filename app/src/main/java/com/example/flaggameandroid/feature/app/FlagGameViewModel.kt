@@ -381,6 +381,10 @@ class FlagGameViewModel(
     updateState { it.withCreateQuizManualTimerEnabledToggled() }
   }
 
+  fun onCreateQuizTrainingToggled() {
+    updateState { it.withCreateQuizTrainingToggled(countries) }
+  }
+
   fun onSurpriseMeClicked() {
     updateState { it.withSurpriseMeToggled() }
   }
@@ -563,6 +567,7 @@ class FlagGameViewModel(
     val state = _uiState.value
     val setup = state.setup
     if (setup.mode != GameMode.CreateQuiz) return SaveQuizResult.NoOp
+    if (setup.usesCreateQuizTraining) return SaveQuizResult.NoOp
 
     val seed = if (setup.createQuizSeed != 0L) setup.createQuizSeed else random.nextLong()
     val resolvedQuestionCountryCodes =

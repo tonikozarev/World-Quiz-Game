@@ -303,13 +303,14 @@ fun QuizScreen(
       infoLabel = localizedQuizInfoButtonLabel(language),
       showInfo = showQuizInfo,
       onInfoClick = { showQuizInfo = !showQuizInfo },
+      showHintButton = quiz.hintsAllowed,
       hintLabel =
         if (quiz.currentQuestionState.hintUses == 0) {
           localizedHintButtonLabel(language)
         } else {
           localizedRevealButtonLabel(language)
         },
-      canUseHint = quiz.currentPlayer.hintPoints >= 1 && quiz.currentQuestionState.hintUses < 2,
+      canUseHint = quiz.hintsAllowed && quiz.currentPlayer.hintPoints >= 1 && quiz.currentQuestionState.hintUses < 2,
       onUseHint = onUseHint,
       unskipLabel = localizedUnskipButtonLabel(language),
       canUnskip = canJump,
