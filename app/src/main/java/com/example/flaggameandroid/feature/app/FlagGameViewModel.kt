@@ -325,6 +325,10 @@ class FlagGameViewModel(
     updateState { it.withSelectedVariantsToggled(variant) }
   }
 
+  fun onInstantCorrectionToggled() {
+    updateState { it.withInstantCorrectionToggled() }
+  }
+
   fun onCreateQuizSourceSelected(source: CreateQuizSource) {
     updateState { it.withCreateQuizSourceSelected(source, countries) }
   }
@@ -448,7 +452,7 @@ class FlagGameViewModel(
   fun onVerifyTypedAnswer() {
     val state = _uiState.value
     val quiz = state.quiz
-    if (quiz.mode != GameMode.Training) return
+    if (quiz.mode != GameMode.Training && !quiz.instantCorrectionEnabled) return
     if (quiz.currentQuestion?.variant != QuizVariant.TypeCountryName) return
     if (quiz.currentQuestionState.typedAnswer.isBlank() || quiz.currentQuestionState.locked) return
 

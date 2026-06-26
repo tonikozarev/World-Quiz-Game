@@ -15,6 +15,11 @@ internal fun FlagGameUiState.withSelectedVariantsToggled(variant: QuizVariant): 
   return withUpdatedSetup { it.copy(variants = next) }
 }
 
+internal fun FlagGameUiState.withInstantCorrectionToggled(): FlagGameUiState =
+  withUpdatedSetup {
+    it.copy(instantCorrectionEnabled = !it.instantCorrectionEnabled)
+  }
+
 internal fun FlagGameUiState.withContinentToggled(
   continent: String,
   countries: List<FlagCountry>,

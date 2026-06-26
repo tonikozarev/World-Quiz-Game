@@ -55,6 +55,7 @@ fun SetupScreen(
   setupError: String?,
   onBack: () -> Unit,
   onVariantToggle: (QuizVariant) -> Unit,
+  onInstantCorrectionToggled: () -> Unit,
   onContinentToggle: (String) -> Unit,
   onWorldFlagsHardcoreToggled: () -> Unit,
   onWorldFlagsTimerToggled: () -> Unit,
@@ -80,6 +81,7 @@ fun SetupScreen(
   var saveQuizName by remember { mutableStateOf("") }
   var saveFeedbackMessage by remember { mutableStateOf<String?>(null) }
   var replaceConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.NameConflict?>(null) }
+  var showInstantCorrectionInfo by remember { mutableStateOf(false) }
   fun showSaveFeedback(message: String) {
     if (saveFeedbackMessage == null) {
       saveFeedbackMessage = message
@@ -117,6 +119,28 @@ fun SetupScreen(
 
   ScreenShell(modifier = modifier) {
     HeaderRow(title = cleanModeTitle(setup.mode, language))
+
+    CompactToggleInfoCard(
+      title =
+        when (language) {
+          AppLanguage.English -> "Instant correction?"
+          AppLanguage.Bulgarian -> "Моментална проверка?"
+          AppLanguage.German -> "Sofortige Auswertung?"
+        },
+      checked = setup.instantCorrectionEnabled,
+      onCheckedChange = onInstantCorrectionToggled,
+      infoExpanded = showInstantCorrectionInfo,
+      onInfoClick = { showInstantCorrectionInfo = !showInstantCorrectionInfo },
+      infoText =
+        when (language) {
+          AppLanguage.English ->
+            "Show right or wrong immediately after each answer is accepted. Turn it off to wait until Results page at the end of the quiz."
+          AppLanguage.Bulgarian ->
+            "Показва правилно или грешно веднага след като отговорът е приет. Изключи го, за да виждаш резултатите чак накрая."
+          AppLanguage.German ->
+            "Zeigt direkt nach der Annahme der Antwort richtig oder falsch an. Deaktiviere es, um erst in den Ergebnissen zu sehen."
+        },
+    )
 
     if (setup.mode == GameMode.LocalMultiplayer) {
       SectionCard(title = when (language) {
@@ -936,6 +960,44 @@ private fun CompactToggleCard(
         )
       }
       content()
+    }
+  }
+}
+
+@Composable
+private fun CompactToggleInfoCard(
+  title: String,
+  checked: Boolean,
+  onCheckedChange: () -> Unit,
+  infoExpanded: Boolean,
+  onInfoClick: () -> Unit,
+  infoText: String,
+) {
+  Card(modifier = Modifier.fillMaxWidth()) {
+    Column(
+      modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+      ) {
+        Text(
+          text = title,
+          style = MaterialTheme.typography.titleSmall,
+          fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+          modifier = Modifier.weight(1f),
+        )
+        InfoButton(onClick = onInfoClick)
+        Switch(
+          checked = checked,
+          onCheckedChange = { onCheckedChange() },
+        )
+      }
+      if (infoExpanded) {
+        InfoPanel(text = infoText)
+      }
     }
   }
 }

@@ -64,9 +64,10 @@ fun QuizScreen(
 ) {
   val question = quiz.currentQuestion ?: return
   val draft = quiz.currentQuestionState
-  val isTrainingLocked = quiz.mode == GameMode.Training && draft.locked
-  val isTrainingPreview = quiz.mode == GameMode.Training && draft.status == QuestionStatus.Answered
-  val isTrainingCorrect =
+  val isImmediateCorrectionEnabled = quiz.mode == GameMode.Training || quiz.instantCorrectionEnabled
+  val isImmediateCorrectionLocked = isImmediateCorrectionEnabled && draft.locked
+  val isImmediateCorrectionPreview = isImmediateCorrectionEnabled && draft.status == QuestionStatus.Answered
+  val isImmediateCorrectionCorrect =
     when (question.variant) {
       QuizVariant.TypeCountryName ->
         QuizAnswerChecker.isTypedAnswerCorrect(
@@ -211,7 +212,7 @@ fun QuizScreen(
         OutlinedTextField(
           value = quiz.typedAnswer,
           onValueChange = onTypedAnswerChanged,
-          enabled = !isTrainingLocked,
+          enabled = !isImmediateCorrectionLocked,
           label = {
             Text(
               when (language) {
@@ -234,24 +235,24 @@ fun QuizScreen(
             }
           },
           colors =
-            if (isTrainingPreview) {
+            if (isImmediateCorrectionPreview) {
               OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = if (isTrainingCorrect) AccentGreen.copy(alpha = 0.18f) else AccentRed.copy(alpha = 0.18f),
-                unfocusedContainerColor = if (isTrainingCorrect) AccentGreen.copy(alpha = 0.18f) else AccentRed.copy(alpha = 0.18f),
-                disabledContainerColor = if (isTrainingCorrect) AccentGreen.copy(alpha = 0.18f) else AccentRed.copy(alpha = 0.18f),
-                focusedBorderColor = if (isTrainingCorrect) AccentGreen else AccentRed,
-                unfocusedBorderColor = if (isTrainingCorrect) AccentGreen else AccentRed,
-                disabledBorderColor = if (isTrainingCorrect) AccentGreen else AccentRed,
-                focusedTextColor = if (isTrainingCorrect) AccentGreen else AccentRed,
-                unfocusedTextColor = if (isTrainingCorrect) AccentGreen else AccentRed,
-                disabledTextColor = if (isTrainingCorrect) AccentGreen else AccentRed,
+                focusedContainerColor = if (isImmediateCorrectionCorrect) AccentGreen.copy(alpha = 0.18f) else AccentRed.copy(alpha = 0.18f),
+                unfocusedContainerColor = if (isImmediateCorrectionCorrect) AccentGreen.copy(alpha = 0.18f) else AccentRed.copy(alpha = 0.18f),
+                disabledContainerColor = if (isImmediateCorrectionCorrect) AccentGreen.copy(alpha = 0.18f) else AccentRed.copy(alpha = 0.18f),
+                focusedBorderColor = if (isImmediateCorrectionCorrect) AccentGreen else AccentRed,
+                unfocusedBorderColor = if (isImmediateCorrectionCorrect) AccentGreen else AccentRed,
+                disabledBorderColor = if (isImmediateCorrectionCorrect) AccentGreen else AccentRed,
+                focusedTextColor = if (isImmediateCorrectionCorrect) AccentGreen else AccentRed,
+                unfocusedTextColor = if (isImmediateCorrectionCorrect) AccentGreen else AccentRed,
+                disabledTextColor = if (isImmediateCorrectionCorrect) AccentGreen else AccentRed,
               )
             } else {
               OutlinedTextFieldDefaults.colors()
             },
           modifier = Modifier.fillMaxWidth(),
         )
-        if (isTrainingPreview && !isTrainingCorrect) {
+        if (isImmediateCorrectionPreview && !isImmediateCorrectionCorrect) {
           Surface(
             color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(14.dp),
@@ -291,8 +292,8 @@ fun QuizScreen(
               selectedCountry = quiz.selectedCountry,
               language = language,
               onCountryAnswerSelected = onCountryAnswerSelected,
-              enabled = !isTrainingLocked,
-              trainingPreview = isTrainingPreview,
+              enabled = !isImmediateCorrectionLocked,
+              trainingPreview = isImmediateCorrectionPreview,
               correctCountry = question.correctCountry,
             )
           }
@@ -308,13 +309,13 @@ fun QuizScreen(
         } else {
           localizedRevealButtonLabel(language)
         },
-      canUseHint = quiz.currentPlayer.hintPoints >= 1 && quiz.currentQuestionState.hintUses < 2 && !quiz.currentQuestionState.locked,
+      canUseHint = quiz.currentPlayer.hintPoints >= 1 && quiz.currentQuestionState.hintUses < 2,
       onUseHint = onUseHint,
       unskipLabel = localizedUnskipButtonLabel(language),
       canUnskip = canJump,
       onUnskipQuestion = onUnskipQuestion,
-      verifyLabel = if (quiz.mode == GameMode.Training && question.variant == QuizVariant.TypeCountryName) localizedVerifyButtonLabel(language) else null,
-      canVerify = quiz.typedAnswer.isNotBlank() && !isTrainingLocked,
+      verifyLabel = if (isImmediateCorrectionEnabled && question.variant == QuizVariant.TypeCountryName) localizedVerifyButtonLabel(language) else null,
+      canVerify = quiz.typedAnswer.isNotBlank() && !isImmediateCorrectionLocked,
       onVerifyTypedAnswer = onVerifyTypedAnswer,
     )
 

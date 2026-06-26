@@ -102,6 +102,7 @@ internal fun buildSetupForMode(
 ): SetupState =
   SetupState(
     mode = mode,
+    instantCorrectionEnabled = mode == GameMode.Training,
     selectedContinents =
       when (mode) {
         GameMode.WorldFlags,

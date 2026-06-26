@@ -58,6 +58,7 @@ internal fun buildStartedQuizState(
     allInType = setup.allInType,
     variants = config.variants,
     selectedContinents = setup.selectedContinents,
+    instantCorrectionEnabled = setup.instantCorrectionEnabled,
     questions = questions,
     questionStates = questionStates,
     players = players,

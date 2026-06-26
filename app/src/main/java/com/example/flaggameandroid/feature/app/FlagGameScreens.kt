@@ -104,6 +104,7 @@ fun FlagGameRoute(
     onToggleTestingIconClick = resolvedViewModel::onToggleTestingIconClicked,
     onTriggerTestingReminderClick = resolvedViewModel::onTriggerTestingReminderClicked,
     onVariantToggled = resolvedViewModel::onVariantToggled,
+    onInstantCorrectionToggled = resolvedViewModel::onInstantCorrectionToggled,
     onContinentToggled = resolvedViewModel::onContinentToggled,
     onWorldFlagsHardcoreToggled = resolvedViewModel::onWorldFlagsHardcoreToggled,
     onWorldFlagsTimerToggled = resolvedViewModel::onWorldFlagsTimerToggled,

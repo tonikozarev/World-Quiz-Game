@@ -15,7 +15,6 @@ internal fun applyHintToCurrentQuestion(
   val quiz = state.quiz
   val question = quiz.currentQuestion ?: return null
   val currentDraft = quiz.currentQuestionState
-  if (currentDraft.locked) return null
   if (currentDraft.hintUses >= 2 || quiz.currentPlayer.hintPoints < 1) return null
 
   val players = quiz.players.toMutableList()

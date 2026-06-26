@@ -60,6 +60,44 @@ class FlagGameViewModelTest {
   }
 
   @Test
+  fun instantCorrectionToggle_enablesImmediatePreviewOutsideTraining() {
+    val viewModel = viewModel()
+
+    viewModel.onModeSelected(GameMode.WorldFlags)
+    viewModel.onInstantCorrectionToggled()
+    QuizVariant.entries.filterNot { it == QuizVariant.FlagToCountry }.forEach(viewModel::onVariantToggled)
+    viewModel.onQuestionCountChanged(1)
+    viewModel.onStartQuiz()
+
+    val question = viewModel.uiState.value.quiz.currentQuestion!!
+    viewModel.onCountryAnswerSelected(question.correctCountry)
+
+    val quiz = viewModel.uiState.value.quiz
+    assertTrue(quiz.instantCorrectionEnabled)
+    assertEquals(QuestionStatus.Answered, quiz.currentQuestionState.status)
+    assertTrue(quiz.currentQuestionState.locked)
+  }
+
+  @Test
+  fun instantCorrectionToggle_allowsTypedVerifyOutsideTraining() {
+    val viewModel = viewModel()
+
+    viewModel.onModeSelected(GameMode.WorldFlags)
+    viewModel.onInstantCorrectionToggled()
+    QuizVariant.entries.filterNot { it == QuizVariant.TypeCountryName }.forEach(viewModel::onVariantToggled)
+    viewModel.onQuestionCountChanged(1)
+    viewModel.onStartQuiz()
+
+    val question = viewModel.uiState.value.quiz.currentQuestion!!
+    viewModel.onTypedAnswerChanged(question.correctCountry.name)
+    viewModel.onVerifyTypedAnswer()
+
+    val quiz = viewModel.uiState.value.quiz
+    assertEquals(QuestionStatus.Answered, quiz.currentQuestionState.status)
+    assertTrue(quiz.currentQuestionState.locked)
+  }
+
+  @Test
   fun setup_showsSevenContinentsIncludingSeparateAmericas() {
     val viewModel = viewModel()
 
