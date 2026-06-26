@@ -6,9 +6,9 @@ import com.example.flaggameandroid.core.model.QuizVariant
 
 internal fun QuizState.withSelectedCountry(country: FlagCountry): QuizState {
   if (currentQuestion == null) return this
-  if ((mode == GameMode.Training || instantCorrectionEnabled) && currentQuestionState.locked) return this
+  if (instantCorrectionEnabled && currentQuestionState.locked) return this
 
-  if (mode != GameMode.Training && currentQuestionState.selectedCountry?.code == country.code) {
+  if (currentQuestionState.selectedCountry?.code == country.code) {
     if (instantCorrectionEnabled) return this
     val clearedDraft =
       currentQuestionState.copy(
@@ -25,7 +25,7 @@ internal fun QuizState.withSelectedCountry(country: FlagCountry): QuizState {
     currentQuestionState.copy(
       status = QuestionStatus.Answered,
       selectedCountry = country,
-      locked = mode == GameMode.Training || instantCorrectionEnabled,
+      locked = instantCorrectionEnabled,
     )
 
   return copy(
@@ -36,7 +36,7 @@ internal fun QuizState.withSelectedCountry(country: FlagCountry): QuizState {
 
 internal fun QuizState.withTypedAnswer(answer: String): QuizState {
   if (currentQuestion == null) return this
-  if ((mode == GameMode.Training || instantCorrectionEnabled) && currentQuestionState.locked) return this
+  if (instantCorrectionEnabled && currentQuestionState.locked) return this
 
   val updatedDraft =
     currentQuestionState.copy(
@@ -58,7 +58,7 @@ internal fun QuizState.withVerifiedTypedAnswer(): QuizState {
   val updatedDraft =
     draft.copy(
       status = QuestionStatus.Answered,
-      locked = mode == GameMode.Training || instantCorrectionEnabled,
+      locked = instantCorrectionEnabled,
     )
 
   return copy(
@@ -90,7 +90,7 @@ internal fun QuizState.withCurrentQuestionSubmitted(): QuizState? {
   val updatedDraft =
     draft.copy(
       status = QuestionStatus.Answered,
-      locked = draft.locked || mode == GameMode.Training || instantCorrectionEnabled,
+      locked = draft.locked || instantCorrectionEnabled,
     )
 
   return copy(

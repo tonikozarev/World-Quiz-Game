@@ -64,7 +64,7 @@ fun QuizScreen(
 ) {
   val question = quiz.currentQuestion ?: return
   val draft = quiz.currentQuestionState
-  val isImmediateCorrectionEnabled = quiz.mode == GameMode.Training || quiz.instantCorrectionEnabled
+  val isImmediateCorrectionEnabled = quiz.instantCorrectionEnabled
   val isImmediateCorrectionLocked = isImmediateCorrectionEnabled && draft.locked
   val isImmediateCorrectionPreview = isImmediateCorrectionEnabled && draft.status == QuestionStatus.Answered
   val isImmediateCorrectionCorrect =

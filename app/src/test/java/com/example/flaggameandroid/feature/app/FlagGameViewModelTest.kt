@@ -195,6 +195,28 @@ class FlagGameViewModelTest {
   }
 
   @Test
+  fun trainingMode_toggleOffDisablesImmediateCorrectionAndAllowsChangingAnswer() {
+    val viewModel = viewModel()
+
+    viewModel.onModeSelected(GameMode.Training)
+    viewModel.onInstantCorrectionToggled()
+    QuizVariant.entries.filterNot { it == QuizVariant.FlagToCountry }.forEach(viewModel::onVariantToggled)
+    viewModel.onQuestionCountChanged(1)
+    viewModel.onStartQuiz()
+
+    val question = viewModel.uiState.value.quiz.currentQuestion!!
+    val correct = question.correctCountry
+    val wrong = question.options.first { it.code != correct.code }
+
+    viewModel.onCountryAnswerSelected(correct)
+    assertFalse(viewModel.uiState.value.quiz.currentQuestionState.locked)
+
+    viewModel.onCountryAnswerSelected(wrong)
+    assertEquals(wrong, viewModel.uiState.value.quiz.currentQuestionState.selectedCountry)
+    assertFalse(viewModel.uiState.value.quiz.currentQuestionState.locked)
+  }
+
+  @Test
   fun fiveCorrectInARow_keepsNewHintPointLockedUntilQuizEnds() {
     val viewModel = viewModel()
     startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 6)

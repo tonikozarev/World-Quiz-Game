@@ -48,7 +48,6 @@ internal fun FlagGameUiState.withCreateQuizSourceSelected(
       createQuizSource = source,
       selectedCountryCodes = if (source == CreateQuizSource.ManualCountries) setup.selectedCountryCodes else emptySet(),
       createQuizManualHardcoreEnabled = if (source == CreateQuizSource.ManualCountries) setup.createQuizManualHardcoreEnabled else false,
-      createQuizManualTimerEnabled = if (source == CreateQuizSource.ManualCountries) setup.createQuizManualTimerEnabled else false,
       createQuizSeed = 0L,
       questionCountInput =
         when (source) {
@@ -143,9 +142,11 @@ internal fun FlagGameUiState.withCreateQuizAllCountriesToggled(countries: List<F
 }
 
 internal fun FlagGameUiState.withWorldFlagsHardcoreToggled(countries: List<FlagCountry>): FlagGameUiState {
+  val enabled = !setup.worldFlagsHardcoreEnabled
   val nextSetup =
     setup.copy(
-      worldFlagsHardcoreEnabled = !setup.worldFlagsHardcoreEnabled,
+      worldFlagsHardcoreEnabled = enabled,
+      variants = if (enabled) QuizVariant.entries.toSet() else setup.variants,
     )
   return copy(
     setup = nextSetup,

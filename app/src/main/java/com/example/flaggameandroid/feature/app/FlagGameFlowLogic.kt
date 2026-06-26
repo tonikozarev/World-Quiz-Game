@@ -55,7 +55,7 @@ internal fun QuizState.previewAdvanceQuestionStates(): List<QuestionDraftState> 
         currentQuestionIndex,
         currentDraft.copy(
           status = QuestionStatus.Answered,
-          locked = currentDraft.locked || mode == GameMode.Training,
+          locked = currentDraft.locked || instantCorrectionEnabled,
         ),
       )
 
@@ -650,7 +650,7 @@ internal fun buildQuestionAdvanceOutcome(
     currentDraft.copy(
       status = QuestionStatus.Answered,
       typedAnswer = currentDraft.typedAnswer,
-      locked = quiz.mode == GameMode.Training && currentDraft.status == QuestionStatus.Answered,
+      locked = currentDraft.locked || quiz.instantCorrectionEnabled,
     )
   val updatedQuestionStates = quiz.questionStates.replaceAt(quiz.currentQuestionIndex, updatedDraft)
   val isCorrect =

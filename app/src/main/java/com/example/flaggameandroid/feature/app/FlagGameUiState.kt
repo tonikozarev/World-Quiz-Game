@@ -120,7 +120,7 @@ data class SetupState(
     get() = mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.ManualCountries && createQuizManualHardcoreEnabled
 
   val usesCreateQuizManualTimer: Boolean
-    get() = mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.ManualCountries && createQuizManualTimerEnabled
+    get() = mode == GameMode.CreateQuiz && createQuizManualTimerEnabled
 }
 
 enum class QuestionStatus {

@@ -82,6 +82,7 @@ fun SetupScreen(
   var saveFeedbackMessage by remember { mutableStateOf<String?>(null) }
   var replaceConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.NameConflict?>(null) }
   var showInstantCorrectionInfo by remember { mutableStateOf(false) }
+  var showWorldFlagsHardcoreInfo by remember { mutableStateOf(false) }
   fun showSaveFeedback(message: String) {
     if (saveFeedbackMessage == null) {
       saveFeedbackMessage = message
@@ -214,59 +215,6 @@ fun SetupScreen(
       }
     }
 
-    if (setup.mode == GameMode.CreateQuiz) {
-      SectionCard(title = when (language) {
-        AppLanguage.English -> "Create a quiz"
-        AppLanguage.Bulgarian -> "Създай тест"
-        AppLanguage.German -> "Quiz erstellen"
-      }) {
-        SelectableRow(
-          title = when (language) {
-            AppLanguage.English -> "Preset filter"
-            AppLanguage.Bulgarian -> "Готов филтър"
-            AppLanguage.German -> "Vorlagenfilter"
-          },
-          selected = setup.createQuizSource == CreateQuizSource.PresetFilter,
-          onClick = { onCreateQuizSourceSelected(CreateQuizSource.PresetFilter) },
-          description = when (language) {
-            AppLanguage.English -> "Use predefined flag rules."
-            AppLanguage.Bulgarian -> "Ползвай готови правила за флагове."
-            AppLanguage.German -> "Nutze vordefinierte Flaggenregeln."
-          },
-        )
-        SelectableRow(
-          title = when (language) {
-            AppLanguage.English -> "Manual countries"
-            AppLanguage.Bulgarian -> "Ръчно избрани държави"
-            AppLanguage.German -> "Manuelle Länder"
-          },
-          selected = setup.createQuizSource == CreateQuizSource.ManualCountries,
-          onClick = { onCreateQuizSourceSelected(CreateQuizSource.ManualCountries) },
-          description = when (language) {
-            AppLanguage.English -> "Pick the exact countries yourself."
-            AppLanguage.Bulgarian -> "Избери точните държави сам."
-            AppLanguage.German -> "Wähle die Länder selbst aus."
-          },
-        )
-      }
-      if (setup.createQuizSource == CreateQuizSource.PresetFilter) {
-        SectionCard(title = when (language) {
-          AppLanguage.English -> "Preset filters"
-          AppLanguage.Bulgarian -> "Готови филтри"
-          AppLanguage.German -> "Vorlagenfilter"
-        }) {
-          createQuizPresetOrder.forEach { preset ->
-            SelectableRow(
-              title = localizedCreateQuizPresetTitle(preset, language),
-              selected = setup.createQuizPreset == preset,
-              onClick = { onCreateQuizPresetSelected(preset) },
-              description = null,
-            )
-          }
-        }
-      }
-    }
-
     val isMistakeReview = setup.mode == GameMode.MistakeReview
     val isCreateQuizManual = setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries
     val isCreateQuizManualHardcore = isCreateQuizManual && setup.createQuizManualHardcoreEnabled
@@ -380,17 +328,7 @@ fun SetupScreen(
       }
     }
 
-    if (setup.mode == GameMode.WorldFlags) {
-      CompactToggleCard(
-        title =
-          when (language) {
-            AppLanguage.English -> "Hardcore game?"
-            AppLanguage.Bulgarian -> "Хардкор игра?"
-            AppLanguage.German -> "Hardcore-Spiel?"
-          },
-        checked = setup.worldFlagsHardcoreEnabled,
-        onCheckedChange = { onWorldFlagsHardcoreToggled() },
-      )
+    if (setup.mode == GameMode.CreateQuiz) {
       CompactToggleCard(
         title =
           when (language) {
@@ -398,9 +336,115 @@ fun SetupScreen(
             AppLanguage.Bulgarian -> "Таймер?"
             AppLanguage.German -> "Timer?"
           },
-        checked = setup.worldFlagsTimerEnabled,
-        onCheckedChange = { onWorldFlagsTimerToggled() },
-      ) { if (setup.worldFlagsTimerEnabled) renderTimerInput() }
+        checked = setup.createQuizManualTimerEnabled,
+        onCheckedChange = { onCreateQuizManualTimerToggled() },
+      ) { if (setup.createQuizManualTimerEnabled) renderTimerInput() }
+
+      if (setup.createQuizSource == CreateQuizSource.PresetFilter) {
+        SectionCard(title = when (language) {
+          AppLanguage.English -> "Question count"
+          AppLanguage.Bulgarian -> "Брой въпроси"
+          AppLanguage.German -> "Fragenanzahl"
+        }) {
+          OutlinedTextField(
+            value = setup.questionCountInput,
+            onValueChange = questionCountChangeHandler,
+            label = {
+              Text(
+                when (language) {
+                  AppLanguage.English -> "Amount of questions"
+                  AppLanguage.Bulgarian -> "Брой въпроси"
+                  AppLanguage.German -> "Fragenanzahl"
+                },
+              )
+            },
+            placeholder = {
+              Text(
+                if (setup.surpriseMe) {
+                  when (language) {
+                    AppLanguage.English -> "Surprise me selected"
+                    AppLanguage.Bulgarian -> "Избрано е \"Изненадай ме\""
+                    AppLanguage.German -> "\"Überrasche mich\" ausgewählt"
+                  }
+                } else {
+                  when (language) {
+                    AppLanguage.English -> "Example: 10"
+                    AppLanguage.Bulgarian -> "Пример: 10"
+                    AppLanguage.German -> "Beispiel: 10"
+                  }
+                },
+              )
+            },
+            supportingText = {
+              Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                  when (language) {
+                    AppLanguage.English -> "Allowed range: 1-$questionCountLimit"
+                    AppLanguage.Bulgarian -> "Допустим диапазон: 1-$questionCountLimit"
+                    AppLanguage.German -> "Erlaubter Bereich: 1-$questionCountLimit"
+                  },
+                )
+                if (questionCountOverLimit) {
+                  Text(
+                    when (language) {
+                      AppLanguage.English -> "Selected question count is over the allowed limit."
+                      AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
+                      AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
+                    },
+                    color = AccentRed,
+                  )
+                } else if (ProgressionRules.shouldWarnNoMedal(setup.questionCount)) {
+                  Text(
+                    when (language) {
+                      AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
+                      AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
+                      AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
+                    },
+                  )
+                }
+              }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            enabled = !setup.surpriseMe,
+            isError = questionCountOverLimit,
+            modifier = Modifier.fillMaxWidth(),
+          )
+          OutlinedButton(onClick = onSurpriseMe, modifier = Modifier.fillMaxWidth()) {
+            Text(
+              if (setup.surpriseMe) {
+                when (language) {
+                  AppLanguage.English -> "Use custom amount"
+                  AppLanguage.Bulgarian -> "Използвай собствен брой"
+                  AppLanguage.German -> "Eigene Anzahl verwenden"
+                }
+              } else {
+                when (language) {
+                  AppLanguage.English -> "Surprise me! (1-$questionCountLimit)"
+                  AppLanguage.Bulgarian -> "Изненадай ме! (1-$questionCountLimit)"
+                  AppLanguage.German -> "Überrasche mich! (1-$questionCountLimit)"
+                }
+              },
+            )
+          }
+        }
+      } else {
+        CompactReadOnlyCard(
+          title = when (language) {
+            AppLanguage.English -> "Question count"
+            AppLanguage.Bulgarian -> "Брой въпроси"
+            AppLanguage.German -> "Fragenanzahl"
+          },
+          value = setup.selectedCountryCodes.size.toString(),
+          supportingText =
+            when (language) {
+              AppLanguage.English -> "Exact pool from your selected countries."
+              AppLanguage.Bulgarian -> "Точен набор от избраните държави."
+              AppLanguage.German -> "Exakter Pool aus deinen ausgewählten Ländern."
+            },
+        )
+      }
+
       SectionCard(title = when (language) {
         AppLanguage.English -> "Question variants"
         AppLanguage.Bulgarian -> "Видове въпроси"
@@ -413,6 +457,110 @@ fun SetupScreen(
             checked = variant in setup.variants,
             onClick = { onVariantToggle(variant) },
           )
+        }
+      }
+
+      SectionCard(title = when (language) {
+        AppLanguage.English -> "Create a quiz"
+        AppLanguage.Bulgarian -> "Създай тест"
+        AppLanguage.German -> "Quiz erstellen"
+      }) {
+        SelectableRow(
+          title = when (language) {
+            AppLanguage.English -> "Preset filter"
+            AppLanguage.Bulgarian -> "Готов филтър"
+            AppLanguage.German -> "Vorlagenfilter"
+          },
+          selected = setup.createQuizSource == CreateQuizSource.PresetFilter,
+          onClick = { onCreateQuizSourceSelected(CreateQuizSource.PresetFilter) },
+          description = when (language) {
+            AppLanguage.English -> "Use predefined flag rules."
+            AppLanguage.Bulgarian -> "Ползвай готови правила за флагове."
+            AppLanguage.German -> "Nutze vordefinierte Flaggenregeln."
+          },
+        )
+        SelectableRow(
+          title = when (language) {
+            AppLanguage.English -> "Manual countries"
+            AppLanguage.Bulgarian -> "Ръчно избрани държави"
+            AppLanguage.German -> "Manuelle Länder"
+          },
+          selected = setup.createQuizSource == CreateQuizSource.ManualCountries,
+          onClick = { onCreateQuizSourceSelected(CreateQuizSource.ManualCountries) },
+          description = when (language) {
+            AppLanguage.English -> "Pick the exact countries yourself."
+            AppLanguage.Bulgarian -> "Избери точните държави сам."
+            AppLanguage.German -> "Wähle die Länder selbst aus."
+          },
+        )
+      }
+
+      if (setup.createQuizSource == CreateQuizSource.PresetFilter) {
+        SectionCard(title = when (language) {
+          AppLanguage.English -> "Preset filters"
+          AppLanguage.Bulgarian -> "Готови филтри"
+          AppLanguage.German -> "Vorlagenfilter"
+        }) {
+          createQuizPresetOrder.forEach { preset ->
+            SelectableRow(
+              title = localizedCreateQuizPresetTitle(preset, language),
+              selected = setup.createQuizPreset == preset,
+              onClick = { onCreateQuizPresetSelected(preset) },
+              description = null,
+            )
+          }
+        }
+      } else {
+        renderChooseCountriesSection()
+      }
+    }
+
+    if (setup.mode == GameMode.WorldFlags) {
+      CompactToggleInfoCard(
+        title =
+          when (language) {
+            AppLanguage.English -> "Hardcore game?"
+            AppLanguage.Bulgarian -> "Хардкор игра?"
+            AppLanguage.German -> "Hardcore-Spiel?"
+          },
+        checked = setup.worldFlagsHardcoreEnabled,
+        onCheckedChange = { onWorldFlagsHardcoreToggled() },
+        infoExpanded = showWorldFlagsHardcoreInfo,
+        onInfoClick = { showWorldFlagsHardcoreInfo = !showWorldFlagsHardcoreInfo },
+        infoText =
+          when (language) {
+            AppLanguage.English ->
+              "Use all 195 countries, keep only the timer option, and hide continent and question-count choices."
+            AppLanguage.Bulgarian ->
+              "Използва всички 195 държави, оставя само таймера и скрива избора на континенти и брой въпроси."
+            AppLanguage.German ->
+              "Verwendet alle 195 Länder, lässt nur den Timer aktiv und blendet Kontinente sowie Fragenanzahl aus."
+          },
+      )
+      CompactToggleCard(
+        title =
+          when (language) {
+            AppLanguage.English -> "Timer?"
+            AppLanguage.Bulgarian -> "Таймер?"
+            AppLanguage.German -> "Timer?"
+          },
+        checked = setup.worldFlagsTimerEnabled,
+        onCheckedChange = { onWorldFlagsTimerToggled() },
+      ) { if (setup.worldFlagsTimerEnabled) renderTimerInput() }
+      if (!setup.worldFlagsHardcoreEnabled) {
+        SectionCard(title = when (language) {
+          AppLanguage.English -> "Question variants"
+          AppLanguage.Bulgarian -> "Видове въпроси"
+          AppLanguage.German -> "Fragetypen"
+        }) {
+          QuizVariant.entries.forEach { variant ->
+            CheckRow(
+              title = localizedVariantTitle(variant, language),
+              description = localizedVariantDescription(variant, language),
+              checked = variant in setup.variants,
+              onClick = { onVariantToggle(variant) },
+            )
+          }
         }
       }
       if (!setup.worldFlagsHardcoreEnabled) {
@@ -522,7 +670,7 @@ fun SetupScreen(
           }
         }
       }
-    } else {
+    } else if (setup.mode != GameMode.CreateQuiz) {
       if (setup.multiplayerBase == MultiplayerQuizBase.Continents && setup.mode == GameMode.LocalMultiplayer) {
         SectionCard(title = cleanText(language, UiText.Continents)) {
           FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -544,63 +692,7 @@ fun SetupScreen(
         }
       }
 
-      if (isCreateQuizManual) {
-        CompactToggleCard(
-          title =
-            when (language) {
-              AppLanguage.English -> "Hardcore game?"
-              AppLanguage.Bulgarian -> "Хардкор игра?"
-              AppLanguage.German -> "Hardcore-Spiel?"
-            },
-          checked = setup.createQuizManualHardcoreEnabled,
-          onCheckedChange = { onCreateQuizManualHardcoreToggled() },
-        )
-        CompactToggleCard(
-          title =
-            when (language) {
-              AppLanguage.English -> "Timer?"
-              AppLanguage.Bulgarian -> "Таймер?"
-              AppLanguage.German -> "Timer?"
-            },
-          checked = setup.createQuizManualTimerEnabled,
-          onCheckedChange = { onCreateQuizManualTimerToggled() },
-        ) {
-          if (setup.createQuizManualTimerEnabled) {
-            renderTimerInput()
-          }
-        }
-        SectionCard(title = when (language) {
-          AppLanguage.English -> "Question variants"
-          AppLanguage.Bulgarian -> "Видове въпроси"
-          AppLanguage.German -> "Fragetypen"
-        }) {
-          QuizVariant.entries.forEach { variant ->
-            CheckRow(
-              title = localizedVariantTitle(variant, language),
-              description = localizedVariantDescription(variant, language),
-              checked = variant in setup.variants,
-              onClick = { onVariantToggle(variant) },
-            )
-          }
-        }
-        CompactReadOnlyCard(
-          title = when (language) {
-            AppLanguage.English -> "Question count"
-            AppLanguage.Bulgarian -> "Брой въпроси"
-            AppLanguage.German -> "Fragenanzahl"
-          },
-          value = setup.selectedCountryCodes.size.toString(),
-          supportingText =
-            when (language) {
-              AppLanguage.English -> "Exact pool from your selected countries."
-              AppLanguage.Bulgarian -> "Точен набор от избраните държави."
-              AppLanguage.German -> "Exakter Pool aus deinen ausgewählten Ländern."
-            },
-        )
-        if (!isCreateQuizManualHardcore) {
-          renderChooseCountriesSection()
-        }
-      } else {
+      else {
         SectionCard(title = when (language) {
           AppLanguage.English -> "Question count"
           AppLanguage.Bulgarian -> "Брой въпроси"
@@ -915,14 +1007,13 @@ fun SetupScreen(
     }
 
     if (setup.mode == GameMode.WorldFlags) {
-      val hasAllVariants = setup.variants.size == QuizVariant.entries.size
       val hintSettingLabel = localizedHintDifficultyTitle(hintDifficulty, language)
       val levelReward = if (hintDifficulty == HintDifficulty.Impossible) "+2" else "+1"
       InfoPanel(
-        text = allInRewardInfo(
+        text = worldFlagsRewardInfo(
           language = language,
+          hardcoreEnabled = setup.worldFlagsHardcoreEnabled,
           hintSettingLabel = hintSettingLabel,
-          hasAllVariants = hasAllVariants,
           rewardLevels = levelReward,
           isImpossible = hintDifficulty == HintDifficulty.Impossible,
         ),
@@ -1111,4 +1202,3 @@ private fun localizedCreateQuizPresetTitle(
       AppLanguage.German -> "OIC-Flaggen"
     }
   }
-

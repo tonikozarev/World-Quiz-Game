@@ -166,6 +166,40 @@ internal fun allInRewardInfo(
       }
   }
 
+internal fun worldFlagsRewardInfo(
+  language: AppLanguage,
+  hardcoreEnabled: Boolean,
+  hintSettingLabel: String,
+  rewardLevels: String,
+  isImpossible: Boolean,
+): String =
+  when (language) {
+    AppLanguage.English ->
+      if (hardcoreEnabled) {
+        "Selected countries count is 195. Hint setting: $hintSettingLabel. Perfect clear reward is active. Finish with no mistakes using all 3 variants to earn $rewardLevels full level(s)." +
+          if (isImpossible) "" else " Switch to 'The impossible one' to earn +1 more level, for +2 full levels total."
+      } else {
+        "Hint setting: $hintSettingLabel. Perfect clear reward is active. Finish with no mistakes using all 3 variants to earn $rewardLevels full level(s)." +
+          if (isImpossible) "" else " Switch to 'The impossible one' to earn +1 more level, for +2 full levels total."
+      }
+    AppLanguage.Bulgarian ->
+      if (hardcoreEnabled) {
+        "Броят на избраните държави е 195. Настройка за жокери: $hintSettingLabel. Наградата за перфектен тест е активна. Завърши без грешка с всичките 3 варианта, за да вземеш $rewardLevels пълно ниво." +
+          if (isImpossible) "" else " Смени на 'The impossible one', за да вземеш още +1 ниво, общо +2 пълни нива."
+      } else {
+        "Настройка за жокери: $hintSettingLabel. Наградата за перфектен тест е активна. Завърши без грешка с всичките 3 варианта, за да вземеш $rewardLevels пълно ниво." +
+          if (isImpossible) "" else " Смени на 'The impossible one', за да вземеш още +1 ниво, общо +2 пълни нива."
+      }
+    AppLanguage.German ->
+      if (hardcoreEnabled) {
+        "Die Anzahl der ausgewählten Länder ist 195. Hinweis-Einstellung: $hintSettingLabel. Die Belohnung für einen fehlerfreien Durchlauf ist aktiv. Beende das Quiz ohne Fehler mit allen 3 Varianten, um $rewardLevels volle Level zu erhalten." +
+          if (isImpossible) "" else " Wechsle zu 'The impossible one', um +1 weiteres Level und insgesamt +2 volle Level zu erhalten."
+      } else {
+        "Hinweis-Einstellung: $hintSettingLabel. Die Belohnung für einen fehlerfreien Durchlauf ist aktiv. Beende das Quiz ohne Fehler mit allen 3 Varianten, um $rewardLevels volle Level zu erhalten." +
+          if (isImpossible) "" else " Wechsle zu 'The impossible one', um +1 weiteres Level und insgesamt +2 volle Level zu erhalten."
+      }
+  }
+
 internal fun displayModeTitle(
   mode: GameMode?,
   language: AppLanguage,
