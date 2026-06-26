@@ -36,7 +36,9 @@ internal fun FlagGameUiState.withContinentToggled(
 
 internal fun FlagGameUiState.withQuestionCountInput(questionCount: String): FlagGameUiState =
   withUpdatedSetup {
-    it.copy(questionCountInput = questionCount.filter { char -> char.isDigit() }, surpriseMe = false)
+    val digitsOnly = questionCount.filter { char -> char.isDigit() }
+    val capped = digitsOnly.toIntOrNull()?.coerceAtMost(999)?.toString().orEmpty()
+    it.copy(questionCountInput = capped, surpriseMe = false)
   }
 
 internal fun FlagGameUiState.withCreateQuizSourceSelected(

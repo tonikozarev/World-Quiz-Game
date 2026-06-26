@@ -231,6 +231,7 @@ fun SetupScreen(
         !isCreateQuizManual &&
         questionCount != null &&
         questionCount > questionCountLimit
+    val surpriseMePlaceholderText = surpriseMePlaceholderText(language, setup.surpriseMe)
     val renderTimerInput: @Composable ColumnScope.() -> Unit = {
       val secondsPerAnswer = setup.speedRunSecondsPerAnswer
       val secondsOutOfRange = secondsPerAnswer != null && secondsPerAnswer !in 1..10
@@ -281,9 +282,9 @@ fun SetupScreen(
     }
     val renderChooseCountriesSection: @Composable () -> Unit = {
       SectionCard(title = when (language) {
-        AppLanguage.English -> "Choose countries"
-        AppLanguage.Bulgarian -> "Избери държави"
-        AppLanguage.German -> "Länder wählen"
+        AppLanguage.English -> "Pick manually"
+        AppLanguage.Bulgarian -> "Избери ръчно"
+        AppLanguage.German -> "Selber auswählen"
       }) {
         Row(
           modifier = Modifier.fillMaxWidth(),
@@ -291,15 +292,18 @@ fun SetupScreen(
           verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
           Text(
-            text =
-              when (language) {
-                AppLanguage.English -> "${setup.selectedCountryCodes.size} selected"
-                AppLanguage.Bulgarian -> "${setup.selectedCountryCodes.size} избрани"
-                AppLanguage.German -> "${setup.selectedCountryCodes.size} ausgewählt"
-              },
-            style = MaterialTheme.typography.bodyMedium,
+            text = when (language) {
+              AppLanguage.English -> "Choose countries"
+              AppLanguage.Bulgarian -> "Избери държави"
+              AppLanguage.German -> "Länder wählen"
+            },
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
           )
-          OutlinedButton(onClick = onCreateQuizAllCountriesToggled, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
+          OutlinedButton(
+            onClick = onCreateQuizAllCountriesToggled,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+          ) {
             Text(
               when (language) {
                 AppLanguage.English -> if (setup.selectedCountryCodes.size == countries.size) "Deselect all" else "Select all"
@@ -328,6 +332,105 @@ fun SetupScreen(
       }
     }
 
+    val renderQuestionCountCard: @Composable (
+      questionCountValue: String,
+      editable: Boolean,
+      showRandomButton: Boolean,
+      randomButtonText: String,
+      onRandomButtonClick: () -> Unit,
+      onValueChange: (String) -> Unit,
+      rangeText: String?,
+      warningText: String?,
+      warningIsError: Boolean,
+    ) -> Unit = { questionCountValue, editable, showRandomButton, randomButtonText, onRandomButtonClick, onValueChange, rangeText, warningText, warningIsError ->
+      Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+          modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+          val rangeTextAsLabel = setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.PresetFilter
+          val useCreateQuizQuestionCountLayout = setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.PresetFilter
+          Text(
+            text = when (language) {
+              AppLanguage.English -> "Question count"
+              AppLanguage.Bulgarian -> "Брой въпроси"
+              AppLanguage.German -> "Fragenanzahl"
+            },
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+          )
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+          ) {
+            val fieldModifier =
+              if (showRandomButton && useCreateQuizQuestionCountLayout) {
+                Modifier.weight(1f)
+              } else if (showRandomButton) {
+                Modifier.fillMaxWidth(0.70f)
+              } else {
+                Modifier.fillMaxWidth()
+              }
+            OutlinedTextField(
+              value = questionCountValue,
+              onValueChange = onValueChange,
+              placeholder = {
+                Text(
+                  surpriseMePlaceholderText,
+                )
+              },
+              label =
+                if (rangeTextAsLabel && rangeText != null) {
+                  { Text(rangeText) }
+                } else {
+                  null
+                },
+              supportingText =
+                if ((!rangeTextAsLabel && rangeText != null) || warningText != null) {
+                  {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                      if (!rangeTextAsLabel && rangeText != null) {
+                        Text(text = rangeText, style = MaterialTheme.typography.bodySmall)
+                      }
+                      if (warningText != null) {
+                        Text(
+                          text = warningText,
+                          style = MaterialTheme.typography.bodySmall,
+                          color = if (warningIsError) AccentRed else MaterialTheme.colorScheme.onSurface,
+                        )
+                      }
+                    }
+                  }
+                } else {
+                  null
+                },
+              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+              singleLine = true,
+              enabled = editable,
+              isError = warningIsError,
+              modifier = fieldModifier,
+            )
+            if (showRandomButton) {
+              val buttonModifier =
+                if (useCreateQuizQuestionCountLayout) {
+                  Modifier.weight(1f)
+                } else {
+                  Modifier
+                }
+              OutlinedButton(
+                onClick = onRandomButtonClick,
+                modifier = buttonModifier,
+                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
+              ) {
+                Text(randomButtonText)
+              }
+            }
+          }
+        }
+      }
+    }
+
     if (setup.mode == GameMode.CreateQuiz) {
       CompactToggleCard(
         title =
@@ -335,113 +438,56 @@ fun SetupScreen(
             AppLanguage.English -> "Timer?"
             AppLanguage.Bulgarian -> "Таймер?"
             AppLanguage.German -> "Timer?"
-          },
+        },
         checked = setup.createQuizManualTimerEnabled,
         onCheckedChange = { onCreateQuizManualTimerToggled() },
       ) { if (setup.createQuizManualTimerEnabled) renderTimerInput() }
 
       if (setup.createQuizSource == CreateQuizSource.PresetFilter) {
-        SectionCard(title = when (language) {
-          AppLanguage.English -> "Question count"
-          AppLanguage.Bulgarian -> "Брой въпроси"
-          AppLanguage.German -> "Fragenanzahl"
-        }) {
-          OutlinedTextField(
-            value = setup.questionCountInput,
-            onValueChange = questionCountChangeHandler,
-            label = {
-              Text(
-                when (language) {
-                  AppLanguage.English -> "Amount of questions"
-                  AppLanguage.Bulgarian -> "Брой въпроси"
-                  AppLanguage.German -> "Fragenanzahl"
-                },
-              )
-            },
-            placeholder = {
-              Text(
-                if (setup.surpriseMe) {
-                  when (language) {
-                    AppLanguage.English -> "Surprise me selected"
-                    AppLanguage.Bulgarian -> "Избрано е \"Изненадай ме\""
-                    AppLanguage.German -> "\"Überrasche mich\" ausgewählt"
-                  }
-                } else {
-                  when (language) {
-                    AppLanguage.English -> "Example: 10"
-                    AppLanguage.Bulgarian -> "Пример: 10"
-                    AppLanguage.German -> "Beispiel: 10"
-                  }
-                },
-              )
-            },
-            supportingText = {
-              Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                  when (language) {
-                    AppLanguage.English -> "Allowed range: 1-$questionCountLimit"
-                    AppLanguage.Bulgarian -> "Допустим диапазон: 1-$questionCountLimit"
-                    AppLanguage.German -> "Erlaubter Bereich: 1-$questionCountLimit"
-                  },
-                )
-                if (questionCountOverLimit) {
-                  Text(
-                    when (language) {
-                      AppLanguage.English -> "Selected question count is over the allowed limit."
-                      AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
-                      AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
-                    },
-                    color = AccentRed,
-                  )
-                } else if (ProgressionRules.shouldWarnNoMedal(setup.questionCount)) {
-                  Text(
-                    when (language) {
-                      AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
-                      AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
-                      AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
-                    },
-                  )
-                }
-              }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            enabled = !setup.surpriseMe,
-            isError = questionCountOverLimit,
-            modifier = Modifier.fillMaxWidth(),
-          )
-          OutlinedButton(onClick = onSurpriseMe, modifier = Modifier.fillMaxWidth()) {
-            Text(
-              if (setup.surpriseMe) {
-                when (language) {
-                  AppLanguage.English -> "Use custom amount"
-                  AppLanguage.Bulgarian -> "Използвай собствен брой"
-                  AppLanguage.German -> "Eigene Anzahl verwenden"
-                }
-              } else {
-                when (language) {
-                  AppLanguage.English -> "Surprise me! (1-$questionCountLimit)"
-                  AppLanguage.Bulgarian -> "Изненадай ме! (1-$questionCountLimit)"
-                  AppLanguage.German -> "Überrasche mich! (1-$questionCountLimit)"
-                }
-              },
-            )
-          }
-        }
-      } else {
-        CompactReadOnlyCard(
-          title = when (language) {
-            AppLanguage.English -> "Question count"
-            AppLanguage.Bulgarian -> "Брой въпроси"
-            AppLanguage.German -> "Fragenanzahl"
+        renderQuestionCountCard(
+          setup.questionCountInput,
+          !setup.surpriseMe,
+          true,
+          when (language) {
+            AppLanguage.English -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+            AppLanguage.Bulgarian -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+            AppLanguage.German -> if (setup.surpriseMe) "Custom count" else "Randomizer"
           },
-          value = setup.selectedCountryCodes.size.toString(),
-          supportingText =
-            when (language) {
-              AppLanguage.English -> "Exact pool from your selected countries."
-              AppLanguage.Bulgarian -> "Точен набор от избраните държави."
-              AppLanguage.German -> "Exakter Pool aus deinen ausgewählten Ländern."
-            },
+          onSurpriseMe,
+          questionCountChangeHandler,
+          when (language) {
+            AppLanguage.English -> "Range: 1-$questionCountLimit"
+            AppLanguage.Bulgarian -> "Диапазон: 1-$questionCountLimit"
+            AppLanguage.German -> "Bereich: 1-$questionCountLimit"
+          },
+          when {
+            questionCountOverLimit ->
+              when (language) {
+                AppLanguage.English -> "Selected question count is over the allowed limit."
+                AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
+                AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
+              }
+            ProgressionRules.shouldWarnNoMedal(setup.questionCount) ->
+              when (language) {
+                AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
+                AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
+                AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
+              }
+            else -> null
+          },
+          questionCountOverLimit,
+        )
+      } else {
+        renderQuestionCountCard(
+          setup.selectedCountryCodes.size.toString(),
+          false,
+          false,
+          "",
+          onSurpriseMe,
+          questionCountChangeHandler,
+          null,
+          null,
+          false,
         )
       }
 
@@ -583,19 +629,7 @@ fun SetupScreen(
             },
             placeholder = {
               Text(
-                if (setup.surpriseMe) {
-                  when (language) {
-                    AppLanguage.English -> "Surprise me selected"
-                    AppLanguage.Bulgarian -> "Избрано е \"Изненадай ме\""
-                    AppLanguage.German -> "\"Überrasche mich\" ausgewählt"
-                  }
-                } else {
-                  when (language) {
-                    AppLanguage.English -> "Example: 10"
-                    AppLanguage.Bulgarian -> "Пример: 10"
-                    AppLanguage.German -> "Beispiel: 10"
-                  }
-                },
+                surpriseMePlaceholderText,
               )
             },
             supportingText = {
@@ -636,16 +670,16 @@ fun SetupScreen(
           OutlinedButton(onClick = onSurpriseMe, modifier = Modifier.fillMaxWidth()) {
             Text(
               if (setup.surpriseMe) {
-                when (language) {
-                  AppLanguage.English -> "Use custom amount"
-                  AppLanguage.Bulgarian -> "Използвай собствен брой"
-                  AppLanguage.German -> "Eigene Anzahl verwenden"
+          when (language) {
+                  AppLanguage.English -> "Custom count"
+                  AppLanguage.Bulgarian -> "Custom count"
+                  AppLanguage.German -> "Custom count"
                 }
               } else {
                 when (language) {
-                  AppLanguage.English -> "Surprise me! (1-$questionCountLimit)"
-                  AppLanguage.Bulgarian -> "Изненадай ме! (1-$questionCountLimit)"
-                  AppLanguage.German -> "Überrasche mich! (1-$questionCountLimit)"
+                  AppLanguage.English -> "Randomizer"
+                  AppLanguage.Bulgarian -> "Randomizer"
+                  AppLanguage.German -> "Randomizer"
                 }
               },
             )
@@ -693,103 +727,42 @@ fun SetupScreen(
       }
 
       else {
-        SectionCard(title = when (language) {
-          AppLanguage.English -> "Question count"
-          AppLanguage.Bulgarian -> "Брой въпроси"
-          AppLanguage.German -> "Fragenanzahl"
-        }) {
-          OutlinedTextField(
-            value =
-              when {
-                isMistakeReview -> questionCountLimit.toString()
-                else -> setup.questionCountInput
-              },
-            onValueChange = questionCountChangeHandler,
-            label = {
-              Text(
-                when (language) {
-                  AppLanguage.English -> "Amount of questions"
-                  AppLanguage.Bulgarian -> "Брой въпроси"
-                  AppLanguage.German -> "Fragenanzahl"
-                },
-              )
-            },
-            placeholder = {
-              Text(
-                if (setup.surpriseMe) {
-                  when (language) {
-                    AppLanguage.English -> "Surprise me selected"
-                    AppLanguage.Bulgarian -> "Избрано е \"Изненадай ме\""
-                    AppLanguage.German -> "\"Überrasche mich\" ausgewählt"
-                  }
-                } else {
-                  when (language) {
-                    AppLanguage.English -> "Example: 10"
-                    AppLanguage.Bulgarian -> "Пример: 10"
-                    AppLanguage.German -> "Beispiel: 10"
-                  }
-                },
-              )
-            },
-            supportingText = if (isMistakeReview) {
-              null
-            } else {
-              {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                  Text(
-                    when (language) {
-                      AppLanguage.English -> "Allowed range: 1-$questionCountLimit"
-                      AppLanguage.Bulgarian -> "Допустим диапазон: 1-$questionCountLimit"
-                      AppLanguage.German -> "Erlaubter Bereich: 1-$questionCountLimit"
-                    },
-                  )
-                  if (questionCountOverLimit) {
-                    Text(
-                      when (language) {
-                        AppLanguage.English -> "Selected question count is over the allowed limit."
-                        AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
-                        AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
-                      },
-                      color = AccentRed,
-                    )
-                  } else if (ProgressionRules.shouldWarnNoMedal(setup.questionCount)) {
-                    Text(
-                      when (language) {
-                        AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
-                        AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
-                        AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
-                      },
-                    )
-                  }
-                }
+        renderQuestionCountCard(
+          when {
+            isMistakeReview -> questionCountLimit.toString()
+            else -> setup.questionCountInput
+          },
+          !setup.surpriseMe && !isMistakeReview,
+          !isMistakeReview,
+          when (language) {
+            AppLanguage.English -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+            AppLanguage.Bulgarian -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+            AppLanguage.German -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+          },
+          onSurpriseMe,
+          questionCountChangeHandler,
+          if (isMistakeReview) null else when (language) {
+            AppLanguage.English -> "Allowed range: 1-$questionCountLimit"
+            AppLanguage.Bulgarian -> "Допустим диапазон: 1-$questionCountLimit"
+            AppLanguage.German -> "Erlaubter Bereich: 1-$questionCountLimit"
+          },
+          if (isMistakeReview) null else when {
+            questionCountOverLimit ->
+              when (language) {
+                AppLanguage.English -> "Selected question count is over the allowed limit."
+                AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
+                AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
               }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            enabled = !setup.surpriseMe && !isMistakeReview,
-            isError = questionCountOverLimit,
-            modifier = Modifier.fillMaxWidth(),
-          )
-          if (!isMistakeReview) {
-            OutlinedButton(onClick = onSurpriseMe, modifier = Modifier.fillMaxWidth()) {
-              Text(
-                if (setup.surpriseMe) {
-                  when (language) {
-                    AppLanguage.English -> "Use custom amount"
-                    AppLanguage.Bulgarian -> "Използвай собствен брой"
-                    AppLanguage.German -> "Eigene Anzahl verwenden"
-                  }
-                } else {
-                  when (language) {
-                    AppLanguage.English -> "Surprise me! (1-$questionCountLimit)"
-                    AppLanguage.Bulgarian -> "Изненадай ме! (1-$questionCountLimit)"
-                    AppLanguage.German -> "Überrasche mich! (1-$questionCountLimit)"
-                  }
-                },
-              )
-            }
-          }
-        }
+            ProgressionRules.shouldWarnNoMedal(setup.questionCount) ->
+              when (language) {
+                AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
+                AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
+                AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
+              }
+            else -> null
+          },
+          questionCountOverLimit,
+        )
 
         SectionCard(title = when (language) {
           AppLanguage.English -> "Question variants"
@@ -1093,33 +1066,23 @@ private fun CompactToggleInfoCard(
   }
 }
 
-@Composable
-private fun CompactReadOnlyCard(
-  title: String,
-  value: String,
-  supportingText: String,
-) {
-  Card(modifier = Modifier.fillMaxWidth()) {
-    Column(
-      modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-      verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-      Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-      )
-      Text(
-        text = value,
-        style = MaterialTheme.typography.headlineSmall,
-      )
-      Text(
-        text = supportingText,
-        style = MaterialTheme.typography.bodySmall,
-      )
+private fun surpriseMePlaceholderText(
+  language: AppLanguage,
+  surpriseMeEnabled: Boolean,
+): String =
+  if (surpriseMeEnabled) {
+    when (language) {
+      AppLanguage.English -> "Random count selected"
+      AppLanguage.Bulgarian -> "Числото ще е случайно"
+      AppLanguage.German -> "Zufallsauswahl"
+    }
+  } else {
+    when (language) {
+      AppLanguage.English -> "Example: 10"
+      AppLanguage.Bulgarian -> "Пример: 10"
+      AppLanguage.German -> "Beispiel: 10"
     }
   }
-}
 
 private fun localizedCreateQuizPresetTitle(
   preset: CreateQuizPreset,
