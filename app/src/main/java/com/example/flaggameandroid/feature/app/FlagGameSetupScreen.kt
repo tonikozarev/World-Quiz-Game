@@ -634,7 +634,7 @@ fun SetupScreen(
         onCheckedChange = { onCreateQuizManualTimerToggled() },
       ) { if (setup.createQuizManualTimerEnabled) renderTimerInput() }
 
-      if (setup.usesCreateQuizTraining || activeCreateQuizSource == CreateQuizSource.PresetFilter) {
+      if (setup.usesCreateQuizTraining || (activeCreateQuizSource == CreateQuizSource.PresetFilter && !setup.usesCreateQuizManualHardcore)) {
         Box(
           modifier =
             Modifier.onGloballyPositioned {
@@ -676,15 +676,18 @@ fun SetupScreen(
           )
         }
       } else {
-        if (!setup.usesCreateQuizManualHardcore) {
-          Box(
+        Box(
           modifier =
             Modifier.onGloballyPositioned {
               showStickyQuestionCount = it.boundsInRoot().bottom <= 0f
             },
         ) {
           renderQuestionCountCard(
-            setup.selectedCountryCodes.size.toString(),
+            if (setup.usesCreateQuizManualHardcore) {
+              countries.size.toString()
+            } else {
+              setup.selectedCountryCodes.size.toString()
+            },
             false,
             false,
             "",
@@ -694,7 +697,6 @@ fun SetupScreen(
             null,
             false,
           )
-        }
         }
       }
 

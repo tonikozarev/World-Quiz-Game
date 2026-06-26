@@ -153,7 +153,7 @@ internal fun FlagGameUiState.withCreateQuizManualHardcoreToggled(countries: List
       createQuizManualHardcoreEnabled = enabled,
       createQuizTrainingEnabled = false,
       createQuizSeed = 0L,
-      questionCountInput = "1",
+      questionCountInput = if (enabled) countries.size.toString() else "1",
       surpriseMe = false,
     )
   return copy(
