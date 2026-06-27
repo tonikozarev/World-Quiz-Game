@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
@@ -155,7 +158,7 @@ fun SetupScreen(
   ScreenShell(
     modifier = modifier,
     overlay = {
-      if (setup.mode == GameMode.CreateQuiz && showStickyQuestionCount && !setup.usesCreateQuizManualHardcore) {
+      if (setup.mode == GameMode.CreateQuiz) {
         val stickyQuestionCount = setup.questionCount ?: 0
         val stickyQuestionCountOverLimit =
           (setup.usesCreateQuizTraining || activeCreateQuizSource == CreateQuizSource.PresetFilter) &&
@@ -193,47 +196,84 @@ fun SetupScreen(
           } else {
             null
           }
-        Box(
+        Column(
           modifier =
             Modifier
               .align(Alignment.TopCenter)
               .fillMaxWidth()
               .background(MaterialTheme.colorScheme.background)
               .padding(bottom = 8.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-          QuestionCountStickyCard(
-            title =
-              when (language) {
-                AppLanguage.English -> "Question count"
-                AppLanguage.Bulgarian -> "Брой въпроси"
-                AppLanguage.German -> "Fragenanzahl"
-              },
-            questionCountValue =
-              if (!setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore && activeCreateQuizSource == CreateQuizSource.ManualCountries) {
-                setup.selectedCountryCodes.size.toString()
-              } else {
-                setup.questionCountInput
-              },
-            editable = (setup.usesCreateQuizTraining || activeCreateQuizSource == CreateQuizSource.PresetFilter) && !setup.usesCreateQuizManualHardcore && !setup.surpriseMe,
-            showRandomButton = !setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore && activeCreateQuizSource == CreateQuizSource.PresetFilter,
-            randomButtonText =
-              when (language) {
-                AppLanguage.English -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-                AppLanguage.Bulgarian -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-                AppLanguage.German -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-              },
-            onRandomButtonClick = onSurpriseMe,
-            onValueChange = onQuestionCountChange,
-            rangeText = stickyRangeText,
-            warningText = stickyWarningText,
-            warningIsError = stickyQuestionCountOverLimit,
-            placeholderText = surpriseMePlaceholderText(language, setup.surpriseMe),
-          )
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Text(
+              text =
+                when (language) {
+                  AppLanguage.English -> "Custom Quiz"
+                  AppLanguage.Bulgarian -> "Персонален тест"
+                  AppLanguage.German -> "Benutzerdefiniertes Quiz"
+                },
+              style = MaterialTheme.typography.headlineMedium,
+              fontWeight = FontWeight.Bold,
+              color = Color.White,
+              modifier = Modifier.weight(1f),
+            )
+            Button(
+              onClick = onStartQuiz,
+              contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+            ) {
+              Text(
+                when (language) {
+                  AppLanguage.English -> "Start"
+                  AppLanguage.Bulgarian -> "Старт"
+                  AppLanguage.German -> "Start"
+                },
+              )
+            }
+          }
+          if (showStickyQuestionCount && !setup.usesCreateQuizManualHardcore) {
+            QuestionCountStickyCard(
+              title =
+                when (language) {
+                  AppLanguage.English -> "Question count"
+                  AppLanguage.Bulgarian -> "Брой въпроси"
+                  AppLanguage.German -> "Fragenanzahl"
+                },
+              questionCountValue =
+                if (!setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore && activeCreateQuizSource == CreateQuizSource.ManualCountries) {
+                  setup.selectedCountryCodes.size.toString()
+                } else {
+                  setup.questionCountInput
+                },
+              editable = (setup.usesCreateQuizTraining || activeCreateQuizSource == CreateQuizSource.PresetFilter) && !setup.usesCreateQuizManualHardcore && !setup.surpriseMe,
+              showRandomButton = !setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore && activeCreateQuizSource == CreateQuizSource.PresetFilter,
+              randomButtonText =
+                when (language) {
+                  AppLanguage.English -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+                  AppLanguage.Bulgarian -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+                  AppLanguage.German -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+                },
+              onRandomButtonClick = onSurpriseMe,
+              onValueChange = onQuestionCountChange,
+              rangeText = stickyRangeText,
+              warningText = stickyWarningText,
+              warningIsError = stickyQuestionCountOverLimit,
+              placeholderText = surpriseMePlaceholderText(language, setup.surpriseMe),
+            )
+          }
         }
       }
     },
   ) {
-    HeaderRow(title = cleanModeTitle(setup.mode, language))
+    if (setup.mode == GameMode.CreateQuiz) {
+      Spacer(modifier = Modifier.height(72.dp))
+    } else {
+      HeaderRow(title = cleanModeTitle(setup.mode, language))
+    }
 
     CompactToggleInfoCard(
       title =
@@ -705,9 +745,9 @@ fun SetupScreen(
 
       if (!setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore) {
         SectionCard(title = when (language) {
-          AppLanguage.English -> "Create a quiz"
-          AppLanguage.Bulgarian -> "Създай тест"
-          AppLanguage.German -> "Quiz erstellen"
+          AppLanguage.English -> "Custom Quiz"
+          AppLanguage.Bulgarian -> "Персонален тест"
+          AppLanguage.German -> "Benutzerdefiniertes Quiz"
         }) {
           SelectableRow(
             title = when (language) {
@@ -852,14 +892,16 @@ fun SetupScreen(
       Text(text = setupError, color = AccentRed, style = MaterialTheme.typography.bodyMedium)
     }
 
-    Button(onClick = onStartQuiz, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-      Text(
-        when (language) {
-          AppLanguage.English -> "Start quiz"
-          AppLanguage.Bulgarian -> "Започни теста"
-          AppLanguage.German -> "Quiz starten"
-        },
-      )
+    if (setup.mode != GameMode.CreateQuiz) {
+      Button(onClick = onStartQuiz, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+        Text(
+          when (language) {
+            AppLanguage.English -> "Start quiz"
+            AppLanguage.Bulgarian -> "Започни теста"
+            AppLanguage.German -> "Quiz starten"
+          },
+        )
+      }
     }
 
     if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore) {

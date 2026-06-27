@@ -36,7 +36,7 @@ internal fun localizedModeTitle(
 ): String =
   when (mode) {
     GameMode.Training -> tr(language, "Training", "Тренировка", "Training")
-    GameMode.CreateQuiz -> tr(language, "Create a quiz", "Създай тест", "Quiz erstellen")
+    GameMode.CreateQuiz -> tr(language, "Custom Quiz", "Персонален тест", "Benutzerdefiniertes Quiz")
     GameMode.WorldFlags ->
       tr(language, "Country Flags", "Държавни флагове", "Länderflaggen")
     GameMode.DailyChallenge -> tr(language, "Daily challenge", "Дневно предизвикателство", "Tägliche Herausforderung")
