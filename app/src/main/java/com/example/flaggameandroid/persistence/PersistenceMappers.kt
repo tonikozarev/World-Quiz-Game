@@ -198,6 +198,7 @@ private fun List<SavedQuizTemplate>.serializeSavedQuizTemplates(): String =
       template.source.name,
       template.preset?.name.orEmpty(),
       template.selectedCountryCodes.joinToString(separator = "."),
+      template.selectedCapitalCountryCodes.joinToString(separator = "."),
       template.questionCountryCodes.joinToString(separator = "."),
       template.variants.joinToString(separator = ".") { it.name },
       template.questionCount.toString(),
@@ -222,17 +223,24 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
         val sourceIndex = if (hasTopic) 4 else 3
         val presetIndex = if (hasTopic) 5 else 4
         val selectedCodesIndex = if (hasTopic) 6 else 5
-        val questionCodesIndex = if (hasTopic) 7 else 6
-        val variantsIndex = if (hasTopic) 8 else 7
-        val questionCountIndex = if (hasTopic) 9 else 8
-        val seedIndex = if (hasTopic) 10 else 9
-        val multiplayerIndex = if (hasTopic) 11 else 10
-        val playersIndex = if (hasTopic) 12 else 11
-        val completionIndex = if (hasTopic) 13 else 12
-        val difficultyIndex = if (hasTopic) 14 else 13
+        val selectedCapitalCodesIndex = if (hasTopic && parts.size >= 16) 7 else -1
+        val questionCodesIndex = if (hasTopic) if (parts.size >= 16) 8 else 7 else 6
+        val variantsIndex = if (hasTopic) if (parts.size >= 16) 9 else 8 else 7
+        val questionCountIndex = if (hasTopic) if (parts.size >= 16) 10 else 9 else 8
+        val seedIndex = if (hasTopic) if (parts.size >= 16) 11 else 10 else 9
+        val multiplayerIndex = if (hasTopic) if (parts.size >= 16) 12 else 11 else 10
+        val playersIndex = if (hasTopic) if (parts.size >= 16) 13 else 12 else 11
+        val completionIndex = if (hasTopic) if (parts.size >= 16) 14 else 13 else 12
+        val difficultyIndex = if (hasTopic) if (parts.size >= 16) 15 else 14 else 13
         val source = CreateQuizSource.entries.firstOrNull { it.name == parts[sourceIndex] } ?: CreateQuizSource.PresetFilter
         val preset = parts[presetIndex].takeIf { it.isNotBlank() }?.let { name -> CreateQuizPreset.entries.firstOrNull { it.name == name } }
         val selectedCountryCodes = parts[selectedCodesIndex].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
+        val selectedCapitalCountryCodes =
+          if (selectedCapitalCodesIndex >= 0) {
+            parts[selectedCapitalCodesIndex].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
+          } else {
+            emptySet()
+          }
         val modernFormat = parts.size >= (if (hasTopic) 15 else 14)
         val questionCountryCodes =
           if (parts.size >= (if (hasTopic) 13 else 12)) {
@@ -267,6 +275,7 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           source = source,
           preset = preset,
           selectedCountryCodes = selectedCountryCodes,
+          selectedCapitalCountryCodes = selectedCapitalCountryCodes,
           questionCountryCodes = questionCountryCodes,
           variants = variants,
           questionCount = parts[questionCountIndex].toIntOrNull() ?: 10,

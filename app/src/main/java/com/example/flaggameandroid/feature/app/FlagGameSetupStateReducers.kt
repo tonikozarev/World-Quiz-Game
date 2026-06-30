@@ -11,7 +11,21 @@ internal fun FlagGameUiState.withUpdatedSetup(update: (SetupState) -> SetupState
   copy(setup = update(setup), setupError = null)
 
 internal fun FlagGameUiState.withSelectedQuizTopic(topic: QuizTopic): FlagGameUiState =
-  copy(selectedQuizTopic = topic, setupError = null)
+  copy(
+    selectedQuizTopic = topic,
+    setup =
+      if (setup.mode == com.example.flaggameandroid.core.model.GameMode.CreateQuiz && topic == QuizTopic.Mixed) {
+        setup.copy(
+          createQuizSource = CreateQuizSource.ManualCountriesCapitals,
+          questionCountInput = setup.derivedCreateQuizQuestionCount().toString(),
+          surpriseMe = false,
+          createQuizSeed = 0L,
+        )
+      } else {
+        setup
+      },
+    setupError = null,
+  )
 
 internal fun FlagGameUiState.withSelectedVariantsToggled(variant: QuizVariant): FlagGameUiState {
   val current = setup.variants
@@ -59,13 +73,14 @@ internal fun FlagGameUiState.withCreateQuizSourceSelected(
     setup.copy(
       createQuizSource = resolvedSource,
       selectedCountryCodes = if (resolvedSource == CreateQuizSource.ManualCountriesCapitals) setup.selectedCountryCodes else emptySet(),
+      selectedCapitalCountryCodes = if (resolvedSource == CreateQuizSource.ManualCountriesCapitals) setup.selectedCapitalCountryCodes else emptySet(),
       createQuizManualHardcoreEnabled = if (resolvedSource == CreateQuizSource.ManualCountriesCapitals) setup.createQuizManualHardcoreEnabled else false,
       createQuizPresets = setup.createQuizPresets.ifEmpty { createQuizDefaultPresetsForTopic(setup.topic) },
       createQuizSeed = 0L,
       questionCountInput =
         when (resolvedSource) {
           CreateQuizSource.PresetFilter -> setup.questionCountInput.ifBlank { "10" }
-          CreateQuizSource.ManualCountriesCapitals -> setup.selectedCountryCodes.derivedCreateQuizQuestionCount(setup.topic).toString()
+          CreateQuizSource.ManualCountriesCapitals -> setup.derivedCreateQuizQuestionCount().toString()
         },
       surpriseMe = if (resolvedSource == CreateQuizSource.ManualCountriesCapitals) false else setup.surpriseMe,
     )
@@ -106,14 +121,111 @@ internal fun FlagGameUiState.withCreateQuizCountryToggled(
   countryCode: String,
   countries: List<FlagCountry>,
 ): FlagGameUiState {
-  val current = setup.selectedCountryCodes
-  val next = if (countryCode in current) current - countryCode else current + countryCode
+  val nextCountrySelection =
+    if (countryCode in setup.selectedCountryCodes) {
+      setup.selectedCountryCodes - countryCode
+    } else {
+      setup.selectedCountryCodes + countryCode
+    }
   val nextSetup =
     setup.copy(
       createQuizSource = CreateQuizSource.ManualCountriesCapitals,
-      selectedCountryCodes = next,
+      selectedCountryCodes = nextCountrySelection,
+      selectedCapitalCountryCodes = setup.selectedCapitalCountryCodes,
       createQuizSeed = 0L,
-      questionCountInput = next.derivedCreateQuizQuestionCount(setup.topic).toString(),
+      questionCountInput =
+        if (setup.topic == QuizTopic.Mixed) {
+          setup.derivedCreateQuizQuestionCount(nextCountrySelection, setup.selectedCapitalCountryCodes).toString()
+        } else {
+          nextCountrySelection.derivedCreateQuizQuestionCount(setup.topic).toString()
+        },
+      surpriseMe = false,
+    )
+  return copy(
+    setup = nextSetup,
+    questionCountLimit = questionLimitFor(nextSetup, countries),
+    setupError = null,
+  )
+}
+
+internal fun FlagGameUiState.withCreateQuizCountryBulkToggled(
+  countryCodes: Set<String>,
+  countries: List<FlagCountry>,
+): FlagGameUiState {
+  if (countryCodes.isEmpty()) return this
+  val allSelected = countryCodes.all { it in setup.selectedCountryCodes }
+  val nextCountrySelection =
+    if (allSelected) {
+      setup.selectedCountryCodes - countryCodes
+    } else {
+      setup.selectedCountryCodes + countryCodes
+    }
+  val nextSetup =
+    setup.copy(
+      createQuizSource = CreateQuizSource.ManualCountriesCapitals,
+      selectedCountryCodes = nextCountrySelection,
+      selectedCapitalCountryCodes = setup.selectedCapitalCountryCodes,
+      createQuizSeed = 0L,
+      questionCountInput =
+        if (setup.topic == QuizTopic.Mixed) {
+          setup.derivedCreateQuizQuestionCount(nextCountrySelection, setup.selectedCapitalCountryCodes).toString()
+        } else {
+          nextCountrySelection.derivedCreateQuizQuestionCount(setup.topic).toString()
+        },
+      surpriseMe = false,
+    )
+  return copy(
+    setup = nextSetup,
+    questionCountLimit = questionLimitFor(nextSetup, countries),
+    setupError = null,
+  )
+}
+
+internal fun FlagGameUiState.withCreateQuizCapitalToggled(
+  countryCode: String,
+  countries: List<FlagCountry>,
+): FlagGameUiState {
+  val nextCapitalSelection =
+    if (countryCode in setup.selectedCapitalCountryCodes) {
+      setup.selectedCapitalCountryCodes - countryCode
+    } else {
+      setup.selectedCapitalCountryCodes + countryCode
+    }
+  val nextSetup =
+    setup.copy(
+      createQuizSource = CreateQuizSource.ManualCountriesCapitals,
+      selectedCountryCodes = setup.selectedCountryCodes,
+      selectedCapitalCountryCodes = nextCapitalSelection,
+      createQuizSeed = 0L,
+      questionCountInput = setup.derivedCreateQuizQuestionCount(setup.selectedCountryCodes, nextCapitalSelection).toString(),
+      surpriseMe = false,
+    )
+  return copy(
+    setup = nextSetup,
+    questionCountLimit = questionLimitFor(nextSetup, countries),
+    setupError = null,
+  )
+}
+
+internal fun FlagGameUiState.withCreateQuizCapitalBulkToggled(
+  countryCodes: Set<String>,
+  countries: List<FlagCountry>,
+): FlagGameUiState {
+  if (countryCodes.isEmpty()) return this
+  val allSelected = countryCodes.all { it in setup.selectedCapitalCountryCodes }
+  val nextCapitalSelection =
+    if (allSelected) {
+      setup.selectedCapitalCountryCodes - countryCodes
+    } else {
+      setup.selectedCapitalCountryCodes + countryCodes
+    }
+  val nextSetup =
+    setup.copy(
+      createQuizSource = CreateQuizSource.ManualCountriesCapitals,
+      selectedCountryCodes = setup.selectedCountryCodes,
+      selectedCapitalCountryCodes = nextCapitalSelection,
+      createQuizSeed = 0L,
+      questionCountInput = setup.derivedCreateQuizQuestionCount(setup.selectedCountryCodes, nextCapitalSelection).toString(),
       surpriseMe = false,
     )
   return copy(
@@ -129,19 +241,31 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
 ): FlagGameUiState {
   val continentCodes = countries.filter { it.continent == continent }.map { it.code }.toSet()
   if (continentCodes.isEmpty()) return this
-  val continentSelected = continentCodes.all { it in setup.selectedCountryCodes }
-  val nextSelection =
-    if (continentSelected) {
+  val continentSelectedCountries = continentCodes.all { it in setup.selectedCountryCodes }
+  val continentSelectedCapitals = continentCodes.all { it in setup.selectedCapitalCountryCodes }
+  val nextCountrySelection =
+    if (continentSelectedCountries) {
       setup.selectedCountryCodes - continentCodes
     } else {
       setup.selectedCountryCodes + continentCodes
     }
+  val nextCapitalSelection =
+    if (setup.topic == QuizTopic.Mixed) {
+      if (continentSelectedCapitals) {
+        setup.selectedCapitalCountryCodes - continentCodes
+      } else {
+        setup.selectedCapitalCountryCodes + continentCodes
+      }
+    } else {
+      setup.selectedCapitalCountryCodes
+    }
   val nextSetup =
     setup.copy(
       createQuizSource = CreateQuizSource.ManualCountriesCapitals,
-      selectedCountryCodes = nextSelection,
+      selectedCountryCodes = nextCountrySelection,
+      selectedCapitalCountryCodes = nextCapitalSelection,
       createQuizSeed = 0L,
-      questionCountInput = nextSelection.derivedCreateQuizQuestionCount(setup.topic).toString(),
+      questionCountInput = if (setup.topic == QuizTopic.Mixed) setup.derivedCreateQuizQuestionCount(nextCountrySelection, nextCapitalSelection).toString() else nextCountrySelection.derivedCreateQuizQuestionCount(setup.topic).toString(),
       surpriseMe = false,
     )
   return copy(
@@ -216,12 +340,14 @@ internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(countries: Li
 internal fun FlagGameUiState.withCreateQuizAllCountriesToggled(countries: List<FlagCountry>): FlagGameUiState {
   val allCodes = countries.map { it.code }.toSet()
   val nextSelection = if (setup.selectedCountryCodes.size == allCodes.size) emptySet() else allCodes
+  val nextCapitalSelection = if (setup.topic == QuizTopic.Mixed && setup.selectedCapitalCountryCodes.size == allCodes.size) emptySet() else if (setup.topic == QuizTopic.Mixed) allCodes else emptySet()
   val nextSetup =
     setup.copy(
       createQuizSource = CreateQuizSource.ManualCountriesCapitals,
       selectedCountryCodes = nextSelection,
+      selectedCapitalCountryCodes = nextCapitalSelection,
       createQuizSeed = 0L,
-      questionCountInput = nextSelection.derivedCreateQuizQuestionCount(setup.topic).toString(),
+      questionCountInput = if (setup.topic == QuizTopic.Mixed) setup.derivedCreateQuizQuestionCount(nextSelection, nextCapitalSelection).toString() else nextSelection.derivedCreateQuizQuestionCount(setup.topic).toString(),
       surpriseMe = false,
     )
   return copy(
@@ -236,6 +362,19 @@ private fun Set<String>.derivedCreateQuizQuestionCount(topic: QuizTopic): Int =
 
 private fun List<FlagCountry>.derivedCreateQuizQuestionCount(topic: QuizTopic): Int =
   if (topic == QuizTopic.Mixed) size * 2 else size
+
+private fun SetupState.derivedCreateQuizQuestionCount(): Int =
+  derivedCreateQuizQuestionCount(selectedCountryCodes, selectedCapitalCountryCodes)
+
+private fun SetupState.derivedCreateQuizQuestionCount(
+  selectedCountries: Set<String>,
+  selectedCapitals: Set<String>,
+): Int =
+  if (topic == QuizTopic.Mixed) {
+    selectedCountries.size + selectedCapitals.size
+  } else {
+    selectedCountries.size
+  }
 
 internal fun FlagGameUiState.withSurpriseMeToggled(): FlagGameUiState {
   val surpriseMe = !setup.surpriseMe

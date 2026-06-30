@@ -4,6 +4,7 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.QuizConfig
+import com.example.flaggameandroid.core.model.QuizQuestionSpec
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
@@ -73,12 +74,23 @@ class QuizQuestionGeneratorTest {
             topic = QuizTopic.Mixed,
             variants = setOf(QuizVariant.FlagToCountry),
             questionCount = 6,
+            questionSpecs =
+              listOf(
+                QuizQuestionSpec("AT", QuizTopic.Countries),
+                QuizQuestionSpec("BG", QuizTopic.Countries),
+                QuizQuestionSpec("DE", QuizTopic.Countries),
+                QuizQuestionSpec("AT", QuizTopic.Capitals),
+                QuizQuestionSpec("BG", QuizTopic.Capitals),
+                QuizQuestionSpec("DE", QuizTopic.Capitals),
+              ),
           ),
         answerPool = repository.getCountries(),
       )
 
     assertEquals(6, questions.size)
     assertEquals(3, questions.map { it.correctCountry.code }.distinct().size)
+    assertTrue(questions.any { it.topic == QuizTopic.Countries })
+    assertTrue(questions.any { it.topic == QuizTopic.Capitals })
   }
 
   @Test

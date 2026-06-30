@@ -143,6 +143,7 @@ class GameModeRegressionTest {
         CreateQuizPreset.CapitalPopulationUnderOneMillion,
         CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
         CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
+        CreateQuizPreset.CapitalPopulationOverThirtyMillion,
       ),
       createQuizDefaultPresetsForTopic(QuizTopic.Capitals),
     )

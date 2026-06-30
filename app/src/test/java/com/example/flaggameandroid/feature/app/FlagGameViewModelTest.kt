@@ -112,7 +112,7 @@ class FlagGameViewModelTest {
   }
 
   @Test
-  fun createQuizMixedDefaultsToManualAndDoublesSelectedQuestionCount() {
+  fun createQuizMixedKeepsCountryAndCapitalSelectionsSeparate() {
     val viewModel = viewModel()
 
     viewModel.onQuizTopicSelected(QuizTopic.Mixed)
@@ -120,9 +120,14 @@ class FlagGameViewModelTest {
     viewModel.onCreateQuizCountryToggled("AT")
     viewModel.onCreateQuizCountryToggled("BG")
     viewModel.onCreateQuizCountryToggled("DE")
+    viewModel.onCreateQuizCapitalToggled("AT")
+    viewModel.onCreateQuizCapitalToggled("BG")
+    viewModel.onCreateQuizCapitalToggled("DE")
 
     val setup = viewModel.uiState.value.setup
     assertEquals(CreateQuizSource.ManualCountriesCapitals, setup.createQuizSource)
+    assertEquals(setOf("AT", "BG", "DE"), setup.selectedCountryCodes)
+    assertEquals(setOf("AT", "BG", "DE"), setup.selectedCapitalCountryCodes)
     assertEquals("6", setup.questionCountInput)
     assertEquals(6, viewModel.uiState.value.questionCountLimit)
 
@@ -132,6 +137,8 @@ class FlagGameViewModelTest {
     assertEquals(GameMode.CreateQuiz, quiz.mode)
     assertEquals(6, quiz.totalQuestions)
     assertEquals(3, quiz.questions.map { it.correctCountry.code }.distinct().size)
+    assertTrue(quiz.questions.any { it.topic == QuizTopic.Countries })
+    assertTrue(quiz.questions.any { it.topic == QuizTopic.Capitals })
   }
 
   @Test

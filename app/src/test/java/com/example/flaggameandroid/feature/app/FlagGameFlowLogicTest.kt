@@ -533,6 +533,30 @@ class FlagGameFlowLogicTest {
   }
 
   @Test
+  fun savedQuizTemplateConfigurationDistinguishesMixedCountryAndCapitalSelectionSets() {
+    val base =
+      SavedQuizTemplate(
+        id = "a",
+        createdAtEpochMillis = 1L,
+        title = "Quiz A",
+        topic = QuizTopic.Mixed,
+        source = CreateQuizSource.ManualCountriesCapitals,
+        selectedCountryCodes = setOf("AT", "BG"),
+        selectedCapitalCountryCodes = setOf("AT", "BG"),
+        variants = setOf(QuizVariant.FlagToCountry),
+        questionCount = 4,
+        seed = 1L,
+      )
+    val differentCapitalSelection =
+      base.copy(
+        id = "b",
+        selectedCapitalCountryCodes = setOf("AT", "DE"),
+      )
+
+    assertFalse(base.hasSameQuizConfiguration(differentCapitalSelection))
+  }
+
+  @Test
   fun applyHintToCurrentQuestion_allowsHintAfterAnswerSelectionOutsideTraining() {
     val country = FlagCountry(code = "DE", name = "Germany", emoji = "🇩🇪", continent = "Europe")
     val question =

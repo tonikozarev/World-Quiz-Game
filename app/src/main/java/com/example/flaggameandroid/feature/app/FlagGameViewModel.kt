@@ -361,6 +361,18 @@ class FlagGameViewModel(
     updateState { it.withCreateQuizCountryToggled(countryCode, countries) }
   }
 
+  fun onCreateQuizCountryBulkToggled(countryCodes: Set<String>) {
+    updateState { it.withCreateQuizCountryBulkToggled(countryCodes, countries) }
+  }
+
+  fun onCreateQuizCapitalToggled(countryCode: String) {
+    updateState { it.withCreateQuizCapitalToggled(countryCode, countries) }
+  }
+
+  fun onCreateQuizCapitalBulkToggled(countryCodes: Set<String>) {
+    updateState { it.withCreateQuizCapitalBulkToggled(countryCodes, countries) }
+  }
+
   fun onCreateQuizContinentToggled(continent: String) {
     updateState { it.withCreateQuizContinentToggled(continent, countries) }
   }
@@ -594,7 +606,11 @@ class FlagGameViewModel(
     val exactQuestionCount =
       when (setup.createQuizSource) {
         CreateQuizSource.ManualCountriesCapitals ->
-          setup.selectedCountryCodes.let { if (setup.topic == QuizTopic.Mixed) it.size * 2 else it.size }.coerceAtLeast(1)
+          if (setup.topic == QuizTopic.Mixed) {
+            (setup.selectedCountryCodes.size + setup.selectedCapitalCountryCodes.size).coerceAtLeast(1)
+          } else {
+            setup.selectedCountryCodes.size.coerceAtLeast(1)
+          }
         CreateQuizSource.PresetFilter -> setup.questionCount ?: state.questionCountLimit
       }
     val templateTitle =
@@ -624,6 +640,7 @@ class FlagGameViewModel(
         source = setup.createQuizSource,
         preset = if (setup.createQuizSource == CreateQuizSource.PresetFilter) setup.createQuizPreset else null,
         selectedCountryCodes = setup.selectedCountryCodes,
+        selectedCapitalCountryCodes = setup.selectedCapitalCountryCodes,
         questionCountryCodes = resolvedQuestionCountryCodes,
         variants = setup.variants,
         questionCount = exactQuestionCount.coerceAtLeast(1),
@@ -704,11 +721,17 @@ class FlagGameViewModel(
         createQuizPreset = template.preset ?: createQuizDefaultPresetsForTopic(template.topic).first(),
         createQuizPresets = template.preset?.let { setOf(it) } ?: createQuizDefaultPresetsForTopic(template.topic),
         selectedCountryCodes = template.selectedCountryCodes,
+        selectedCapitalCountryCodes = template.selectedCapitalCountryCodes,
         createQuizSeed = template.seed,
         savedQuizTemplateId = template.id,
         createQuizLocalMultiplayerEnabled = template.createQuizLocalMultiplayerEnabled,
         playerNames = template.playerNames.ifEmpty { listOf("Player 1", "Player 2") },
-        questionCountInput = template.questionCount.toString(),
+        questionCountInput =
+          if (template.topic == QuizTopic.Mixed) {
+            (template.selectedCountryCodes.size + template.selectedCapitalCountryCodes.size).toString()
+          } else {
+            template.questionCount.toString()
+          },
       )
     updateState {
       it.copy(

@@ -5,6 +5,7 @@ data class QuizConfig(
   val variants: Set<QuizVariant>,
   val topic: QuizTopic = QuizTopic.Countries,
   val selectedContinents: Set<String> = emptySet(),
+  val questionSpecs: List<QuizQuestionSpec> = emptyList(),
   val questionCount: Int,
   val speedRunSecondsPerAnswer: Int = 3,
   val countdownEnabled: Boolean = false,
@@ -14,6 +15,11 @@ data class QuizConfig(
   val players: List<String> = listOf("Solo"),
   val poolSource: QuizPoolSource = QuizPoolSource.Standard,
   val dailyChallengeTheme: DailyChallengeTheme? = null,
+)
+
+data class QuizQuestionSpec(
+  val countryCode: String,
+  val topic: QuizTopic,
 )
 
 data class PlayerProgress(

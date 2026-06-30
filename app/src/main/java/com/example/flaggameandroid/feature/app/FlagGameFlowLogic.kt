@@ -176,9 +176,10 @@ internal fun validateSetup(
     !setup.usesCreateQuizTraining &&
     !setup.usesCreateQuizManualHardcore &&
     setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
-    setup.selectedCountryCodes.isEmpty()
+    setup.selectedCountryCodes.isEmpty() &&
+    setup.selectedCapitalCountryCodes.isEmpty()
   ) {
-    return "Choose at least one country."
+    return if (setup.topic == QuizTopic.Mixed) "Choose at least one country or capital." else "Choose at least one country."
   }
   val needsContinents =
     setup.mode == GameMode.WorldFlags ||
@@ -201,6 +202,12 @@ internal fun validateSetup(
     if (setup.mode == GameMode.MistakeReview) return null
     if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) return null
     if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.usesCreateQuizManualHardcore) return null
+    if (
+      setup.mode == GameMode.CreateQuiz &&
+      !setup.usesCreateQuizTraining &&
+      setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
+      setup.topic == QuizTopic.Mixed
+    ) return null
     if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals) return null
     val questionCount = setup.questionCount ?: return "Write how many questions you want."
     if (questionCount <= 0) return "Question count must be at least 1."
@@ -209,6 +216,11 @@ internal fun validateSetup(
         setup.mode == GameMode.Training -> 999
         setup.usesCreateQuizTraining -> 999
         setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore -> 195
+        setup.mode == GameMode.CreateQuiz &&
+          !setup.usesCreateQuizTraining &&
+          setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
+          setup.topic == QuizTopic.Mixed ->
+          setup.derivedCreateQuizQuestionCount()
         else -> maxQuestions
       }
     if (questionCount > limit) return "Question count must be between 1 and $limit."
@@ -242,7 +254,7 @@ internal fun configFor(
       setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.usesCreateQuizManualHardcore ->
         if (setup.topic == QuizTopic.Mixed) poolSize * 2 else poolSize
       setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals ->
-        if (setup.topic == QuizTopic.Mixed) poolSize * 2 else poolSize
+        if (setup.topic == QuizTopic.Mixed) setup.derivedCreateQuizQuestionCount() else poolSize
       setup.mode == GameMode.DailyChallenge -> (setup.questionCount?.coerceIn(1, minOf(poolSize, 10)) ?: minOf(poolSize, 10)).coerceAtLeast(1)
       setup.mode == GameMode.MistakeReview -> mistakeReviewEligibleCountryCount(practiceStats, setup.topic)
       setup.mode == GameMode.Training ->
@@ -277,6 +289,18 @@ internal fun configFor(
     variants = variants,
     topic = setup.topic,
     selectedContinents = setup.selectedContinents,
+    questionSpecs =
+      if (
+        setup.mode == GameMode.CreateQuiz &&
+        !setup.usesCreateQuizTraining &&
+        setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
+        setup.topic == QuizTopic.Mixed
+      ) {
+        setup.selectedCountryCodes.map { code -> com.example.flaggameandroid.core.model.QuizQuestionSpec(code, QuizTopic.Countries) } +
+          setup.selectedCapitalCountryCodes.map { code -> com.example.flaggameandroid.core.model.QuizQuestionSpec(code, QuizTopic.Capitals) }
+      } else {
+        emptyList()
+      },
     questionCount = questionCount,
     speedRunSecondsPerAnswer = setup.speedRunSecondsPerAnswer ?: 5,
     countdownEnabled =
@@ -312,7 +336,9 @@ internal fun countryPoolFor(
         if (setup.usesCreateQuizManualHardcore) {
           countries
         } else {
-          countries.filter { country -> country.code in setup.selectedCountryCodes }
+          countries.filter { country ->
+            country.code in setup.selectedCountryCodes || country.code in setup.selectedCapitalCountryCodes
+          }
         }
     }
   } else if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) {
@@ -338,6 +364,11 @@ internal fun questionLimitFor(
     999
   } else if (setup.mode == GameMode.CreateQuiz) {
     when {
+      setup.mode == GameMode.CreateQuiz &&
+        !setup.usesCreateQuizTraining &&
+        setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
+        setup.topic == QuizTopic.Mixed ->
+        setup.derivedCreateQuizQuestionCount()
       setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals ->
         setup.selectedCountryCodes.derivedCreateQuizQuestionCount(setup.topic)
       setup.usesCreateQuizManualHardcore ->
@@ -358,6 +389,13 @@ internal fun questionLimitFor(
 
 private fun Set<String>.derivedCreateQuizQuestionCount(topic: QuizTopic): Int =
   if (topic == QuizTopic.Mixed) size * 2 else size
+
+private fun SetupState.derivedCreateQuizQuestionCount(): Int =
+  if (topic == QuizTopic.Mixed) {
+    selectedCountryCodes.size + selectedCapitalCountryCodes.size
+  } else {
+    selectedCountryCodes.size
+  }
 
 internal fun advanceLevelProgress(
   progress: LevelProgressState,

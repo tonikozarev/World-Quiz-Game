@@ -20,6 +20,7 @@ internal fun createQuizDefaultPresetsForTopic(topic: QuizTopic): Set<CreateQuizP
         CreateQuizPreset.CapitalPopulationUnderOneMillion,
         CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
         CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
+        CreateQuizPreset.CapitalPopulationOverThirtyMillion,
       )
     QuizTopic.Countries,
     QuizTopic.Mixed ->

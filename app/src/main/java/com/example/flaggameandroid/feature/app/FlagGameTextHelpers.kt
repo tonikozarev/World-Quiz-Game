@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import com.example.flaggameandroid.core.model.FlagCountry
+import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -22,7 +23,40 @@ internal fun wrongOptionLabel(
   language: AppLanguage,
   topic: QuizTopic = QuizTopic.Countries,
 ): String =
-  if (variant == QuizVariant.TextToFlag) country.emoji else country.localizedQuizText(language, topic)
+  when {
+    variant == QuizVariant.TextToFlag && topic == QuizTopic.Capitals ->
+      "${country.localizedName(language)} ${country.emoji}"
+    variant == QuizVariant.TextToFlag -> country.emoji
+    else -> country.localizedQuizText(language, topic)
+  }
+
+internal fun answerOptionLabel(
+  question: FlagQuestion,
+  option: FlagCountry,
+  language: AppLanguage,
+): String =
+  when {
+    question.variant == QuizVariant.TextToFlag && question.topic == QuizTopic.Capitals ->
+      "${option.localizedName(language)} ${option.emoji}"
+    question.variant == QuizVariant.TextToFlag -> option.emoji
+    else -> option.localizedQuizText(language, question.topic)
+  }
+
+internal fun capitalQuestionCountryLabel(
+  question: FlagQuestion,
+  language: AppLanguage,
+): String? =
+  if (question.topic == QuizTopic.Capitals && question.variant != QuizVariant.TextToFlag) {
+    val prefix =
+      when (language) {
+        AppLanguage.English -> "Country"
+        AppLanguage.Bulgarian -> "Държава"
+        AppLanguage.German -> "Land"
+      }
+    "$prefix: ${question.correctCountry.localizedName(language)}"
+  } else {
+    null
+  }
 
 internal val AvatarOptions =
   listOf(

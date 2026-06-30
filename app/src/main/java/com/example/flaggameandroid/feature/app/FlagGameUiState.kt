@@ -93,6 +93,7 @@ data class SetupState(
       CreateQuizPreset.FourPlusColors,
     ),
   val selectedCountryCodes: Set<String> = emptySet(),
+  val selectedCapitalCountryCodes: Set<String> = emptySet(),
   val createQuizSeed: Long = 0L,
   val savedQuizTemplateId: String? = null,
   val questionCountInput: String = "10",
@@ -137,6 +138,9 @@ data class SetupState(
 
   val usesCreateQuizManualTimer: Boolean
     get() = mode == GameMode.CreateQuiz && createQuizManualTimerEnabled
+
+  val createQuizMixedSelectionCount: Int
+    get() = selectedCountryCodes.size + selectedCapitalCountryCodes.size
 }
 
 enum class QuestionStatus {

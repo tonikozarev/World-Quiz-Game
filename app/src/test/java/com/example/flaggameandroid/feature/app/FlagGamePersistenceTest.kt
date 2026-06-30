@@ -146,10 +146,12 @@ class FlagGamePersistenceTest {
         id = "saved-1",
         createdAtEpochMillis = 1L,
         title = "My quiz",
+        topic = QuizTopic.Mixed,
         source = CreateQuizSource.ManualCountriesCapitals,
         selectedCountryCodes = setOf("DE", "BG", "AT"),
+        selectedCapitalCountryCodes = setOf("DE", "BG", "AT"),
         variants = setOf(QuizVariant.FlagToCountry),
-        questionCount = 3,
+        questionCount = 6,
         seed = 99L,
       )
     val viewModel =
@@ -165,6 +167,7 @@ class FlagGamePersistenceTest {
     assertEquals(AppScreen.Setup, viewModel.uiState.value.screen)
     assertEquals(GameMode.CreateQuiz, viewModel.uiState.value.setup.mode)
     assertEquals(3, viewModel.uiState.value.setup.selectedCountryCodes.size)
+    assertEquals(3, viewModel.uiState.value.setup.selectedCapitalCountryCodes.size)
     assertTrue(viewModel.uiState.value.quiz.questions.isEmpty())
   }
 

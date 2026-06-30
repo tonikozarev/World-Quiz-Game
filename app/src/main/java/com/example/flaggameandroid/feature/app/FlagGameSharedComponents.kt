@@ -335,9 +335,18 @@ internal fun AnswerButton(
     shape = RoundedCornerShape(10.dp),
     modifier = Modifier.fillMaxWidth(),
   ) {
+    val isCapitalFlagAnswer = question.variant == QuizVariant.TextToFlag && question.topic == com.example.flaggameandroid.core.model.QuizTopic.Capitals
     Text(
-      text = if (question.variant == QuizVariant.TextToFlag) option.emoji else option.localizedQuizText(language, question.topic),
-      fontSize = if (question.variant == QuizVariant.TextToFlag) 32.sp else 16.sp,
+      text = answerOptionLabel(question, option, language),
+      fontSize =
+        when {
+          isCapitalFlagAnswer -> 16.sp
+          question.variant == QuizVariant.TextToFlag -> 32.sp
+          else -> 16.sp
+        },
+      maxLines = if (isCapitalFlagAnswer) 2 else 1,
+      textAlign = TextAlign.Center,
+      overflow = TextOverflow.Ellipsis,
     )
   }
 }

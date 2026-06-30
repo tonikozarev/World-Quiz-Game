@@ -24,9 +24,12 @@ class QuizQuestionGenerator(
     val pool = countries.distinctBy { it.code }
     val optionPool = answerPool.distinctBy { it.code }
     require(optionPool.size >= 4) { "Need at least 4 countries to build a quiz." }
+    val explicitSpecs = config.questionSpecs
+    val configuredCount = if (explicitSpecs.isNotEmpty()) explicitSpecs.size else config.questionCount
 
     val maxQuestions =
       when {
+        explicitSpecs.isNotEmpty() -> explicitSpecs.size
         config.mode == GameMode.CreateQuiz &&
           config.topic == QuizTopic.Mixed &&
           config.poolSource == com.example.flaggameandroid.core.model.QuizPoolSource.Standard ->
@@ -36,13 +39,15 @@ class QuizQuestionGenerator(
       }
     val targetCount =
       if (config.mode == GameMode.Training) {
-        config.questionCount.coerceIn(1, 999)
+        configuredCount.coerceIn(1, 999)
       } else {
-        config.questionCount.coerceIn(1, maxQuestions)
+        configuredCount.coerceIn(1, maxQuestions)
       }
     val variants = buildWeightedVariants(config, targetCount)
     val correctCountries =
-      if (config.mode == GameMode.Training) {
+      if (explicitSpecs.isNotEmpty()) {
+        explicitSpecs.mapNotNull { spec -> pool.firstOrNull { it.code == spec.countryCode } ?: answerPool.firstOrNull { it.code == spec.countryCode } }
+      } else if (config.mode == GameMode.Training) {
         buildTrainingCountries(pool, targetCount)
       } else if (config.poolSource == QuizPoolSource.MistakeReview) {
         buildUniqueReviewCountries(pool, targetCount)
@@ -54,6 +59,8 @@ class QuizQuestionGenerator(
 
     return correctCountries.mapIndexed { index, correctCountry ->
       val variant = variants[index % variants.size]
+      val questionTopic =
+        explicitSpecs.getOrNull(index)?.topic ?: resolveQuestionTopic(config.topic)
       val wrongOptions =
         optionPool
           .filterNot { it.code == correctCountry.code }
@@ -64,7 +71,7 @@ class QuizQuestionGenerator(
         correctCountry = correctCountry,
         options = (wrongOptions + correctCountry).shuffled(random),
         variant = variant,
-        topic = resolveQuestionTopic(config.topic),
+        topic = questionTopic,
       )
       }.shuffled(random)
   }

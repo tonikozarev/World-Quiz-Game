@@ -45,6 +45,15 @@ internal fun QuestionPrompt(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
           )
+          capitalQuestionCountryLabel(question, language)?.let { countryLabel ->
+            Text(
+              text = countryLabel,
+              style = MaterialTheme.typography.titleSmall,
+              fontWeight = FontWeight.SemiBold,
+              modifier = Modifier.fillMaxWidth(),
+              textAlign = TextAlign.Center,
+            )
+          }
         }
 
         QuizVariant.TextToFlag -> {
