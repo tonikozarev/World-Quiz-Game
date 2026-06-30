@@ -7,6 +7,7 @@ import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuizConfig
 import com.example.flaggameandroid.core.model.QuizPoolSource
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import java.text.Normalizer
 import kotlin.random.Random
@@ -24,11 +25,20 @@ class QuizQuestionGenerator(
     val optionPool = answerPool.distinctBy { it.code }
     require(optionPool.size >= 4) { "Need at least 4 countries to build a quiz." }
 
+    val maxQuestions =
+      when {
+        config.mode == GameMode.CreateQuiz &&
+          config.topic == QuizTopic.Mixed &&
+          config.poolSource == com.example.flaggameandroid.core.model.QuizPoolSource.Standard ->
+          pool.size * 2
+        config.mode == GameMode.Training -> 999
+        else -> pool.size
+      }
     val targetCount =
       if (config.mode == GameMode.Training) {
         config.questionCount.coerceIn(1, 999)
       } else {
-        config.questionCount.coerceIn(1, pool.size)
+        config.questionCount.coerceIn(1, maxQuestions)
       }
     val variants = buildWeightedVariants(config, targetCount)
     val correctCountries =
@@ -36,8 +46,10 @@ class QuizQuestionGenerator(
         buildTrainingCountries(pool, targetCount)
       } else if (config.poolSource == QuizPoolSource.MistakeReview) {
         buildUniqueReviewCountries(pool, targetCount)
+      } else if (config.mode == GameMode.CreateQuiz && config.topic == QuizTopic.Mixed && targetCount > pool.size) {
+        buildMixedCreateQuizCountries(pool, targetCount)
       } else {
-        pickWeightedCountries(pool, targetCount, practiceStats)
+        pickWeightedCountries(pool, targetCount, practiceStats, config.topic)
       }
 
     return correctCountries.mapIndexed { index, correctCountry ->
@@ -52,9 +64,17 @@ class QuizQuestionGenerator(
         correctCountry = correctCountry,
         options = (wrongOptions + correctCountry).shuffled(random),
         variant = variant,
+        topic = resolveQuestionTopic(config.topic),
       )
       }.shuffled(random)
   }
+
+  private fun resolveQuestionTopic(topic: QuizTopic): QuizTopic =
+    when (topic) {
+      QuizTopic.Countries,
+      QuizTopic.Capitals -> topic
+      QuizTopic.Mixed -> if (random.nextBoolean()) QuizTopic.Countries else QuizTopic.Capitals
+    }
 
   private fun buildTrainingCountries(
     pool: List<FlagCountry>,
@@ -73,6 +93,7 @@ class QuizQuestionGenerator(
     pool: List<FlagCountry>,
     targetCount: Int,
     practiceStats: Map<String, CountryPracticeStats>,
+    topic: QuizTopic,
   ): List<FlagCountry> {
     if (targetCount >= pool.size) {
       return pool.shuffled(random).take(targetCount)
@@ -83,7 +104,7 @@ class QuizQuestionGenerator(
     while (picked.size < targetCount && available.isNotEmpty()) {
       val weightedIndices =
         available.mapIndexed { index, country ->
-          index to countrySelectionWeight(country, practiceStats)
+          index to countrySelectionWeight(country, practiceStats, topic)
         }
       val totalWeight = weightedIndices.sumOf { it.second }.coerceAtLeast(1)
       var draw = random.nextInt(totalWeight)
@@ -108,15 +129,31 @@ class QuizQuestionGenerator(
     return pool.shuffled(random).take(minOf(targetCount, pool.size))
   }
 
+  private fun buildMixedCreateQuizCountries(
+    pool: List<FlagCountry>,
+    targetCount: Int,
+  ): List<FlagCountry> {
+    if (pool.isEmpty()) return emptyList()
+    val repeated = buildList {
+      while (size < targetCount) {
+        addAll(pool.shuffled(random))
+      }
+    }
+    return repeated.take(targetCount)
+  }
+
   private fun countrySelectionWeight(
     country: FlagCountry,
     practiceStats: Map<String, CountryPracticeStats>,
+    topic: QuizTopic = QuizTopic.Countries,
   ): Int {
     val stats = practiceStats[country.code]
     var weight = 1
     if (stats?.favorite == true) weight += 3
-    if (stats?.isWeak == true) weight += 4
-    if ((stats?.wrongCount ?: 0) > 0) weight += minOf(3, stats?.wrongCount ?: 0)
+    val weakForTopic = (stats?.wrongCountFor(topic) ?: 0) >= 2 && (stats?.wrongCountFor(topic) ?: 0) > (stats?.correctCountFor(topic) ?: 0)
+    if (weakForTopic) weight += 4
+    val topicWrongCount = stats?.wrongCountFor(topic) ?: 0
+    if (topicWrongCount > 0) weight += minOf(3, topicWrongCount)
     return weight
   }
 

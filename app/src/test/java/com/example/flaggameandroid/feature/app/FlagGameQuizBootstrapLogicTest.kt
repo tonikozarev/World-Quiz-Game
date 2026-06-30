@@ -6,6 +6,7 @@ import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -128,6 +129,21 @@ class FlagGameQuizBootstrapLogicTest {
   }
 
   @Test
+  fun dailyChallenge_forcesMixedTopicAtSetupTime() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.DailyChallenge,
+        QuizTopic.Countries,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      )
+
+    assertEquals(QuizTopic.Mixed, setup.topic)
+  }
+
+  @Test
   fun dailyChallenge_isDeterministicForTheSameLocalDaySeed() {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup = buildSetupForMode(GameMode.DailyChallenge, listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"), countries, "Tony")
@@ -160,6 +176,7 @@ class FlagGameQuizBootstrapLogicTest {
       first.questions.map { it.correctCountry.code to it.variant },
       second.questions.map { it.correctCountry.code to it.variant },
     )
+    assertEquals(QuizTopic.Mixed, first.topic)
   }
 
   @Test

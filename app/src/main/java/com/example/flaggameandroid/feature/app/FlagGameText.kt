@@ -1,16 +1,5 @@
 ﻿package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AchievementId
-import com.example.flaggameandroid.core.model.AchievementSector
-import com.example.flaggameandroid.core.model.FlagCountry
-import com.example.flaggameandroid.core.model.GameMode
-import com.example.flaggameandroid.core.model.HintDifficulty
-import com.example.flaggameandroid.core.model.MedalTier
-import com.example.flaggameandroid.core.model.QuizVariant
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
 internal fun cleanText(
   language: AppLanguage,
   text: UiText,
@@ -52,11 +41,11 @@ internal fun cleanText(
         AppLanguage.Bulgarian -> "Запазени"
         AppLanguage.German -> "Gespeichert"
       }
-    UiText.FavoriteCountriesFlags ->
+    UiText.FavoriteCountriesCapitals ->
       when (language) {
-        AppLanguage.English -> "Favorite countries/flags"
-        AppLanguage.Bulgarian -> "Любими държави/флагове"
-        AppLanguage.German -> "Lieblingsländer/Flaggen"
+        AppLanguage.English -> "Favorite countries/capitals"
+        AppLanguage.Bulgarian -> "Любими държави/столици"
+        AppLanguage.German -> "Lieblingsländer/Hauptstädte"
       }
     UiText.Settings ->
       when (language) {
@@ -202,7 +191,7 @@ internal enum class UiText {
   Medals,
   Achievements,
   Favorites,
-  FavoriteCountriesFlags,
+  FavoriteCountriesCapitals,
   Settings,
   Quit,
   Profile,

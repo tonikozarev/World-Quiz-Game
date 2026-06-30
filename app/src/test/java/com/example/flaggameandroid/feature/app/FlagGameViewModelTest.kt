@@ -7,6 +7,7 @@ import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.RatingsProgress
 import com.example.flaggameandroid.persistence.PersistedAppState
 import com.example.flaggameandroid.persistence.PersistedQuizHistory
@@ -108,6 +109,29 @@ class FlagGameViewModelTest {
       viewModel.uiState.value.availableContinents,
     )
     assertTrue("Antarctica" !in viewModel.uiState.value.setup.selectedContinents)
+  }
+
+  @Test
+  fun createQuizMixedDefaultsToManualAndDoublesSelectedQuestionCount() {
+    val viewModel = viewModel()
+
+    viewModel.onQuizTopicSelected(QuizTopic.Mixed)
+    viewModel.onModeSelected(GameMode.CreateQuiz)
+    viewModel.onCreateQuizCountryToggled("AT")
+    viewModel.onCreateQuizCountryToggled("BG")
+    viewModel.onCreateQuizCountryToggled("DE")
+
+    val setup = viewModel.uiState.value.setup
+    assertEquals(CreateQuizSource.ManualCountriesCapitals, setup.createQuizSource)
+    assertEquals("6", setup.questionCountInput)
+    assertEquals(6, viewModel.uiState.value.questionCountLimit)
+
+    viewModel.onStartQuiz()
+
+    val quiz = viewModel.uiState.value.quiz
+    assertEquals(GameMode.CreateQuiz, quiz.mode)
+    assertEquals(6, quiz.totalQuestions)
+    assertEquals(3, quiz.questions.map { it.correctCountry.code }.distinct().size)
   }
 
   @Test
@@ -501,7 +525,7 @@ class FlagGameViewModelTest {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)
-    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountries)
+    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountriesCapitals)
     viewModel.onCreateQuizManualHardcoreToggled()
     viewModel.onStartQuiz()
 
@@ -957,18 +981,18 @@ class FlagGameViewModelTest {
   private fun answerCurrentCorrectly(viewModel: FlagGameViewModel) {
     val question = viewModel.uiState.value.quiz.currentQuestion!!
     when (question.variant) {
-      QuizVariant.TypeCountryName -> viewModel.onTypedAnswerChanged(question.correctCountry.name)
-      QuizVariant.FlagToCountry,
-      QuizVariant.CountryToFlag -> viewModel.onCountryAnswerSelected(question.correctCountry)
+      QuizVariant.TypeText -> viewModel.onTypedAnswerChanged(question.correctCountry.name)
+      QuizVariant.FlagToText,
+      QuizVariant.TextToFlag -> viewModel.onCountryAnswerSelected(question.correctCountry)
     }
   }
 
   private fun answerCurrentWrongly(viewModel: FlagGameViewModel) {
     val question = viewModel.uiState.value.quiz.currentQuestion!!
     when (question.variant) {
-      QuizVariant.TypeCountryName -> viewModel.onTypedAnswerChanged("wrong answer")
-      QuizVariant.FlagToCountry,
-      QuizVariant.CountryToFlag -> viewModel.onCountryAnswerSelected(question.options.first { it.code != question.correctCountry.code })
+      QuizVariant.TypeText -> viewModel.onTypedAnswerChanged("wrong answer")
+      QuizVariant.FlagToText,
+      QuizVariant.TextToFlag -> viewModel.onCountryAnswerSelected(question.options.first { it.code != question.correctCountry.code })
     }
   }
 

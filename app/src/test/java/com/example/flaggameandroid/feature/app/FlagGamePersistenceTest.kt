@@ -7,6 +7,7 @@ import com.example.flaggameandroid.core.model.DailyChallengeTheme
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.persistence.PersistedAppState
@@ -33,6 +34,7 @@ class FlagGamePersistenceTest {
             correctAnswersTowardNextLevel = 18,
             eligibleQuizzesTowardNextLevel = 2,
             mistakeReviewUnlocked = true,
+            dailyChallengeCaches = emptyMap(),
           ),
       )
 
@@ -113,14 +115,17 @@ class FlagGamePersistenceTest {
         progressStore = progressStore,
         initialPersistedState =
           PersistedAppState(
-            dailyChallengeCache =
-              DailyChallengeCache(
-                dayKey = 123L,
-                theme = DailyChallengeTheme.Europe,
-                questionCount = 10,
-                seed = 42L,
-                completed = true,
-                completedAtEpochMillis = 1_234_567L,
+            dailyChallengeCaches =
+              mapOf(
+                QuizTopic.Countries to
+                  DailyChallengeCache(
+                    dayKey = 123L,
+                    theme = DailyChallengeTheme.Europe,
+                    questionCount = 10,
+                    seed = 42L,
+                    completed = true,
+                    completedAtEpochMillis = 1_234_567L,
+                  ),
               ),
           ),
       )
@@ -141,7 +146,7 @@ class FlagGamePersistenceTest {
         id = "saved-1",
         createdAtEpochMillis = 1L,
         title = "My quiz",
-        source = CreateQuizSource.ManualCountries,
+        source = CreateQuizSource.ManualCountriesCapitals,
         selectedCountryCodes = setOf("DE", "BG", "AT"),
         variants = setOf(QuizVariant.FlagToCountry),
         questionCount = 3,

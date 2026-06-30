@@ -5,21 +5,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,25 +32,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.flaggameandroid.core.model.ActivityDayRecord
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.AchievementsProgress
 import com.example.flaggameandroid.core.model.gameModesHubModes
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.DailyChallengeCache
-import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
-import com.example.flaggameandroid.core.model.PlayerProgress
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.RatingsProgress
-import com.example.flaggameandroid.core.model.SavedQuizDifficulty
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.startQuizModes
 import kotlinx.coroutines.delay
@@ -157,7 +153,7 @@ fun GameModesScreen(
       )
     }
 
-      NavigationCard(
+    NavigationCard(
       title = localizedGameModesHubTitle(language),
       description =
         when (language) {
@@ -174,8 +170,10 @@ fun GameModesScreen(
 @Composable
 fun GameModesHubScreen(
   language: AppLanguage,
+  selectedTopic: QuizTopic,
   dailyChallengeCache: DailyChallengeCache?,
   mistakeReviewEligibleCount: Int,
+  onTopicSelected: (QuizTopic) -> Unit,
   onModeSelected: (GameMode) -> Unit,
   onRefreshDailyChallengeAvailability: () -> Unit,
   modifier: Modifier = Modifier,
@@ -190,6 +188,11 @@ fun GameModesHubScreen(
   }
   ScreenShell(modifier = modifier) {
     HeaderRow(title = localizedGameModesHubTitle(language))
+    QuizTopicSelector(
+      language = language,
+      selectedTopic = selectedTopic,
+      onTopicSelected = onTopicSelected,
+    )
 
     gameModesHubModes().forEach { mode ->
       ModeCard(
@@ -208,6 +211,35 @@ fun GameModesHubScreen(
         },
         onClick = { onModeSelected(mode) },
       )
+    }
+  }
+}
+
+@Composable
+private fun QuizTopicSelector(
+  language: AppLanguage,
+  selectedTopic: QuizTopic,
+  onTopicSelected: (QuizTopic) -> Unit,
+) {
+  Card(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Text(
+        text = localizedQuizTopicTitle(language),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+      )
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        QuizTopic.entries.forEach { topic ->
+          FilterChip(
+            selected = selectedTopic == topic,
+            onClick = { onTopicSelected(topic) },
+            label = { Text(localizedQuizTopicLabel(topic, language)) },
+          )
+        }
+      }
     }
   }
 }
@@ -381,7 +413,7 @@ fun FavoritesScreen(
     if (favoriteCountriesDialogVisible) {
       AlertDialog(
         onDismissRequest = { favoriteCountriesDialogVisible = false },
-        title = { Text(text = cleanText(language, UiText.FavoriteCountriesFlags)) },
+        title = { Text(text = cleanText(language, UiText.FavoriteCountriesCapitals)) },
         text = {
           if (favoriteCountries.isEmpty()) {
             Text(
@@ -393,7 +425,14 @@ fun FavoritesScreen(
                 },
             )
           } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+              modifier =
+                Modifier
+                  .fillMaxWidth()
+                  .heightIn(max = 420.dp)
+                  .verticalScroll(rememberScrollState()),
+              verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
               grouped.keys.sorted().forEach { continent ->
                 val list = grouped[continent].orEmpty()
                 if (list.isNotEmpty()) {
@@ -485,12 +524,12 @@ fun FavoritesScreen(
 
     HeaderRow(title = cleanText(language, UiText.Favorites))
 
-    SectionCard(title = cleanText(language, UiText.FavoriteCountriesFlags)) {
+    SectionCard(title = cleanText(language, UiText.FavoriteCountriesCapitals)) {
       Button(
         onClick = { favoriteCountriesDialogVisible = true },
         modifier = Modifier.fillMaxWidth(),
       ) {
-        Text(text = cleanText(language, UiText.FavoriteCountriesFlags))
+        Text(text = cleanText(language, UiText.FavoriteCountriesCapitals))
       }
     }
 
@@ -577,7 +616,7 @@ private fun SavedQuizTemplateRow(
                 when (template.source) {
                   CreateQuizSource.PresetFilter ->
                     "${template.questionCount} ${if (language == AppLanguage.English) "questions" else if (language == AppLanguage.Bulgarian) "въпроса" else "Fragen"}"
-                  CreateQuizSource.ManualCountries ->
+                  CreateQuizSource.ManualCountriesCapitals ->
                     "${template.selectedCountryCodes.size} ${if (language == AppLanguage.English) "countries" else if (language == AppLanguage.Bulgarian) "държави" else "Länder"}"
                 },
               style = MaterialTheme.typography.bodySmall,

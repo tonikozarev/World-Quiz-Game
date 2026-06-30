@@ -51,6 +51,7 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.ProgressionRules
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.theme.AccentRed
 import kotlinx.coroutines.delay
@@ -110,23 +111,8 @@ fun SetupScreen(
   }
   val context = LocalContext.current
   val createQuizPresetOrder =
-    remember {
-      listOf(
-        CreateQuizPreset.TwoColors,
-        CreateQuizPreset.ThreeColors,
-        CreateQuizPreset.FourPlusColors,
-        CreateQuizPreset.HorizontalStripes,
-        CreateQuizPreset.VerticalStripes,
-        CreateQuizPreset.Stars,
-        CreateQuizPreset.Crosses,
-        CreateQuizPreset.Animals,
-        CreateQuizPreset.Nato,
-        CreateQuizPreset.EuUnion,
-        CreateQuizPreset.WorldTradeOrganization,
-        CreateQuizPreset.CommonwealthOfNations,
-        CreateQuizPreset.AfricanUnion,
-        CreateQuizPreset.OrganisationOfIslamicCooperation,
-      )
+    remember(setup.topic) {
+      createQuizPresetOrderFor(setup.topic)
     }
   val countriesByContinent = remember(countries) { countries.groupBy { it.continent } }
   val activeCreateQuizSource =
@@ -244,8 +230,8 @@ fun SetupScreen(
                   AppLanguage.German -> "Fragenanzahl"
                 },
               questionCountValue =
-                if (!setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore && activeCreateQuizSource == CreateQuizSource.ManualCountries) {
-                  setup.selectedCountryCodes.size.toString()
+                if (!setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore && activeCreateQuizSource == CreateQuizSource.ManualCountriesCapitals) {
+                  (setup.selectedCountryCodes.size * if (setup.topic == QuizTopic.Mixed) 2 else 1).toString()
                 } else {
                   setup.questionCountInput
                 },
@@ -328,8 +314,9 @@ fun SetupScreen(
 
     val isMistakeReview = setup.mode == GameMode.MistakeReview
     val isCreateQuizTraining = setup.usesCreateQuizTraining
-    val isCreateQuizManual = setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountries
+    val isCreateQuizManual = setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals
     val isCreateQuizManualHardcore = setup.usesCreateQuizManualHardcore
+    val isCreateQuizMixed = setup.topic == QuizTopic.Mixed
     val questionCount = setup.questionCount
     val questionCountChangeHandler: (String) -> Unit =
       if (isMistakeReview || (isCreateQuizManual && !isCreateQuizTraining)) {
@@ -453,10 +440,19 @@ fun SetupScreen(
           if (continentExpanded) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
               list.sortedBy { it.localizedName(language) }.forEach { country ->
+                val labelText =
+                  when (setup.topic) {
+                    QuizTopic.Capitals ->
+                      "${country.emoji} ${country.capital?.takeIf { it.isNotBlank() } ?: country.localizedName(language)}"
+                    QuizTopic.Mixed ->
+                      "${country.emoji} ${country.localizedName(language)}, ${country.capital?.takeIf { it.isNotBlank() } ?: country.localizedName(language)}"
+                    else ->
+                      "${country.emoji} ${country.localizedName(language)}"
+                  }
                 FilterChip(
                   selected = country.code in setup.selectedCountryCodes,
                   onClick = { onCreateQuizCountryToggled(country.code) },
-                  label = { Text("${country.emoji} ${country.localizedName(language)}") },
+                  label = { Text(labelText) },
                 )
               }
             }
@@ -676,8 +672,14 @@ fun SetupScreen(
               showStickyQuestionCount = it.boundsInRoot().bottom <= 0f
             },
         ) {
+          val displayedQuestionCount =
+            when {
+              isCreateQuizManual ->
+                (setup.selectedCountryCodes.size * if (isCreateQuizMixed) 2 else 1).toString()
+              else -> setup.questionCountInput
+            }
           renderQuestionCountCard(
-            setup.questionCountInput,
+            displayedQuestionCount,
             !setup.surpriseMe,
             !setup.usesCreateQuizTraining,
             when (language) {
@@ -721,7 +723,7 @@ fun SetupScreen(
             if (setup.usesCreateQuizManualHardcore) {
               countries.size.toString()
             } else {
-              setup.selectedCountryCodes.size.toString()
+              (setup.selectedCountryCodes.size * if (setup.topic == QuizTopic.Mixed) 2 else 1).toString()
             },
             false,
             false,
@@ -737,6 +739,7 @@ fun SetupScreen(
 
       QuestionVariantsSection(
         language = language,
+        topic = setup.topic,
         selectedVariants = setup.variants,
         expanded = questionVariantsExpanded,
         onExpandedChange = { questionVariantsExpanded = !questionVariantsExpanded },
@@ -756,6 +759,7 @@ fun SetupScreen(
               AppLanguage.German -> "Vorlagenfilter"
             },
             selected = activeCreateQuizSource == CreateQuizSource.PresetFilter,
+            enabled = setup.topic != QuizTopic.Mixed,
             onClick = {
               displayedCreateQuizSource = CreateQuizSource.PresetFilter
               onCreateQuizSourceSelected(CreateQuizSource.PresetFilter)
@@ -768,19 +772,19 @@ fun SetupScreen(
           )
           SelectableRow(
             title = when (language) {
-              AppLanguage.English -> "Manual countries"
-              AppLanguage.Bulgarian -> "Ръчно избрани държави"
-              AppLanguage.German -> "Manuelle Länder"
+              AppLanguage.English -> "Manual countries/capitals"
+              AppLanguage.Bulgarian -> "Ръчно избрани държави/градове"
+              AppLanguage.German -> "Manuelle Länder/Städte"
             },
-            selected = activeCreateQuizSource == CreateQuizSource.ManualCountries,
+            selected = activeCreateQuizSource == CreateQuizSource.ManualCountriesCapitals,
             onClick = {
-              displayedCreateQuizSource = CreateQuizSource.ManualCountries
-              onCreateQuizSourceSelected(CreateQuizSource.ManualCountries)
+              displayedCreateQuizSource = CreateQuizSource.ManualCountriesCapitals
+              onCreateQuizSourceSelected(CreateQuizSource.ManualCountriesCapitals)
             },
             description = when (language) {
-              AppLanguage.English -> "Pick the exact countries yourself."
-              AppLanguage.Bulgarian -> "Избери точните държави сам."
-              AppLanguage.German -> "Wähle die Länder selbst aus."
+              AppLanguage.English -> "Pick the exact ones yourself."
+              AppLanguage.Bulgarian -> "Избери точните сам."
+              AppLanguage.German -> "Wähle selbst aus."
             },
           )
         }
@@ -803,7 +807,7 @@ fun SetupScreen(
                   onClick = { onCreateQuizPresetSelected(preset) },
                   label = {
                     Text(
-                      text = localizedCreateQuizPresetTitle(preset, language),
+                      text = localizedCreateQuizPresetTitle(preset, language, setup.topic),
                       maxLines = 1,
                       style = MaterialTheme.typography.bodyMedium,
                     )
@@ -880,6 +884,7 @@ fun SetupScreen(
 
         QuestionVariantsSection(
           language = language,
+          topic = setup.topic,
           selectedVariants = setup.variants,
           expanded = questionVariantsExpanded,
           onExpandedChange = { questionVariantsExpanded = !questionVariantsExpanded },
@@ -908,7 +913,7 @@ fun SetupScreen(
       Button(
         onClick = {
           saveQuizName =
-            if (setup.createQuizSource == CreateQuizSource.ManualCountries) {
+            if (setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals) {
               when (language) {
                 AppLanguage.English -> "My quiz"
                 AppLanguage.Bulgarian -> "Моят тест"
@@ -1306,6 +1311,7 @@ private fun CompactToggleInfoCard(
 @Composable
 private fun QuestionVariantsSection(
   language: AppLanguage,
+  topic: com.example.flaggameandroid.core.model.QuizTopic,
   selectedVariants: Set<QuizVariant>,
   expanded: Boolean,
   onExpandedChange: () -> Unit,
@@ -1348,8 +1354,8 @@ private fun QuestionVariantsSection(
     if (expanded) {
       QuizVariant.entries.forEach { variant ->
         CheckRow(
-          title = localizedVariantTitle(variant, language),
-          description = localizedVariantDescription(variant, language),
+          title = localizedVariantTitle(variant, language, topic),
+          description = localizedVariantDescription(variant, language, topic),
           checked = variant in selectedVariants,
           onClick = { onVariantToggle(variant) },
         )
@@ -1450,87 +1456,5 @@ private fun surpriseMePlaceholderText(
       AppLanguage.English -> "Example: 10"
       AppLanguage.Bulgarian -> "Пример: 10"
       AppLanguage.German -> "Beispiel: 10"
-    }
-  }
-
-private fun localizedCreateQuizPresetTitle(
-  preset: CreateQuizPreset,
-  language: AppLanguage,
-): String =
-  when (preset) {
-    CreateQuizPreset.TwoColors -> when (language) {
-      AppLanguage.English -> "2 colors"
-      AppLanguage.Bulgarian -> "2 цвята"
-      AppLanguage.German -> "2 Farben"
-    }
-    CreateQuizPreset.ThreeColors -> when (language) {
-      AppLanguage.English -> "3 colors"
-      AppLanguage.Bulgarian -> "3 цвята"
-      AppLanguage.German -> "3 Farben"
-    }
-    CreateQuizPreset.FourPlusColors -> when (language) {
-      AppLanguage.English -> "4+ colors"
-      AppLanguage.Bulgarian -> "4+ цвята"
-      AppLanguage.German -> "4+ Farben"
-    }
-    CreateQuizPreset.HorizontalStripes -> when (language) {
-      AppLanguage.English -> "Horizontal stripes"
-      AppLanguage.Bulgarian -> "Хоризонтални ивици"
-      AppLanguage.German -> "Horizontale Streifen"
-    }
-    CreateQuizPreset.VerticalStripes -> when (language) {
-      AppLanguage.English -> "Vertical stripes"
-      AppLanguage.Bulgarian -> "Вертикални ивици"
-      AppLanguage.German -> "Vertikale Streifen"
-    }
-    CreateQuizPreset.Stars -> when (language) {
-      AppLanguage.English -> "Stars"
-      AppLanguage.Bulgarian -> "Звезди"
-      AppLanguage.German -> "Sterne"
-    }
-    CreateQuizPreset.Crosses -> when (language) {
-      AppLanguage.English -> "Crosses"
-      AppLanguage.Bulgarian -> "Кръстове"
-      AppLanguage.German -> "Kreuze"
-    }
-    CreateQuizPreset.NoSymbols -> when (language) {
-      AppLanguage.English -> "No symbols"
-      AppLanguage.Bulgarian -> "Без символи"
-      AppLanguage.German -> "Ohne Symbole"
-    }
-    CreateQuizPreset.Animals -> when (language) {
-      AppLanguage.English -> "Animals"
-      AppLanguage.Bulgarian -> "Животни"
-      AppLanguage.German -> "Tiere"
-    }
-    CreateQuizPreset.Nato -> when (language) {
-      AppLanguage.English -> "NATO flags"
-      AppLanguage.Bulgarian -> "Флагове на НАТО"
-      AppLanguage.German -> "NATO-Flaggen"
-    }
-    CreateQuizPreset.EuUnion -> when (language) {
-      AppLanguage.English -> "EU union flags"
-      AppLanguage.Bulgarian -> "Флагове на ЕС"
-      AppLanguage.German -> "EU-Flaggen"
-    }
-    CreateQuizPreset.WorldTradeOrganization -> when (language) {
-      AppLanguage.English -> "WTO flags"
-      AppLanguage.Bulgarian -> "Флагове на СТО"
-      AppLanguage.German -> "WTO-Flaggen"
-    }
-    CreateQuizPreset.CommonwealthOfNations -> when (language) {
-      AppLanguage.English -> "Commonwealth flags"
-      AppLanguage.Bulgarian -> "Флагове на Британската общност"
-      AppLanguage.German -> "Commonwealth-Flaggen"
-    }
-    CreateQuizPreset.AfricanUnion -> when (language) {
-      AppLanguage.English -> "African Union flags"
-      AppLanguage.Bulgarian -> "Флагове на Африканския съюз"
-      AppLanguage.German -> "Flaggen der Afrikanischen Union"
-    }
-    CreateQuizPreset.OrganisationOfIslamicCooperation -> when (language) {
-      AppLanguage.English -> "OIC flags"
-      AppLanguage.Bulgarian -> "Флагове на ОИС"
-      AppLanguage.German -> "OIC-Flaggen"
     }
   }

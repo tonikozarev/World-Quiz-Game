@@ -21,7 +21,7 @@ internal fun applyHintToCurrentQuestion(
   val newHintCount = quiz.currentPlayer.hintPoints - 1
   players.replaceAll { it.copy(hintPoints = newHintCount) }
 
-  val isTypedQuestion = question.variant == QuizVariant.TypeCountryName
+  val isTypedQuestion = question.variant == QuizVariant.TypeText
   val firstHint = currentDraft.hintUses == 0
   val speedRunPenaltySeconds =
     if (quiz.countdownEnabled) {
@@ -29,7 +29,7 @@ internal fun applyHintToCurrentQuestion(
     } else {
       0
     }
-  val fullCountryName = question.correctCountry.localizedName(state.settings.language)
+  val fullAnswerText = question.correctCountry.localizedQuizText(state.settings.language, question.topic).trim()
   val hiddenCodes =
     when {
       isTypedQuestion -> currentDraft.hiddenOptionCodes
@@ -52,14 +52,14 @@ internal fun applyHintToCurrentQuestion(
       typedHintPrefix =
         when {
           !isTypedQuestion -> currentDraft.typedHintPrefix
-          firstHint -> fullCountryName.take(3)
-          else -> fullCountryName
+          firstHint -> fullAnswerText.take(3)
+          else -> fullAnswerText
         },
       typedAnswer =
         when {
           !isTypedQuestion -> currentDraft.typedAnswer
           firstHint -> currentDraft.typedAnswer
-          else -> fullCountryName
+          else -> fullAnswerText
         },
       selectedCountry =
         when {

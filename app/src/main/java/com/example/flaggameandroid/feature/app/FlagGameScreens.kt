@@ -74,6 +74,7 @@ fun FlagGameRoute(
     onFavoritesClicked = resolvedViewModel::onFavoritesClicked,
     onSettingsClicked = resolvedViewModel::onSettingsClicked,
     onGameModesClicked = resolvedViewModel::onGameModesClicked,
+    onQuizTopicSelected = resolvedViewModel::onQuizTopicSelected,
     onQuitClicked = { showExitDialog = true },
     onLevelUpSeen = resolvedViewModel::onLevelUpSeen,
     onAccountNameChanged = resolvedViewModel::onAccountNameChanged,

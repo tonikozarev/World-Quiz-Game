@@ -3,6 +3,7 @@ package com.example.flaggameandroid.core.model
 data class QuizConfig(
   val mode: GameMode,
   val variants: Set<QuizVariant>,
+  val topic: QuizTopic = QuizTopic.Countries,
   val selectedContinents: Set<String> = emptySet(),
   val questionCount: Int,
   val speedRunSecondsPerAnswer: Int = 3,
@@ -63,9 +64,9 @@ enum class HintDifficulty(
     correctStreakRequired = 3,
     variantWeights =
       mapOf(
-        QuizVariant.FlagToCountry to 45,
-        QuizVariant.CountryToFlag to 45,
-        QuizVariant.TypeCountryName to 10,
+        QuizVariant.FlagToText to 45,
+        QuizVariant.TextToFlag to 45,
+        QuizVariant.TypeText to 10,
       ),
   ),
   Medium(
@@ -73,9 +74,9 @@ enum class HintDifficulty(
     correctStreakRequired = 5,
     variantWeights =
       mapOf(
-        QuizVariant.FlagToCountry to 40,
-        QuizVariant.CountryToFlag to 40,
-        QuizVariant.TypeCountryName to 20,
+        QuizVariant.FlagToText to 40,
+        QuizVariant.TextToFlag to 40,
+        QuizVariant.TypeText to 20,
       ),
   ),
   Hard(
@@ -83,9 +84,9 @@ enum class HintDifficulty(
     correctStreakRequired = 10,
     variantWeights =
       mapOf(
-        QuizVariant.FlagToCountry to 30,
-        QuizVariant.CountryToFlag to 30,
-        QuizVariant.TypeCountryName to 40,
+        QuizVariant.FlagToText to 30,
+        QuizVariant.TextToFlag to 30,
+        QuizVariant.TypeText to 40,
       ),
   ),
   Impossible(
@@ -93,9 +94,9 @@ enum class HintDifficulty(
     correctStreakRequired = 50,
     variantWeights =
       mapOf(
-        QuizVariant.FlagToCountry to 20,
-        QuizVariant.CountryToFlag to 20,
-        QuizVariant.TypeCountryName to 60,
+        QuizVariant.FlagToText to 20,
+        QuizVariant.TextToFlag to 20,
+        QuizVariant.TypeText to 60,
       ),
   ),
 }

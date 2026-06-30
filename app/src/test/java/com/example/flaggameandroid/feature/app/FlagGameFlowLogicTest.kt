@@ -10,8 +10,11 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.RatingsProgress
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
+import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
+import com.example.flaggameandroid.core.model.countryQuizMetadata
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.hasSameQuizConfiguration
 import junit.framework.TestCase.assertEquals
@@ -384,6 +387,84 @@ class FlagGameFlowLogicTest {
   }
 
   @Test
+  fun createQuizCountryPresetPath_keepsExistingUnionBehavior() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val baseSetup =
+      buildSetupForMode(
+        GameMode.CreateQuiz,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(createQuizSource = CreateQuizSource.PresetFilter)
+
+    val twoColorsPool =
+      countryPoolFor(
+        baseSetup.copy(createQuizPresets = setOf(CreateQuizPreset.TwoColors)),
+        countries,
+      )
+    val threeColorsPool =
+      countryPoolFor(
+        baseSetup.copy(createQuizPresets = setOf(CreateQuizPreset.ThreeColors)),
+        countries,
+      )
+    val combinedPool =
+      countryPoolFor(
+        baseSetup.copy(createQuizPresets = setOf(CreateQuizPreset.TwoColors, CreateQuizPreset.ThreeColors)),
+        countries,
+      )
+
+    assertTrue(combinedPool.isNotEmpty())
+    assertEquals(combinedPool.map { it.code }.distinct().size, combinedPool.size)
+    assertEquals(
+      (twoColorsPool.map { it.code } + threeColorsPool.map { it.code }).toSet(),
+      combinedPool.map { it.code }.toSet(),
+    )
+  }
+
+  @Test
+  fun createQuizCapitalPresetPath_filtersAndDeduplicatesOverlaps() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val baseSetup =
+      buildSetupForMode(
+        GameMode.CreateQuiz,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        topic = QuizTopic.Capitals,
+        createQuizSource = CreateQuizSource.PresetFilter,
+      )
+
+    val pool =
+      countryPoolFor(
+        baseSetup.copy(
+          createQuizPresets =
+            setOf(
+              CreateQuizPreset.CapitalPopulationUnderOneMillion,
+              CreateQuizPreset.CapitalAreaUnderTwentyFiveSquareKm,
+              CreateQuizPreset.CapitalNotCoastal,
+            ),
+        ),
+        countries,
+      )
+
+    assertTrue(pool.isNotEmpty())
+    assertEquals(pool.map { it.code }.distinct().size, pool.size)
+    assertEquals(1, pool.count { it.code == "MC" })
+    assertTrue(
+      pool.all { country ->
+        val metadata = countryQuizMetadata(country.code)
+        metadata != null &&
+          (
+            metadata.population < 1_000_000L ||
+              metadata.areaKm2 < 25 ||
+              metadata.landlocked
+          )
+      },
+    )
+  }
+
+  @Test
   fun awardAchievementsIfEligible_unlocksSpeedRunOneSecondForPerfectRun() {
     val country = FlagCountry(code = "SR", name = "Speedland", emoji = "SR", continent = "Europe")
     val question =
@@ -434,7 +515,7 @@ class FlagGameFlowLogicTest {
         id = "a",
         createdAtEpochMillis = 1L,
         title = "Quiz A",
-        source = CreateQuizSource.ManualCountries,
+        source = CreateQuizSource.ManualCountriesCapitals,
         selectedCountryCodes = setOf("AT", "BG", "DE"),
         variants = setOf(QuizVariant.FlagToCountry),
         questionCount = 3,

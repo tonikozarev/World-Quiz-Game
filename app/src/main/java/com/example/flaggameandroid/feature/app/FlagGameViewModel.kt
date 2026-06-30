@@ -1,4 +1,4 @@
-package com.example.flaggameandroid.feature.app
+﻿package com.example.flaggameandroid.feature.app
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider
@@ -16,6 +16,7 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.ProgressionRules
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.hasSameQuizConfiguration
@@ -121,18 +122,25 @@ class FlagGameViewModel(
 
   fun refreshDailyChallengeAvailability() {
     val nowEpochMillis = System.currentTimeMillis()
-    updateState { state ->
-      val refreshedCache =
-        buildDailyChallengeCache(
-          countries = countries,
-          dailyChallengeCache = state.dailyChallengeCache,
-          nowEpochMillis = nowEpochMillis,
-        )
-      if (refreshedCache == state.dailyChallengeCache) {
-        state
-      } else {
-        state.copy(dailyChallengeCache = refreshedCache)
+    val currentState = _uiState.value
+    val updated =
+      currentState.let { state ->
+        val refreshedCache =
+          buildDailyChallengeCache(
+            countries = countries,
+            topic = QuizTopic.Mixed,
+            dailyChallengeCache = state.dailyChallengeCacheFor(QuizTopic.Mixed) ?: state.dailyChallengeCacheFor(QuizTopic.Countries),
+            nowEpochMillis = nowEpochMillis,
+          )
+        if (refreshedCache == state.dailyChallengeCache) {
+          state
+        } else {
+          state.copy(dailyChallengeCaches = state.dailyChallengeCaches.withDailyChallengeCache(refreshedCache))
+        }
       }
+    if (updated != currentState) {
+      updateState { updated }
+      persistProgress(progressStore, _uiState.value)
     }
   }
 
@@ -174,7 +182,12 @@ class FlagGameViewModel(
         AppScreen.GameModesHub -> AppScreen.GameModesHub
         else -> AppScreen.GameModes
       }
-    val setup = buildSetupForMode(mode, selectableContinents, countries, _uiState.value.profile.displayName)
+    val topic =
+      when (mode) {
+        GameMode.DailyChallenge -> QuizTopic.Mixed
+        else -> _uiState.value.selectedQuizTopic
+      }
+    val setup = buildSetupForMode(mode, topic, selectableContinents, countries, _uiState.value.profile.displayName)
     val practiceStats = _uiState.value.countryPracticeStats
     val questionCountLimit = questionLimitFor(setup, countries, practiceStats)
     val preparedSetup =
@@ -199,7 +212,7 @@ class FlagGameViewModel(
           hintCount = state.hintCount,
           displayName = state.profile.displayName,
           practiceStats = state.countryPracticeStats,
-          dailyChallengeCache = state.dailyChallengeCache,
+          dailyChallengeCache = state.dailyChallengeCacheFor(QuizTopic.Mixed) ?: state.dailyChallengeCacheFor(QuizTopic.Countries),
           nowEpochMillis = System.currentTimeMillis(),
           mistakeReviewUnlocked = state.mistakeReviewUnlocked,
         )
@@ -207,7 +220,7 @@ class FlagGameViewModel(
         updateState { it.copy(setupError = result.validationError) }
         return
       }
-      updateState {
+      updateStateAndPersistProgress {
         val quiz = requireNotNull(result.quiz)
         it.copy(
           screen = AppScreen.Quiz,
@@ -215,7 +228,7 @@ class FlagGameViewModel(
           setup = preparedSetup,
           questionCountLimit = questionCountLimit,
           quiz = quiz,
-          dailyChallengeCache = result.dailyChallengeCache ?: it.dailyChallengeCache,
+          dailyChallengeCaches = it.dailyChallengeCaches.withDailyChallengeCache(result.dailyChallengeCache),
           setupError = null,
         )
       }
@@ -230,6 +243,11 @@ class FlagGameViewModel(
         )
       }
     }
+  }
+
+  fun onQuizTopicSelected(topic: QuizTopic) {
+    updateState { it.withSelectedQuizTopic(topic) }
+    refreshDailyChallengeAvailability()
   }
 
   fun onHintDifficultySelected(difficulty: HintDifficulty) {
@@ -294,11 +312,13 @@ class FlagGameViewModel(
   fun onResetDailyChallengeClicked() {
     updateStateAndPersistProgress {
       it.copy(
-        dailyChallengeCache =
-          it.dailyChallengeCache?.copy(
-            completed = false,
-            completedAtEpochMillis = 0L,
-          ),
+        dailyChallengeCaches =
+          it.dailyChallengeCaches.mapValues { (_, cache) ->
+            cache.copy(
+              completed = false,
+              completedAtEpochMillis = 0L,
+            )
+          },
       )
     }
   }
@@ -429,13 +449,13 @@ class FlagGameViewModel(
       return
     }
 
-    updateState {
-      val quiz = requireNotNull(result.quiz)
-      it.copy(
-        screen = AppScreen.Quiz,
-        quizReturnTarget = state.quizReturnTarget,
+      updateState {
+        val quiz = requireNotNull(result.quiz)
+        it.copy(
+          screen = AppScreen.Quiz,
+          quizReturnTarget = state.quizReturnTarget,
         quiz = quiz,
-        dailyChallengeCache = result.dailyChallengeCache ?: it.dailyChallengeCache,
+        dailyChallengeCaches = it.dailyChallengeCaches.withDailyChallengeCache(result.dailyChallengeCache),
         setupError = null,
       )
     }
@@ -457,7 +477,7 @@ class FlagGameViewModel(
     val state = _uiState.value
     val quiz = state.quiz
     if (!quiz.instantCorrectionEnabled) return
-    if (quiz.currentQuestion?.variant != QuizVariant.TypeCountryName) return
+    if (quiz.currentQuestion?.variant != QuizVariant.TypeText) return
     if (quiz.currentQuestionState.typedAnswer.isBlank() || quiz.currentQuestionState.locked) return
 
     updateState { state -> state.copy(quiz = state.quiz.withVerifiedTypedAnswer()) }
@@ -573,59 +593,22 @@ class FlagGameViewModel(
       )
     val exactQuestionCount =
       when (setup.createQuizSource) {
-        CreateQuizSource.ManualCountries -> setup.selectedCountryCodes.size.coerceAtLeast(1)
+        CreateQuizSource.ManualCountriesCapitals ->
+          setup.selectedCountryCodes.let { if (setup.topic == QuizTopic.Mixed) it.size * 2 else it.size }.coerceAtLeast(1)
         CreateQuizSource.PresetFilter -> setup.questionCount ?: state.questionCountLimit
       }
     val templateTitle =
       when (setup.createQuizSource) {
         CreateQuizSource.PresetFilter -> {
           val presetTitle =
-            when (state.settings.language) {
-              AppLanguage.English -> setup.createQuizPreset.title
-              AppLanguage.Bulgarian ->
-                when (setup.createQuizPreset) {
-                  CreateQuizPreset.TwoColors -> "2 цвята"
-                  CreateQuizPreset.ThreeColors -> "3 цвята"
-                  CreateQuizPreset.FourPlusColors -> "4+ цвята"
-                  CreateQuizPreset.HorizontalStripes -> "Хоризонтални ивици"
-                  CreateQuizPreset.VerticalStripes -> "Вертикални ивици"
-                  CreateQuizPreset.Stars -> "Звезди"
-                  CreateQuizPreset.Crosses -> "Кръстове"
-                  CreateQuizPreset.NoSymbols -> "Без символи"
-                  CreateQuizPreset.Animals -> "Животни"
-                  CreateQuizPreset.Nato -> "НАТО"
-                  CreateQuizPreset.EuUnion -> "ЕС"
-                  CreateQuizPreset.WorldTradeOrganization -> "СТО"
-                  CreateQuizPreset.CommonwealthOfNations -> "Британската общност"
-                  CreateQuizPreset.AfricanUnion -> "Африкански съюз"
-                  CreateQuizPreset.OrganisationOfIslamicCooperation -> "ОИС"
-                }
-              AppLanguage.German ->
-                when (setup.createQuizPreset) {
-                  CreateQuizPreset.TwoColors -> "2 Farben"
-                  CreateQuizPreset.ThreeColors -> "3 Farben"
-                  CreateQuizPreset.FourPlusColors -> "4+ Farben"
-                  CreateQuizPreset.HorizontalStripes -> "Horizontale Streifen"
-                  CreateQuizPreset.VerticalStripes -> "Vertikale Streifen"
-                  CreateQuizPreset.Stars -> "Sterne"
-                  CreateQuizPreset.Crosses -> "Kreuze"
-                  CreateQuizPreset.NoSymbols -> "Ohne Symbole"
-                  CreateQuizPreset.Animals -> "Tiere"
-                  CreateQuizPreset.Nato -> "NATO"
-                  CreateQuizPreset.EuUnion -> "EU"
-                  CreateQuizPreset.WorldTradeOrganization -> "WTO"
-                  CreateQuizPreset.CommonwealthOfNations -> "Commonwealth"
-                  CreateQuizPreset.AfricanUnion -> "Afrikanische Union"
-                  CreateQuizPreset.OrganisationOfIslamicCooperation -> "OIC"
-                }
-            }
+            localizedCreateQuizPresetTitle(setup.createQuizPreset, state.settings.language, setup.topic)
           when (state.settings.language) {
             AppLanguage.English -> "$presetTitle quiz"
             AppLanguage.Bulgarian -> "Тест с $presetTitle"
             AppLanguage.German -> "Quiz mit $presetTitle"
           }
         }
-        CreateQuizSource.ManualCountries ->
+        CreateQuizSource.ManualCountriesCapitals ->
           when (state.settings.language) {
             AppLanguage.English -> "Manual quiz"
             AppLanguage.Bulgarian -> "Ръчен тест"
@@ -637,6 +620,7 @@ class FlagGameViewModel(
         id = "saved-${seed}-${setup.createQuizSource.name.lowercase()}",
         createdAtEpochMillis = System.currentTimeMillis(),
         title = templateName.trim().take(30).ifBlank { templateTitle },
+        topic = setup.topic,
         source = setup.createQuizSource,
         preset = if (setup.createQuizSource == CreateQuizSource.PresetFilter) setup.createQuizPreset else null,
         selectedCountryCodes = setup.selectedCountryCodes,
@@ -679,7 +663,7 @@ class FlagGameViewModel(
     return SaveQuizResult.Saved(
       when (state.settings.language) {
         AppLanguage.English -> "Saved \"${template.title}\"."
-        AppLanguage.Bulgarian -> "Запазен е \"${template.title}\"."
+        AppLanguage.Bulgarian -> "Р—Р°РїР°Р·РµРЅ Рµ \"${template.title}\"."
         AppLanguage.German -> "\"${template.title}\" wurde gespeichert."
       },
     )
@@ -714,10 +698,11 @@ class FlagGameViewModel(
     val setup =
       SetupState(
         mode = GameMode.CreateQuiz,
+        topic = template.topic,
         variants = template.variants,
         createQuizSource = template.source,
-        createQuizPreset = template.preset ?: CreateQuizPreset.TwoColors,
-        createQuizPresets = template.preset?.let { setOf(it) } ?: setOf(CreateQuizPreset.TwoColors),
+        createQuizPreset = template.preset ?: createQuizDefaultPresetsForTopic(template.topic).first(),
+        createQuizPresets = template.preset?.let { setOf(it) } ?: createQuizDefaultPresetsForTopic(template.topic),
         selectedCountryCodes = template.selectedCountryCodes,
         createQuizSeed = template.seed,
         savedQuizTemplateId = template.id,
@@ -728,6 +713,7 @@ class FlagGameViewModel(
     updateState {
       it.copy(
         screen = AppScreen.Setup,
+        selectedQuizTopic = template.topic,
         quizReturnTarget = AppScreen.Favorites,
         setup = setup,
         questionCountLimit = questionLimitFor(setup, countries),
@@ -775,3 +761,4 @@ class FlagGameViewModel(
       }
   }
 }
+

@@ -1,12 +1,15 @@
 package com.example.flaggameandroid.feature.app
 
+import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
 import com.example.flaggameandroid.core.data.QuizAnswerChecker
 import com.example.flaggameandroid.core.model.FlagCountry
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CountryLocalizationTest {
+  private val catalog = StaticFlagCatalogRepository().getCountries()
   private val germany =
     FlagCountry(
       code = "DE",
@@ -14,6 +17,16 @@ class CountryLocalizationTest {
       emoji = "🇩🇪",
       continent = "Europe",
     )
+
+  @Test
+  fun catalog_populatesKnownCapitalCitiesForCountries() {
+    val capitalsByCode = catalog.associate { it.code to it.capital }
+
+    assertEquals("Berlin", capitalsByCode.getValue("DE"))
+    assertEquals("Vienna", capitalsByCode.getValue("AT"))
+    assertEquals("Washington D.C.", capitalsByCode.getValue("US"))
+    assertEquals("Tokyo", capitalsByCode.getValue("JP"))
+  }
 
   @Test
   fun typedAnswer_acceptsOnlyBulgarianNameWhenBulgarianIsSelected() {

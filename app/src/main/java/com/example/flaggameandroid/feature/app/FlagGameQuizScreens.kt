@@ -69,14 +69,14 @@ fun QuizScreen(
   val isImmediateCorrectionPreview = isImmediateCorrectionEnabled && draft.status == QuestionStatus.Answered
   val isImmediateCorrectionCorrect =
     when (question.variant) {
-      QuizVariant.TypeCountryName ->
+      QuizVariant.TypeText ->
         QuizAnswerChecker.isTypedAnswerCorrect(
           typedAnswer = draft.typedAnswer,
-          acceptedAnswers = question.correctCountry.acceptedTypedAnswers(language),
+          acceptedAnswers = question.correctCountry.acceptedTypedAnswers(language, question.topic),
         )
 
-      QuizVariant.FlagToCountry,
-      QuizVariant.CountryToFlag -> QuizAnswerChecker.isCountrySelectionCorrect(draft.selectedCountry, question.correctCountry)
+      QuizVariant.FlagToText,
+      QuizVariant.TextToFlag -> QuizAnswerChecker.isCountrySelectionCorrect(draft.selectedCountry, question.correctCountry)
     }
   var showQuitDialog by remember { mutableStateOf(false) }
   var showQuizInfo by remember { mutableStateOf(false) }
@@ -207,20 +207,14 @@ fun QuizScreen(
       canGoForward = canGoForward,
     )
 
-    if (question.variant == QuizVariant.TypeCountryName) {
+    if (question.variant == QuizVariant.TypeText) {
       Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
           value = quiz.typedAnswer,
           onValueChange = onTypedAnswerChanged,
           enabled = !isImmediateCorrectionLocked,
           label = {
-            Text(
-              when (language) {
-                AppLanguage.English -> "Country name"
-                AppLanguage.Bulgarian -> "Име на държава"
-                AppLanguage.German -> "Ländername"
-              },
-            )
+            Text(text = localizedTypedAnswerFieldLabel(question.topic, language))
           },
           singleLine = true,
           supportingText = {
@@ -270,7 +264,7 @@ fun QuizScreen(
                 style = MaterialTheme.typography.bodySmall,
               )
               Text(
-                text = question.correctCountry.localizedName(language),
+                text = question.correctCountry.localizedQuizText(language, question.topic),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AccentGreen,
@@ -315,7 +309,7 @@ fun QuizScreen(
       unskipLabel = localizedUnskipButtonLabel(language),
       canUnskip = canJump,
       onUnskipQuestion = onUnskipQuestion,
-      verifyLabel = if (isImmediateCorrectionEnabled && question.variant == QuizVariant.TypeCountryName) localizedVerifyButtonLabel(language) else null,
+      verifyLabel = if (isImmediateCorrectionEnabled && question.variant == QuizVariant.TypeText) localizedVerifyButtonLabel(language) else null,
       canVerify = quiz.typedAnswer.isNotBlank() && !isImmediateCorrectionLocked,
       onVerifyTypedAnswer = onVerifyTypedAnswer,
     )

@@ -102,7 +102,7 @@ internal fun ResultRow(
       else -> ""
     }
   val wrongOptions =
-    if (result.question.variant == QuizVariant.TypeCountryName) {
+    if (result.question.variant == QuizVariant.TypeText) {
       emptyList()
     } else {
       result.question.options.filterNot { it.code == result.question.correctCountry.code }
@@ -171,17 +171,17 @@ internal fun ResultRow(
       Text(
         text =
           when (language) {
-            AppLanguage.English -> "Question type: ${localizedVariantTitle(result.question.variant, language)}"
-            AppLanguage.Bulgarian -> "Тип въпрос: ${localizedVariantTitle(result.question.variant, language)}"
-            AppLanguage.German -> "Fragetyp: ${localizedVariantTitle(result.question.variant, language)}"
+            AppLanguage.English -> "Question type: ${localizedVariantTitle(result.question.variant, language, result.question.topic)}"
+            AppLanguage.Bulgarian -> "Тип въпрос: ${localizedVariantTitle(result.question.variant, language, result.question.topic)}"
+            AppLanguage.German -> "Fragetyp: ${localizedVariantTitle(result.question.variant, language, result.question.topic)}"
           },
       )
       Text(
         text =
           when (language) {
-            AppLanguage.English -> "Correct: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedName(language)}"
-            AppLanguage.Bulgarian -> "Верен: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedName(language)}"
-            AppLanguage.German -> "Richtig: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedName(language)}"
+            AppLanguage.English -> "Correct: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedQuizText(language, result.question.topic)}"
+            AppLanguage.Bulgarian -> "Верен: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedQuizText(language, result.question.topic)}"
+            AppLanguage.German -> "Richtig: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedQuizText(language, result.question.topic)}"
           },
       )
       if (result.isCorrect) {
@@ -211,7 +211,7 @@ internal fun ResultRow(
                   if (optionIndex > 0) {
                     append(", ")
                   }
-                  val label = wrongOptionLabel(option, result.question.variant, language)
+                  val label = wrongOptionLabel(option, result.question.variant, language, result.question.topic)
                   if (option.code == selectedWrongCode) {
                     pushStyle(SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline))
                     append(label)

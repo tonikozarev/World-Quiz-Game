@@ -9,6 +9,7 @@ import com.example.flaggameandroid.core.model.DailyChallengeTheme
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.SavedQuizDifficulty
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.RatingsProgress
@@ -29,7 +30,7 @@ internal fun ProgressEntity.toPersistedAppState(hintDifficultyName: String): Per
     achievements = achievementUnlocksSerialized.toAchievementsProgress(),
     countryPracticeStats = countryPracticeSerialized.toCountryPracticeStats(),
     activityCalendar = activityCalendarSerialized.toActivityCalendar(),
-    dailyChallengeCache = dailyChallengeSerialized.toDailyChallengeCache(),
+    dailyChallengeCaches = dailyChallengeSerialized.toDailyChallengeCaches(),
     savedQuizTemplates = savedQuizTemplatesSerialized.toSavedQuizTemplates(),
     accountName = accountName,
     avatarIndex = avatarIndex,
@@ -51,7 +52,7 @@ internal fun PersistedAppState.toProgressEntity(): ProgressEntity =
     achievementUnlocksSerialized = achievements.serialize(),
     countryPracticeSerialized = countryPracticeStats.serializeCountryPracticeStats(),
     activityCalendarSerialized = activityCalendar.serializeActivityCalendar(),
-    dailyChallengeSerialized = dailyChallengeCache.serializeDailyChallengeCache(),
+    dailyChallengeSerialized = dailyChallengeCaches.serializeDailyChallengeCaches(),
     savedQuizTemplatesSerialized = savedQuizTemplates.serializeSavedQuizTemplates(),
     accountName = accountName,
     avatarIndex = avatarIndex,
@@ -75,6 +76,8 @@ private fun Map<String, CountryPracticeStats>.serializeCountryPracticeStats(): S
       code,
       stats.correctCount.toString(),
       stats.wrongCount.toString(),
+      stats.capitalCorrectCount.toString(),
+      stats.capitalWrongCount.toString(),
       stats.lastMissedAtEpochMillis.toString(),
       if (stats.favorite) "1" else "0",
     ).joinToString(separator = ",")
@@ -93,8 +96,10 @@ private fun String.toCountryPracticeStats(): Map<String, CountryPracticeStats> =
           CountryPracticeStats(
             correctCount = parts[1].toIntOrNull() ?: 0,
             wrongCount = parts[2].toIntOrNull() ?: 0,
-            lastMissedAtEpochMillis = parts[3].toLongOrNull() ?: 0L,
-            favorite = parts[4] == "1",
+            capitalCorrectCount = parts.getOrNull(3)?.toIntOrNull() ?: 0,
+            capitalWrongCount = parts.getOrNull(4)?.toIntOrNull() ?: 0,
+            lastMissedAtEpochMillis = parts.getOrNull(if (parts.size >= 7) 5 else 3)?.toLongOrNull() ?: 0L,
+            favorite = parts.getOrNull(if (parts.size >= 7) 6 else 4) == "1",
           )
       }
       .toMap()
@@ -134,31 +139,52 @@ private fun String.toActivityCalendar(): Map<Long, ActivityDayRecord> =
       .toMap()
   }
 
-private fun DailyChallengeCache?.serializeDailyChallengeCache(): String =
-  this?.let { cache ->
+private fun Map<QuizTopic, DailyChallengeCache>.serializeDailyChallengeCaches(): String =
+  entries.joinToString(separator = "|") { (_, cache) ->
     listOf(
       cache.dayKey.toString(),
+      cache.topic.name,
       cache.theme.name,
       cache.questionCount.toString(),
       cache.seed.toString(),
       if (cache.completed) "1" else "0",
       cache.completedAtEpochMillis.toString(),
     ).joinToString(separator = ",")
-  }.orEmpty()
+  }
+
+private fun String.toDailyChallengeCaches(): Map<QuizTopic, DailyChallengeCache> {
+  if (isBlank()) return emptyMap()
+  return split("|")
+    .mapNotNull { entry -> entry.toDailyChallengeCache() }
+    .associateBy { it.topic }
+}
 
 private fun String.toDailyChallengeCache(): DailyChallengeCache? {
   if (isBlank()) return null
   val parts = split(",")
   if (parts.size < 4) return null
   val dayKey = parts[0].toLongOrNull() ?: return null
-  val theme = DailyChallengeTheme.entries.firstOrNull { it.name == parts[1] } ?: DailyChallengeTheme.World
+  val hasTopic = parts.size >= 7
+  val topic =
+    if (hasTopic) {
+      QuizTopic.entries.firstOrNull { it.name == parts[1] } ?: QuizTopic.Countries
+    } else {
+      QuizTopic.Countries
+    }
+  val themeIndex = if (hasTopic) 2 else 1
+  val questionCountIndex = if (hasTopic) 3 else 2
+  val seedIndex = if (hasTopic) 4 else 3
+  val completedIndex = if (hasTopic) 5 else 4
+  val completedAtIndex = if (hasTopic) 6 else 5
+  val theme = DailyChallengeTheme.entries.firstOrNull { it.name == parts[themeIndex] } ?: DailyChallengeTheme.World
   return DailyChallengeCache(
     dayKey = dayKey,
+    topic = topic,
     theme = theme,
-    questionCount = parts[2].toIntOrNull() ?: 10,
-    seed = parts[3].toLongOrNull() ?: 0L,
-    completed = parts.getOrNull(4) == "1",
-    completedAtEpochMillis = parts.getOrNull(5)?.toLongOrNull() ?: 0L,
+    questionCount = parts[questionCountIndex].toIntOrNull() ?: 10,
+    seed = parts[seedIndex].toLongOrNull() ?: 0L,
+    completed = parts.getOrNull(completedIndex) == "1",
+    completedAtEpochMillis = parts.getOrNull(completedAtIndex)?.toLongOrNull() ?: 0L,
   )
 }
 
@@ -168,6 +194,7 @@ private fun List<SavedQuizTemplate>.serializeSavedQuizTemplates(): String =
       template.id,
       template.createdAtEpochMillis.toString(),
       template.title,
+      template.topic.name,
       template.source.name,
       template.preset?.name.orEmpty(),
       template.selectedCountryCodes.joinToString(separator = "."),
@@ -190,18 +217,31 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
       .mapNotNull { row ->
         val parts = row.split(",")
         if (parts.size < 11) return@mapNotNull null
-        val source = CreateQuizSource.entries.firstOrNull { it.name == parts[3] } ?: CreateQuizSource.PresetFilter
-        val preset = parts[4].takeIf { it.isNotBlank() }?.let { name -> CreateQuizPreset.entries.firstOrNull { it.name == name } }
-        val selectedCountryCodes = parts[5].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
-        val modernFormat = parts.size >= 14
+        val hasTopic = parts.size >= 15
+        val topic = if (hasTopic) QuizTopic.entries.firstOrNull { it.name == parts[3] } ?: QuizTopic.Countries else QuizTopic.Countries
+        val sourceIndex = if (hasTopic) 4 else 3
+        val presetIndex = if (hasTopic) 5 else 4
+        val selectedCodesIndex = if (hasTopic) 6 else 5
+        val questionCodesIndex = if (hasTopic) 7 else 6
+        val variantsIndex = if (hasTopic) 8 else 7
+        val questionCountIndex = if (hasTopic) 9 else 8
+        val seedIndex = if (hasTopic) 10 else 9
+        val multiplayerIndex = if (hasTopic) 11 else 10
+        val playersIndex = if (hasTopic) 12 else 11
+        val completionIndex = if (hasTopic) 13 else 12
+        val difficultyIndex = if (hasTopic) 14 else 13
+        val source = CreateQuizSource.entries.firstOrNull { it.name == parts[sourceIndex] } ?: CreateQuizSource.PresetFilter
+        val preset = parts[presetIndex].takeIf { it.isNotBlank() }?.let { name -> CreateQuizPreset.entries.firstOrNull { it.name == name } }
+        val selectedCountryCodes = parts[selectedCodesIndex].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
+        val modernFormat = parts.size >= (if (hasTopic) 15 else 14)
         val questionCountryCodes =
-          if (parts.size >= 12) {
-            parts[6].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
+          if (parts.size >= (if (hasTopic) 13 else 12)) {
+            parts[questionCodesIndex].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
           } else {
             selectedCountryCodes
           }
         val variants =
-          parts[if (parts.size >= 12) 7 else 6]
+          parts[variantsIndex]
             .takeIf { it.isNotBlank() }
             ?.split(".")
             ?.mapNotNull { variantName -> com.example.flaggameandroid.core.model.QuizVariant.entries.firstOrNull { it.name == variantName } }
@@ -209,13 +249,13 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
             ?: com.example.flaggameandroid.core.model.QuizVariant.entries.toSet()
         val createQuizLocalMultiplayerEnabled =
           if (modernFormat) {
-            parts[10] == "1"
+            parts[multiplayerIndex] == "1"
           } else {
             false
           }
         val playerNames =
           if (modernFormat) {
-            parts[11].takeIf { it.isNotBlank() }?.split(".")?.filter { it.isNotBlank() }.orEmpty()
+            parts[playersIndex].takeIf { it.isNotBlank() }?.split(".")?.filter { it.isNotBlank() }.orEmpty()
           } else {
             emptyList()
           }
@@ -223,17 +263,18 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           id = parts[0],
           createdAtEpochMillis = parts[1].toLongOrNull() ?: 0L,
           title = parts[2],
+          topic = topic,
           source = source,
           preset = preset,
           selectedCountryCodes = selectedCountryCodes,
           questionCountryCodes = questionCountryCodes,
           variants = variants,
-          questionCount = parts[if (parts.size >= 12) 8 else 7].toIntOrNull() ?: 10,
-          seed = parts[if (parts.size >= 12) 9 else 8].toLongOrNull() ?: 0L,
+          questionCount = parts[questionCountIndex].toIntOrNull() ?: 10,
+          seed = parts[seedIndex].toLongOrNull() ?: 0L,
           createQuizLocalMultiplayerEnabled = createQuizLocalMultiplayerEnabled,
           playerNames = playerNames,
-          completionCount = parts[if (modernFormat) 12 else if (parts.size >= 12) 10 else 9].toIntOrNull() ?: 0,
-          difficulty = SavedQuizDifficulty.entries.firstOrNull { it.name == parts[if (modernFormat) 13 else if (parts.size >= 12) 11 else 10] } ?: SavedQuizDifficulty.ItIsOk,
+          completionCount = parts[if (modernFormat) completionIndex else if (parts.size >= (if (hasTopic) 13 else 12)) seedIndex + 1 else seedIndex].toIntOrNull() ?: 0,
+          difficulty = SavedQuizDifficulty.entries.firstOrNull { it.name == parts[if (modernFormat) difficultyIndex else if (parts.size >= (if (hasTopic) 13 else 12)) seedIndex + 2 else seedIndex + 1] } ?: SavedQuizDifficulty.ItIsOk,
         )
       }
       .toList()

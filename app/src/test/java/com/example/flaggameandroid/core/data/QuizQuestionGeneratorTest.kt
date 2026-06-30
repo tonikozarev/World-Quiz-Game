@@ -4,6 +4,7 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.QuizConfig
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -56,6 +57,28 @@ class QuizQuestionGeneratorTest {
       assertEquals(4, question.options.distinctBy { it.code }.size)
       assertTrue(question.options.any { it.code == question.correctCountry.code })
     }
+  }
+
+  @Test
+  fun buildQuestions_supportsMixedCreateQuizManualPoolsThatNeedDoubleQuestionCount() {
+    val generator = QuizQuestionGenerator(Random(9))
+    val manualCountries = repository.getCountries().filter { it.code in setOf("AT", "BG", "DE") }
+
+    val questions =
+      generator.buildQuestions(
+        countries = manualCountries,
+        config =
+          QuizConfig(
+            mode = GameMode.CreateQuiz,
+            topic = QuizTopic.Mixed,
+            variants = setOf(QuizVariant.FlagToCountry),
+            questionCount = 6,
+          ),
+        answerPool = repository.getCountries(),
+      )
+
+    assertEquals(6, questions.size)
+    assertEquals(3, questions.map { it.correctCountry.code }.distinct().size)
   }
 
   @Test

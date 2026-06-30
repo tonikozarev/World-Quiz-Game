@@ -57,6 +57,7 @@ internal fun buildStartedQuizState(
     mode = config.mode,
     allInType = setup.allInType,
     variants = config.variants,
+    topic = config.topic,
     selectedContinents = setup.selectedContinents,
     instantCorrectionEnabled = setup.instantCorrectionEnabled,
     hintsAllowed = !setup.usesCreateQuizManualHardcore,
@@ -100,7 +101,7 @@ internal fun buildQuizStartResult(
     return QuizStartResult(validationError = "Daily challenge already completed for today.")
   }
   if (setup.mode == GameMode.MistakeReview) {
-    val eligibleCount = mistakeReviewEligibleCountryCount(practiceStats)
+    val eligibleCount = mistakeReviewEligibleCountryCount(practiceStats, setup.topic)
     if (eligibleCount < MistakeReviewUnlockCountryCount) {
       return QuizStartResult(validationError = "No missed countries to review yet.")
     }

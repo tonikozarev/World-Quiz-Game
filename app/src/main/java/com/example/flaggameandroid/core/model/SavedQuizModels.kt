@@ -4,7 +4,7 @@ enum class CreateQuizSource(
   val title: String,
 ) {
   PresetFilter("Preset filter"),
-  ManualCountries("Manual countries"),
+  ManualCountriesCapitals("Manual countries/capitals"),
 }
 
 enum class CreateQuizPreset(
@@ -18,6 +18,17 @@ enum class CreateQuizPreset(
   Stars("Stars"),
   Crosses("Crosses"),
   Animals("Animals"),
+  CapitalPopulationUnderOneMillion("Population < 1M"),
+  CapitalPopulationOneToSixPointFiveMillion("Population 1M-6.5M"),
+  CapitalPopulationSixPointFiveToThirtyMillion("Population 6.5M-30M"),
+  CapitalPopulationOverThirtyMillion("Population > 30M"),
+  CapitalAreaUnderTwentyFiveSquareKm("Area < 25 km²"),
+  CapitalAreaTwentyFiveToOneHundredFiftySquareKm("Area 25-150 km²"),
+  CapitalAreaOneHundredFiftyToSixHundredSquareKm("Area 150-600 km²"),
+  CapitalAreaOverSixHundredSquareKm("Area > 600 km²"),
+  CapitalNatoMember("NATO member"),
+  CapitalSchengenMember("Schengen member"),
+  CapitalNotCoastal("Not coastal"),
   Nato("NATO flags"),
   EuUnion("EU union flags"),
   WorldTradeOrganization("WTO flags"),
@@ -39,6 +50,7 @@ data class SavedQuizTemplate(
   val id: String,
   val createdAtEpochMillis: Long,
   val title: String,
+  val topic: QuizTopic = QuizTopic.Countries,
   val source: CreateQuizSource,
   val preset: CreateQuizPreset? = null,
   val selectedCountryCodes: Set<String> = emptySet(),
@@ -53,7 +65,8 @@ data class SavedQuizTemplate(
 )
 
 internal fun SavedQuizTemplate.hasSameQuizConfiguration(other: SavedQuizTemplate): Boolean =
-  normalizedQuestionCountryCodes() == other.normalizedQuestionCountryCodes()
+  topic == other.topic &&
+    normalizedQuestionCountryCodes() == other.normalizedQuestionCountryCodes()
 
 private fun SavedQuizTemplate.normalizedQuestionCountryCodes(): Set<String> =
   if (questionCountryCodes.isNotEmpty()) {

@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
 private fun tr(language: AppLanguage, english: String, bulgarian: String, german: String): String =
@@ -19,8 +20,9 @@ internal fun wrongOptionLabel(
   country: FlagCountry,
   variant: QuizVariant,
   language: AppLanguage,
+  topic: QuizTopic = QuizTopic.Countries,
 ): String =
-  if (variant == QuizVariant.CountryToFlag) country.emoji else country.localizedName(language)
+  if (variant == QuizVariant.TextToFlag) country.emoji else country.localizedQuizText(language, topic)
 
 internal val AvatarOptions =
   listOf(
@@ -93,6 +95,16 @@ internal fun languageDescription(language: AppLanguage): String =
 
 internal fun localizedHintButtonLabel(language: AppLanguage): String =
   tr(language, "Hint", "Жокер", "Hinweis")
+
+internal fun localizedTypedAnswerFieldLabel(
+  topic: QuizTopic,
+  language: AppLanguage,
+): String =
+  when (topic) {
+    QuizTopic.Countries -> tr(language, "Country name", "Име на държава", "Ländername")
+    QuizTopic.Capitals -> tr(language, "Capital name", "Име на столица", "Hauptstadt")
+    QuizTopic.Mixed -> tr(language, "Text", "Текст", "Text")
+  }
 
 internal fun localizedTimeZoneTitle(language: AppLanguage): String =
   tr(language, "Time zone", "Часова зона", "Zeitzone")
@@ -243,7 +255,7 @@ internal fun speedRunTotalBudgetMillis(quiz: QuizState): Long {
   val secondsPerAnswer = quiz.speedRunSecondsPerAnswer.coerceAtLeast(1)
   val totalSeconds =
     quiz.questions.sumOf { question ->
-      if (question.variant == QuizVariant.TypeCountryName) {
+      if (question.variant == QuizVariant.TypeText) {
         secondsPerAnswer * 2
       } else {
         secondsPerAnswer

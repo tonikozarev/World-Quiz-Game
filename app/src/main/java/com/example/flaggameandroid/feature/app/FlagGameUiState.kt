@@ -11,6 +11,7 @@ import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.ProgressionRules
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.DailyChallengeCache
@@ -74,6 +75,7 @@ data class SettingsState(
 data class SetupState(
   val mode: GameMode = GameMode.Training,
   val variants: Set<QuizVariant> = QuizVariant.entries.toSet(),
+  val topic: QuizTopic = QuizTopic.Countries,
   val selectedContinents: Set<String> = emptySet(),
   val instantCorrectionEnabled: Boolean = true,
   val worldFlagsHardcoreEnabled: Boolean = false,
@@ -115,8 +117,8 @@ data class SetupState(
   val needsPlayers: Boolean
     get() = mode == GameMode.LocalMultiplayer || (mode == GameMode.CreateQuiz && createQuizLocalMultiplayerEnabled)
 
-  val needsManualCountries: Boolean
-    get() = mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.ManualCountries
+  val needsManualCountriesCapitals: Boolean
+    get() = mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.ManualCountriesCapitals
 
   val usesWorldFlagsHardcore: Boolean
     get() = mode == GameMode.WorldFlags && worldFlagsHardcoreEnabled
@@ -158,6 +160,7 @@ data class QuizState(
   val mode: GameMode? = null,
   val allInType: AllInType? = null,
   val variants: Set<QuizVariant> = emptySet(),
+  val topic: QuizTopic = QuizTopic.Countries,
   val selectedContinents: Set<String> = emptySet(),
   val instantCorrectionEnabled: Boolean = false,
   val questions: List<FlagQuestion> = emptyList(),
@@ -213,9 +216,9 @@ data class QuizState(
     get() =
       currentQuestion?.let { question ->
         when (question.variant) {
-          QuizVariant.TypeCountryName -> typedAnswer.isNotBlank()
-          QuizVariant.FlagToCountry,
-          QuizVariant.CountryToFlag -> selectedCountry != null
+          QuizVariant.TypeText -> typedAnswer.isNotBlank()
+          QuizVariant.FlagToText,
+          QuizVariant.TextToFlag -> selectedCountry != null
         }
       } == true
 }
@@ -267,6 +270,7 @@ data class LevelProgressState(
 data class FlagGameUiState(
   val screen: AppScreen = AppScreen.Menu,
   val quizReturnTarget: AppScreen = AppScreen.GameModes,
+  val selectedQuizTopic: QuizTopic = QuizTopic.Countries,
   val settings: SettingsState = SettingsState(),
   val setup: SetupState = SetupState(),
   val quiz: QuizState = QuizState(),
@@ -284,7 +288,12 @@ data class FlagGameUiState(
   val inactiveIconActive: Boolean = false,
   val countryPracticeStats: Map<String, CountryPracticeStats> = emptyMap(),
   val activityCalendar: Map<Long, ActivityDayRecord> = emptyMap(),
-  val dailyChallengeCache: DailyChallengeCache? = null,
+  val dailyChallengeCaches: Map<QuizTopic, DailyChallengeCache> = emptyMap(),
   val mistakeReviewUnlocked: Boolean = false,
   val savedQuizTemplates: List<SavedQuizTemplate> = emptyList(),
-)
+) {
+  val dailyChallengeCache: DailyChallengeCache?
+    get() = dailyChallengeCaches[QuizTopic.Mixed] ?: dailyChallengeCaches[QuizTopic.Countries]
+
+  fun dailyChallengeCacheFor(topic: QuizTopic): DailyChallengeCache? = dailyChallengeCaches[topic]
+}

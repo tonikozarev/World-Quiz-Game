@@ -37,8 +37,8 @@ internal fun QuestionPrompt(
       horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
     ) {
       when (question.variant) {
-        QuizVariant.FlagToCountry,
-        QuizVariant.TypeCountryName -> {
+        QuizVariant.FlagToText,
+        QuizVariant.TypeText -> {
           Text(
             text = question.correctCountry.emoji,
             fontSize = 62.sp,
@@ -47,9 +47,9 @@ internal fun QuestionPrompt(
           )
         }
 
-        QuizVariant.CountryToFlag -> {
+        QuizVariant.TextToFlag -> {
           Text(
-            text = question.correctCountry.localizedName(language),
+            text = question.correctCountry.localizedQuizText(language, question.topic),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.fillMaxWidth(),
@@ -75,7 +75,7 @@ private fun PreviewQuestionPrompt() {
               emoji = "🇩🇪",
               continent = "Europe",
             ),
-            variant = QuizVariant.FlagToCountry,
+            variant = QuizVariant.FlagToText,
             options = emptyList(),
           ),
         language = AppLanguage.English,

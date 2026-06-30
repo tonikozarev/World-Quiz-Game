@@ -9,6 +9,7 @@ import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
 @Composable
@@ -20,6 +21,7 @@ internal fun FlagGameScreenContent(
   onFavoritesClicked: () -> Unit,
   onSettingsClicked: () -> Unit,
   onGameModesClicked: () -> Unit,
+  onQuizTopicSelected: (QuizTopic) -> Unit,
   onQuitClicked: () -> Unit,
   onLevelUpSeen: () -> Unit,
   onAccountNameChanged: (String) -> Unit,
@@ -131,7 +133,7 @@ internal fun FlagGameScreenContent(
       GameModesScreen(
         language = uiState.settings.language,
         dailyChallengeCache = uiState.dailyChallengeCache,
-        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats),
+        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, uiState.selectedQuizTopic),
         onGameModesClick = onGameModesClicked,
         onModeSelected = onModeSelected,
         onRefreshDailyChallengeAvailability = onRefreshDailyChallengeAvailability,
@@ -140,8 +142,10 @@ internal fun FlagGameScreenContent(
     AppScreen.GameModesHub ->
       GameModesHubScreen(
         language = uiState.settings.language,
+        selectedTopic = uiState.selectedQuizTopic,
         dailyChallengeCache = uiState.dailyChallengeCache,
-        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats),
+        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, uiState.selectedQuizTopic),
+        onTopicSelected = onQuizTopicSelected,
         onModeSelected = onModeSelected,
         onRefreshDailyChallengeAvailability = onRefreshDailyChallengeAvailability,
         modifier = modifier,
