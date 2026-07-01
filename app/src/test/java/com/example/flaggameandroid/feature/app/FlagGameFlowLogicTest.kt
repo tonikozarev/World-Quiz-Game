@@ -14,7 +14,7 @@ import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
-import com.example.flaggameandroid.core.model.countryQuizMetadata
+import com.example.flaggameandroid.core.model.capitalQuizMetadata
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.hasSameQuizConfiguration
 import junit.framework.TestCase.assertEquals
@@ -441,7 +441,7 @@ class FlagGameFlowLogicTest {
           createQuizPresets =
             setOf(
               CreateQuizPreset.CapitalPopulationUnderOneMillion,
-              CreateQuizPreset.CapitalAreaUnderTwentyFiveSquareKm,
+              CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
               CreateQuizPreset.CapitalNotCoastal,
             ),
         ),
@@ -453,12 +453,12 @@ class FlagGameFlowLogicTest {
     assertEquals(1, pool.count { it.code == "MC" })
     assertTrue(
       pool.all { country ->
-        val metadata = countryQuizMetadata(country.code)
+        val metadata = capitalQuizMetadata(country.code)
         metadata != null &&
           (
             metadata.population < 1_000_000L ||
-              metadata.areaKm2 < 25 ||
-              metadata.landlocked
+              metadata.areaKm2 < 50.0 ||
+              metadata.notCoastal
           )
       },
     )

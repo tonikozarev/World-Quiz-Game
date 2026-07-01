@@ -1,10 +1,9 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.CountryQuizMetadata
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.QuizTopic
-import com.example.flaggameandroid.core.model.countryQuizMetadata
+import com.example.flaggameandroid.core.model.capitalQuizMetadata
 
 internal fun createQuizPresetOrderFor(topic: QuizTopic): List<CreateQuizPreset> =
   when (topic) {
@@ -83,12 +82,10 @@ private val capitalCreateQuizPresetOrder =
     CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
     CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
     CreateQuizPreset.CapitalPopulationOverThirtyMillion,
-    CreateQuizPreset.CapitalAreaUnderTwentyFiveSquareKm,
-    CreateQuizPreset.CapitalAreaTwentyFiveToOneHundredFiftySquareKm,
-    CreateQuizPreset.CapitalAreaOneHundredFiftyToSixHundredSquareKm,
-    CreateQuizPreset.CapitalAreaOverSixHundredSquareKm,
-    CreateQuizPreset.CapitalNatoMember,
-    CreateQuizPreset.CapitalSchengenMember,
+    CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
+    CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm,
+    CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm,
+    CreateQuizPreset.CapitalAreaOverEightHundredSquareKm,
     CreateQuizPreset.CapitalNotCoastal,
   )
 
@@ -192,35 +189,25 @@ private fun localizedCountryCreateQuizPresetTitle(
       AppLanguage.Bulgarian -> "Население > 30M"
       AppLanguage.German -> "Bevölkerung > 30 Mio."
     }
-    CreateQuizPreset.CapitalAreaUnderTwentyFiveSquareKm -> when (language) {
-      AppLanguage.English -> "Area < 25 km²"
-      AppLanguage.Bulgarian -> "Площ < 25 km²"
-      AppLanguage.German -> "Fläche < 25 km²"
+    CreateQuizPreset.CapitalAreaUnderFiftySquareKm -> when (language) {
+      AppLanguage.English -> "Area < 50 km²"
+      AppLanguage.Bulgarian -> "Площ < 50 km²"
+      AppLanguage.German -> "Fläche < 50 km²"
     }
-    CreateQuizPreset.CapitalAreaTwentyFiveToOneHundredFiftySquareKm -> when (language) {
-      AppLanguage.English -> "Area 25-150 km²"
-      AppLanguage.Bulgarian -> "Площ 25-150 km²"
-      AppLanguage.German -> "Fläche 25-150 km²"
+    CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm -> when (language) {
+      AppLanguage.English -> "Area 50-300 km²"
+      AppLanguage.Bulgarian -> "Площ 50-300 km²"
+      AppLanguage.German -> "Fläche 50-300 km²"
     }
-    CreateQuizPreset.CapitalAreaOneHundredFiftyToSixHundredSquareKm -> when (language) {
-      AppLanguage.English -> "Area 150-600 km²"
-      AppLanguage.Bulgarian -> "Площ 150-600 km²"
-      AppLanguage.German -> "Fläche 150-600 km²"
+    CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm -> when (language) {
+      AppLanguage.English -> "Area 300-800 km²"
+      AppLanguage.Bulgarian -> "Площ 300-800 km²"
+      AppLanguage.German -> "Fläche 300-800 km²"
     }
-    CreateQuizPreset.CapitalAreaOverSixHundredSquareKm -> when (language) {
-      AppLanguage.English -> "Area > 600 km²"
-      AppLanguage.Bulgarian -> "Площ > 600 km²"
-      AppLanguage.German -> "Fläche > 600 km²"
-    }
-    CreateQuizPreset.CapitalNatoMember -> when (language) {
-      AppLanguage.English -> "NATO member"
-      AppLanguage.Bulgarian -> "Член на НАТО"
-      AppLanguage.German -> "NATO-Mitglied"
-    }
-    CreateQuizPreset.CapitalSchengenMember -> when (language) {
-      AppLanguage.English -> "Schengen member"
-      AppLanguage.Bulgarian -> "Член на Шенген"
-      AppLanguage.German -> "Schengen-Mitglied"
+    CreateQuizPreset.CapitalAreaOverEightHundredSquareKm -> when (language) {
+      AppLanguage.English -> "Area > 800 km²"
+      AppLanguage.Bulgarian -> "Площ > 800 km²"
+      AppLanguage.German -> "Fläche > 800 km²"
     }
     CreateQuizPreset.CapitalNotCoastal -> when (language) {
       AppLanguage.English -> "Not coastal"
@@ -254,12 +241,10 @@ private fun matchesCountryCreateQuizPreset(
     CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
     CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
     CreateQuizPreset.CapitalPopulationOverThirtyMillion,
-    CreateQuizPreset.CapitalAreaUnderTwentyFiveSquareKm,
-    CreateQuizPreset.CapitalAreaTwentyFiveToOneHundredFiftySquareKm,
-    CreateQuizPreset.CapitalAreaOneHundredFiftyToSixHundredSquareKm,
-    CreateQuizPreset.CapitalAreaOverSixHundredSquareKm,
-    CreateQuizPreset.CapitalNatoMember,
-    CreateQuizPreset.CapitalSchengenMember,
+    CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
+    CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm,
+    CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm,
+    CreateQuizPreset.CapitalAreaOverEightHundredSquareKm,
     CreateQuizPreset.CapitalNotCoastal -> false
   }
 }
@@ -269,19 +254,17 @@ private fun matchesCapitalCreateQuizPreset(
   preset: CreateQuizPreset,
 ): Boolean {
   val code = country.code
-  val metadata = countryQuizMetadata(country.code) ?: return false
+  val metadata = capitalQuizMetadata(country.code) ?: return false
   return when (preset) {
     CreateQuizPreset.CapitalPopulationUnderOneMillion -> metadata.population < 1_000_000L
     CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion -> metadata.population in 1_000_000L until 6_500_000L
     CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion -> metadata.population in 6_500_000L..30_000_000L
     CreateQuizPreset.CapitalPopulationOverThirtyMillion -> metadata.population > 30_000_000L
-    CreateQuizPreset.CapitalAreaUnderTwentyFiveSquareKm -> metadata.areaKm2 < 25
-    CreateQuizPreset.CapitalAreaTwentyFiveToOneHundredFiftySquareKm -> metadata.areaKm2 in 25..150
-    CreateQuizPreset.CapitalAreaOneHundredFiftyToSixHundredSquareKm -> metadata.areaKm2 in 150..600
-    CreateQuizPreset.CapitalAreaOverSixHundredSquareKm -> metadata.areaKm2 > 600
-    CreateQuizPreset.CapitalNatoMember -> code in createQuizNatoCountryCodes
-    CreateQuizPreset.CapitalSchengenMember -> code in createQuizSchengenCountryCodes
-    CreateQuizPreset.CapitalNotCoastal -> metadata.landlocked
+    CreateQuizPreset.CapitalAreaUnderFiftySquareKm -> metadata.areaKm2 < 50.0
+    CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm -> metadata.areaKm2 in 50.0..300.0
+    CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm -> metadata.areaKm2 in 300.0..800.0
+    CreateQuizPreset.CapitalAreaOverEightHundredSquareKm -> metadata.areaKm2 > 800.0
+    CreateQuizPreset.CapitalNotCoastal -> metadata.notCoastal
     CreateQuizPreset.TwoColors,
     CreateQuizPreset.ThreeColors,
     CreateQuizPreset.FourPlusColors,
@@ -401,10 +384,4 @@ private val createQuizOrganisationOfIslamicCooperationCountryCodes =
     "GN", "GW", "GY", "ID", "IQ", "IR", "JO", "KG", "KM", "KW", "KZ", "LB", "LY", "MA", "ML", "MR",
     "MV", "MY", "MZ", "NE", "NG", "OM", "PK", "PS", "QA", "SA", "SD", "SL", "SN", "SO", "SR", "SY",
     "TD", "TG", "TJ", "TM", "TN", "TR", "UG", "UZ", "YE",
-  )
-
-private val createQuizSchengenCountryCodes =
-  setOf(
-    "AT", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IS", "IT",
-    "LI", "LT", "LU", "LV", "MT", "NL", "NO", "PL", "PT", "RO", "SE", "SI", "SK",
   )

@@ -20,8 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.QuestionResult
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.theme.AccentGreen
 import com.example.flaggameandroid.theme.AccentRed
@@ -107,6 +109,12 @@ internal fun ResultRow(
     } else {
       result.question.options.filterNot { it.code == result.question.correctCountry.code }
     }
+  val allOptions =
+    if (result.question.variant == QuizVariant.TypeText) {
+      emptyList()
+    } else {
+      result.question.options
+    }
   val netPointsInternal =
     when {
       !result.isCorrect || result.hintUses >= 2 -> 0
@@ -176,38 +184,46 @@ internal fun ResultRow(
             AppLanguage.German -> "Fragetyp: ${localizedVariantTitle(result.question.variant, language, result.question.topic)}"
           },
       )
-      Text(
-        text =
-          when (language) {
-            AppLanguage.English -> "Correct: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedQuizText(language, result.question.topic)}"
-            AppLanguage.Bulgarian -> "Верен: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedQuizText(language, result.question.topic)}"
-            AppLanguage.German -> "Richtig: ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedQuizText(language, result.question.topic)}"
-          },
-      )
+      Text(text = localizedReviewedQuestionText(result, language))
       if (result.isCorrect) {
         Text(
-          text =
-            when (language) {
-              AppLanguage.English -> "Points: ${formatScore(netPointsInternal)}"
-              AppLanguage.Bulgarian -> "Точки: ${formatScore(netPointsInternal)}"
-              AppLanguage.German -> "Punkte: ${formatScore(netPointsInternal)}"
-            },
+          text = labeledEmphasizedAnswerText("Correct", "Верен", "Richtig", result.question.correctCountry, language, result.question.topic),
         )
       }
       if (!result.isCorrect) {
-        if (wrongOptions.isNotEmpty()) {
-          val wrongOptionsPrefix =
+        Text(
+          text = labeledEmphasizedAnswerText("Correct", "Верен", "Richtig", result.question.correctCountry, language, result.question.topic),
+        )
+        if (result.question.variant == QuizVariant.TypeText) {
+          val selectedWrongCode = result.selectedCountry?.code
+          Text(
+            text =
+              buildAnnotatedString {
+                append(
+                  when (language) {
+                    AppLanguage.English -> "Your answer: "
+                    AppLanguage.Bulgarian -> "Твоят отговор: "
+                    AppLanguage.German -> "Deine Antwort: "
+                  },
+                )
+                pushStyle(SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline))
+                append(result.typedAnswer.ifBlank { "-" })
+                pop()
+              },
+          )
+        } else if (allOptions.isNotEmpty()) {
+          val answersPrefix =
             when (language) {
-              AppLanguage.English -> "Wrong options: "
-              AppLanguage.Bulgarian -> "Грешни опции: "
-              AppLanguage.German -> "Falsche Optionen: "
+              AppLanguage.English -> "All answers: "
+              AppLanguage.Bulgarian -> "Всички отговори: "
+              AppLanguage.German -> "Alle Antworten: "
             }
           val selectedWrongCode = result.selectedCountry?.code
           Text(
             text =
               buildAnnotatedString {
-                append(wrongOptionsPrefix)
-                wrongOptions.forEachIndexed { optionIndex, option ->
+                append(answersPrefix)
+                allOptions.forEachIndexed { optionIndex, option ->
                   if (optionIndex > 0) {
                     append(", ")
                   }
@@ -224,18 +240,76 @@ internal fun ResultRow(
           )
         }
       }
-      if (!result.isCorrect) {
-        Text(
-          text =
-            when (language) {
-              AppLanguage.English -> "Points: ${formatScore(netPointsInternal)}"
-              AppLanguage.Bulgarian -> "Точки: ${formatScore(netPointsInternal)}"
-              AppLanguage.German -> "Punkte: ${formatScore(netPointsInternal)}"
-            },
-        )
-      }
+      Text(
+        text =
+          when (language) {
+            AppLanguage.English -> "Points: ${formatScore(netPointsInternal)}"
+            AppLanguage.Bulgarian -> "Точки: ${formatScore(netPointsInternal)}"
+            AppLanguage.German -> "Punkte: ${formatScore(netPointsInternal)}"
+          },
+      )
     }
   }
+}
+
+private fun localizedReviewedQuestionText(
+  result: QuestionResult,
+  language: AppLanguage,
+): String {
+  val capitalOfPrefix =
+    if (result.question.topic == QuizTopic.Capitals) {
+      val label =
+        when (language) {
+          AppLanguage.English -> "(Capital of)"
+          AppLanguage.Bulgarian -> "(Столица на)"
+          AppLanguage.German -> "(Hauptstadt von)"
+        }
+      "$label ${result.question.correctCountry.emoji} ${result.question.correctCountry.localizedName(language)}"
+    } else {
+      null
+    }
+  val prompt =
+    when (result.question.variant) {
+      QuizVariant.FlagToText -> {
+        capitalOfPrefix ?: result.question.correctCountry.emoji
+      }
+      QuizVariant.TextToFlag -> {
+        val base = result.question.correctCountry.localizedQuizText(language, result.question.topic)
+        if (result.question.topic == QuizTopic.Capitals) {
+          "$capitalOfPrefix $base"
+        } else {
+          base
+        }
+      }
+      QuizVariant.TypeText -> {
+        capitalOfPrefix ?: result.question.correctCountry.emoji
+      }
+    }
+  return when (language) {
+    AppLanguage.English -> "Question: $prompt"
+    AppLanguage.Bulgarian -> "Въпрос: $prompt"
+    AppLanguage.German -> "Frage: $prompt"
+  }
+}
+
+private fun labeledEmphasizedAnswerText(
+  englishLabel: String,
+  bulgarianLabel: String,
+  germanLabel: String,
+  country: FlagCountry,
+  language: AppLanguage,
+  topic: QuizTopic,
+) = buildAnnotatedString {
+  append(
+    when (language) {
+      AppLanguage.English -> "$englishLabel: "
+      AppLanguage.Bulgarian -> "$bulgarianLabel: "
+      AppLanguage.German -> "$germanLabel: "
+    },
+  )
+  pushStyle(SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline))
+  append("${country.emoji} ${country.localizedQuizText(language, topic)}")
+  pop()
 }
 
 

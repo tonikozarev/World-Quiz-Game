@@ -9,11 +9,9 @@ import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.CreateQuizSource
-import com.example.flaggameandroid.core.model.countryQuizMetadata
+import com.example.flaggameandroid.core.model.capitalQuizMetadata
 import com.example.flaggameandroid.core.model.gameModesHubModes
 import com.example.flaggameandroid.core.model.startQuizModes
-import com.example.flaggameandroid.feature.app.createQuizDefaultPresetsForTopic
-import com.example.flaggameandroid.feature.app.createQuizPresetOrderFor
 import com.example.flaggameandroid.persistence.PersistedAppState
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -114,8 +112,8 @@ class GameModeRegressionTest {
     assertEquals(pool.map { it.code }.distinct().size, pool.size)
     assertTrue(
       pool.all { country ->
-        val metadata = countryQuizMetadata(country.code)
-        metadata != null && (metadata.population < 1_000_000L || metadata.landlocked)
+        val metadata = capitalQuizMetadata(country.code)
+        metadata != null && (metadata.population < 1_000_000L || metadata.notCoastal)
       },
     )
   }
@@ -128,12 +126,10 @@ class GameModeRegressionTest {
         CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
         CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
         CreateQuizPreset.CapitalPopulationOverThirtyMillion,
-        CreateQuizPreset.CapitalAreaUnderTwentyFiveSquareKm,
-        CreateQuizPreset.CapitalAreaTwentyFiveToOneHundredFiftySquareKm,
-        CreateQuizPreset.CapitalAreaOneHundredFiftyToSixHundredSquareKm,
-        CreateQuizPreset.CapitalAreaOverSixHundredSquareKm,
-        CreateQuizPreset.CapitalNatoMember,
-        CreateQuizPreset.CapitalSchengenMember,
+        CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
+        CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm,
+        CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm,
+        CreateQuizPreset.CapitalAreaOverEightHundredSquareKm,
         CreateQuizPreset.CapitalNotCoastal,
       ),
       createQuizPresetOrderFor(QuizTopic.Capitals),
