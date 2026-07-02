@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import android.widget.Toast
 import com.example.flaggameandroid.core.model.CreateQuizPreset
@@ -75,6 +76,7 @@ fun SetupScreen(
   onBack: () -> Unit,
   onVariantToggle: (QuizVariant) -> Unit,
   onInstantCorrectionToggled: () -> Unit,
+  onQuizTopicSelected: (QuizTopic) -> Unit,
   onContinentToggle: (String) -> Unit,
   onCreateQuizTrainingToggled: () -> Unit,
   onCreateQuizLocalMultiplayerToggled: () -> Unit,
@@ -104,6 +106,7 @@ fun SetupScreen(
   var saveQuizName by remember { mutableStateOf("") }
   var saveFeedbackMessage by remember { mutableStateOf<String?>(null) }
   var replaceConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.NameConflict?>(null) }
+  var capacityConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.CapacityConflict?>(null) }
   var showInstantCorrectionInfo by remember { mutableStateOf(false) }
   var showCreateQuizTrainingInfo by remember { mutableStateOf(false) }
   var showCreateQuizLocalMultiplayerInfo by remember { mutableStateOf(false) }
@@ -237,6 +240,14 @@ fun SetupScreen(
             "Zeigt direkt nach der Annahme der Antwort richtig oder falsch an. Deaktiviere es, um erst in den Ergebnissen zu sehen."
         },
     )
+
+    if (setup.mode == GameMode.CreateQuiz || setup.mode == GameMode.MistakeReview) {
+      QuizTopicToggleSection(
+        language = language,
+        selectedTopic = setup.topic,
+        onTopicSelected = onQuizTopicSelected,
+      )
+    }
 
     if (setup.mode == GameMode.LocalMultiplayer) {
       PlayersSection(
@@ -1037,6 +1048,11 @@ fun SetupScreen(
                   showSaveDialog = false
                 }
 
+                is FlagGameViewModel.SaveQuizResult.CapacityConflict -> {
+                  capacityConflict = result
+                  showSaveDialog = false
+                }
+
                 FlagGameViewModel.SaveQuizResult.NoOp -> showSaveDialog = false
               }
             },
@@ -1099,6 +1115,7 @@ fun SetupScreen(
                     }
                   )
                 is FlagGameViewModel.SaveQuizResult.NameConflict,
+                is FlagGameViewModel.SaveQuizResult.CapacityConflict,
                 FlagGameViewModel.SaveQuizResult.NoOp -> Unit
               }
               replaceConflict = null
@@ -1115,6 +1132,70 @@ fun SetupScreen(
         },
         dismissButton = {
           TextButton(onClick = { replaceConflict = null }) {
+            Text(
+              when (language) {
+                AppLanguage.English -> "Cancel"
+                AppLanguage.Bulgarian -> "Отказ"
+                AppLanguage.German -> "Abbrechen"
+              },
+            )
+          }
+        },
+      )
+    }
+
+    capacityConflict?.let { conflict ->
+      AlertDialog(
+        onDismissRequest = { capacityConflict = null },
+        title = {
+          Text(
+            when (language) {
+              AppLanguage.English -> "Saved quiz limit reached"
+              AppLanguage.Bulgarian -> "Лимитът за запазени тестове е достигнат"
+              AppLanguage.German -> "Limit für gespeicherte Quiz erreicht"
+            },
+          )
+        },
+        text = {
+          Text(
+            when (language) {
+              AppLanguage.English -> "You already have 10 saved quizzes. Replace \"${conflict.replaceTemplateName}\" with this new quiz?"
+              AppLanguage.Bulgarian -> "Вече имаш 10 запазени теста. Да заменя ли \"${conflict.replaceTemplateName}\" с този нов тест?"
+              AppLanguage.German -> "Du hast bereits 10 gespeicherte Quiz. Soll \"${conflict.replaceTemplateName}\" durch dieses neue Quiz ersetzt werden?"
+            },
+          )
+        },
+        confirmButton = {
+          TextButton(
+            onClick = {
+              when (val result = onSaveCreateQuizClicked(saveQuizName, conflict.replaceTemplateId)) {
+                is FlagGameViewModel.SaveQuizResult.Saved -> showSaveFeedback(result.message)
+                is FlagGameViewModel.SaveQuizResult.DuplicateConfiguration ->
+                  showSaveFeedback(
+                    when (language) {
+                      AppLanguage.English -> "That exact quiz is already saved as \"${result.existingName}\"."
+                      AppLanguage.Bulgarian -> "Същият тест вече е записан като \"${result.existingName}\"."
+                      AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert."
+                    }
+                  )
+                is FlagGameViewModel.SaveQuizResult.NameConflict -> replaceConflict = result
+                is FlagGameViewModel.SaveQuizResult.CapacityConflict,
+                FlagGameViewModel.SaveQuizResult.NoOp -> Unit
+              }
+              capacityConflict = null
+            },
+          ) {
+            Text(
+              when (language) {
+                AppLanguage.English -> "Replace"
+                AppLanguage.Bulgarian -> "Замени"
+                AppLanguage.German -> "Ersetzen"
+              },
+            )
+          }
+        },
+        dismissButton = {
+          TextButton(onClick = { capacityConflict = null }) {
             Text(
               when (language) {
                 AppLanguage.English -> "Cancel"
@@ -1337,6 +1418,52 @@ private fun CompactToggleInfoCard(
       }
       if (infoExpanded) {
         InfoPanel(text = infoText)
+      }
+    }
+  }
+}
+
+@Composable
+private fun QuizTopicToggleSection(
+  language: AppLanguage,
+  selectedTopic: QuizTopic,
+  onTopicSelected: (QuizTopic) -> Unit,
+) {
+  Card(modifier = Modifier.fillMaxWidth()) {
+    Column(
+      modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      Text(
+        text = localizedQuizTopicTitle(language),
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
+      )
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        QuizTopic.entries.forEach { topic ->
+          val selected = selectedTopic == topic
+          val label = localizedQuizTopicLabel(topic, language)
+          if (selected) {
+            Button(
+              onClick = { onTopicSelected(topic) },
+              contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+              modifier = Modifier.weight(1f),
+            ) {
+              Text(text = label, maxLines = 1, fontSize = 13.sp)
+            }
+          } else {
+            OutlinedButton(
+              onClick = { onTopicSelected(topic) },
+              contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+              modifier = Modifier.weight(1f),
+            ) {
+              Text(text = label, maxLines = 1, fontSize = 13.sp)
+            }
+          }
+        }
       }
     }
   }

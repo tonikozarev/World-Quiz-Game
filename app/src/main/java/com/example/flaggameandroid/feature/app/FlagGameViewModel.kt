@@ -246,7 +246,7 @@ class FlagGameViewModel(
   }
 
   fun onQuizTopicSelected(topic: QuizTopic) {
-    updateState { it.withSelectedQuizTopic(topic) }
+    updateState { it.withSelectedQuizTopic(topic, countries) }
     refreshDailyChallengeAvailability()
   }
 
@@ -664,13 +664,23 @@ class FlagGameViewModel(
       return SaveQuizResult.DuplicateConfiguration(existingName = sameConfigurationTemplate.title)
     }
 
+    val replacingExisting = replaceTemplateId != null
+    if (!replacingExisting && state.savedQuizTemplates.size >= 10) {
+      val oldestTemplate = state.savedQuizTemplates.minByOrNull { it.createdAtEpochMillis }
+      if (oldestTemplate != null) {
+        return SaveQuizResult.CapacityConflict(
+          replaceTemplateId = oldestTemplate.id,
+          replaceTemplateName = oldestTemplate.title,
+        )
+      }
+    }
+
     updateStateAndPersistProgress { current ->
       val templates =
         (listOf(template) +
           current.savedQuizTemplates
             .filterNot { it.id == template.id }
             .filterNot { it.id == replaceTemplateId })
-          .take(10)
       current.copy(
         setup = current.setup.copy(createQuizSeed = seed),
         savedQuizTemplates = templates,
@@ -759,6 +769,11 @@ class FlagGameViewModel(
     data class NameConflict(
       val existingTemplateId: String,
       val existingName: String,
+    ) : SaveQuizResult
+
+    data class CapacityConflict(
+      val replaceTemplateId: String,
+      val replaceTemplateName: String,
     ) : SaveQuizResult
   }
 

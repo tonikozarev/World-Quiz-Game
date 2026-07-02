@@ -30,6 +30,18 @@ internal fun wrongOptionLabel(
     else -> country.localizedQuizText(language, topic)
   }
 
+internal fun reviewAnswerLabel(
+  country: FlagCountry,
+  variant: QuizVariant,
+  language: AppLanguage,
+  topic: QuizTopic,
+): String =
+  when {
+    variant == QuizVariant.TextToFlag -> "${country.localizedName(language)} ${country.emoji}"
+    topic == QuizTopic.Capitals -> "${country.localizedQuizText(language, topic)} ${country.emoji}"
+    else -> "${country.localizedName(language)} ${country.emoji}"
+  }
+
 internal fun answerOptionLabel(
   question: FlagQuestion,
   option: FlagCountry,

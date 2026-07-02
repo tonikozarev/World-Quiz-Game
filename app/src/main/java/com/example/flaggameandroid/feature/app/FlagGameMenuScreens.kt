@@ -17,7 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -170,10 +169,8 @@ fun GameModesScreen(
 @Composable
 fun GameModesHubScreen(
   language: AppLanguage,
-  selectedTopic: QuizTopic,
   dailyChallengeCache: DailyChallengeCache?,
   mistakeReviewEligibleCount: Int,
-  onTopicSelected: (QuizTopic) -> Unit,
   onModeSelected: (GameMode) -> Unit,
   onRefreshDailyChallengeAvailability: () -> Unit,
   modifier: Modifier = Modifier,
@@ -188,11 +185,6 @@ fun GameModesHubScreen(
   }
   ScreenShell(modifier = modifier) {
     HeaderRow(title = localizedGameModesHubTitle(language))
-    QuizTopicSelector(
-      language = language,
-      selectedTopic = selectedTopic,
-      onTopicSelected = onTopicSelected,
-    )
 
     gameModesHubModes().forEach { mode ->
       ModeCard(
@@ -211,35 +203,6 @@ fun GameModesHubScreen(
         },
         onClick = { onModeSelected(mode) },
       )
-    }
-  }
-}
-
-@Composable
-private fun QuizTopicSelector(
-  language: AppLanguage,
-  selectedTopic: QuizTopic,
-  onTopicSelected: (QuizTopic) -> Unit,
-) {
-  Card(modifier = Modifier.fillMaxWidth()) {
-    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text(
-        text = localizedQuizTopicTitle(language),
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-      )
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-      ) {
-        QuizTopic.entries.forEach { topic ->
-          FilterChip(
-            selected = selectedTopic == topic,
-            onClick = { onTopicSelected(topic) },
-            label = { Text(localizedQuizTopicLabel(topic, language)) },
-          )
-        }
-      }
     }
   }
 }

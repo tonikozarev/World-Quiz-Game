@@ -145,10 +145,11 @@ internal fun FlagGameScreenContent(
     AppScreen.GameModesHub ->
       GameModesHubScreen(
         language = uiState.settings.language,
-        selectedTopic = uiState.selectedQuizTopic,
         dailyChallengeCache = uiState.dailyChallengeCache,
-        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, uiState.selectedQuizTopic),
-        onTopicSelected = onQuizTopicSelected,
+        mistakeReviewEligibleCount =
+          QuizTopic.entries.maxOf { topic ->
+            mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, topic)
+          },
         onModeSelected = onModeSelected,
         onRefreshDailyChallengeAvailability = onRefreshDailyChallengeAvailability,
         modifier = modifier,
@@ -198,6 +199,7 @@ internal fun FlagGameScreenContent(
         onBack = onBackToGameModesClick,
         onVariantToggle = onVariantToggled,
         onInstantCorrectionToggled = onInstantCorrectionToggled,
+        onQuizTopicSelected = onQuizTopicSelected,
         onContinentToggle = onContinentToggled,
         onCreateQuizTrainingToggled = onCreateQuizTrainingToggled,
         onCreateQuizLocalMultiplayerToggled = onCreateQuizLocalMultiplayerToggled,

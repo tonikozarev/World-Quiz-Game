@@ -10,22 +10,46 @@ import com.example.flaggameandroid.core.model.QuizVariant
 internal fun FlagGameUiState.withUpdatedSetup(update: (SetupState) -> SetupState): FlagGameUiState =
   copy(setup = update(setup), setupError = null)
 
-internal fun FlagGameUiState.withSelectedQuizTopic(topic: QuizTopic): FlagGameUiState =
-  copy(
-    selectedQuizTopic = topic,
-    setup =
-      if (setup.mode == com.example.flaggameandroid.core.model.GameMode.CreateQuiz && topic == QuizTopic.Mixed) {
+internal fun FlagGameUiState.withSelectedQuizTopic(
+  topic: QuizTopic,
+  countries: List<FlagCountry>,
+): FlagGameUiState {
+  val nextSetup =
+    when (setup.mode) {
+      com.example.flaggameandroid.core.model.GameMode.CreateQuiz ->
         setup.copy(
-          createQuizSource = CreateQuizSource.ManualCountriesCapitals,
-          questionCountInput = setup.derivedCreateQuizQuestionCount().toString(),
-          surpriseMe = false,
+          topic = topic,
+          createQuizSource =
+            if (topic == QuizTopic.Mixed) {
+              CreateQuizSource.ManualCountriesCapitals
+            } else {
+              CreateQuizSource.PresetFilter
+            },
+          createQuizPreset =
+            when (topic) {
+              QuizTopic.Capitals -> CreateQuizPreset.CapitalPopulationUnderOneMillion
+              QuizTopic.Countries,
+              QuizTopic.Mixed -> CreateQuizPreset.TwoColors
+            },
+          createQuizPresets = createQuizDefaultPresetsForTopic(topic),
+          selectedCountryCodes = emptySet(),
+          selectedCapitalCountryCodes = emptySet(),
+          createQuizManualHardcoreEnabled = false,
           createQuizSeed = 0L,
+          questionCountInput = if (topic == QuizTopic.Mixed) "0" else "10",
+          surpriseMe = false,
         )
-      } else {
-        setup
-      },
+      com.example.flaggameandroid.core.model.GameMode.MistakeReview ->
+        setup.copy(topic = topic, questionCountInput = "10", surpriseMe = false)
+      else -> setup
+    }
+  return copy(
+    selectedQuizTopic = topic,
+    setup = nextSetup,
+    questionCountLimit = questionLimitFor(nextSetup, countries),
     setupError = null,
   )
+}
 
 internal fun FlagGameUiState.withSelectedVariantsToggled(variant: QuizVariant): FlagGameUiState {
   val current = setup.variants

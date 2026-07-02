@@ -166,7 +166,7 @@ internal fun localizedGameModesHubTitle(language: AppLanguage): String =
   tr(language, "Game modes", "Режими на игра", "Spielmodi")
 
 internal fun localizedQuizTopicTitle(language: AppLanguage): String =
-  tr(language, "Choose topic", "Избери тема", "Thema wählen")
+  tr(language, "Choose type of quiz", "Избери тип тест", "Quiz-Typ auswählen")
 
 internal fun localizedQuizTopicLabel(
   topic: QuizTopic,
@@ -175,7 +175,7 @@ internal fun localizedQuizTopicLabel(
   when (topic) {
     QuizTopic.Countries -> tr(language, "Countries", "Държави", "Länder")
     QuizTopic.Capitals -> tr(language, "Capitals", "Столици", "Hauptstädte")
-    QuizTopic.Mixed -> tr(language, "Mix", "Микс", "Mix")
+    QuizTopic.Mixed -> tr(language, "Both", "И двете", "Beide")
   }
 
 internal fun localizedSavedTestsTitle(
