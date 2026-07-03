@@ -479,7 +479,7 @@ fun SetupScreen(
                       FilterChip(
                         selected = country.code in setup.selectedCapitalCountryCodes,
                         onClick = { onCreateQuizCapitalToggled(country.code) },
-                        label = { Text("${country.emoji} ${country.capital?.takeIf { it.isNotBlank() } ?: country.localizedName(language)}") },
+                        label = { Text("${country.emoji} ${country.localizedCapital(language)}") },
                       )
                     }
                   }
@@ -491,7 +491,7 @@ fun SetupScreen(
                   val labelText =
                     when (setup.topic) {
                       QuizTopic.Capitals ->
-                        "${country.emoji} ${country.capital?.takeIf { it.isNotBlank() } ?: country.localizedName(language)}"
+                        "${country.emoji} ${country.localizedCapital(language)}"
                       else ->
                         "${country.emoji} ${country.localizedName(language)}"
                     }

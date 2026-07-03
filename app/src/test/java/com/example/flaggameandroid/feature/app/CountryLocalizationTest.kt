@@ -61,6 +61,26 @@ class CountryLocalizationTest {
   }
 
   @Test
+  fun capitalLabels_areLocalizedInBulgarianAndGerman() {
+    val austria = catalog.first { it.code == "AT" }
+
+    assertEquals("Виена", austria.localizedCapital(AppLanguage.Bulgarian))
+    assertEquals("Wien", austria.localizedCapital(AppLanguage.German))
+    assertTrue(
+      QuizAnswerChecker.isTypedAnswerCorrect(
+        "Виена",
+        austria.acceptedTypedAnswers(AppLanguage.Bulgarian, QuizTopic.Capitals),
+      ),
+    )
+    assertTrue(
+      QuizAnswerChecker.isTypedAnswerCorrect(
+        "Wien",
+        austria.acceptedTypedAnswers(AppLanguage.German, QuizTopic.Capitals),
+      ),
+    )
+  }
+
+  @Test
   fun formatHintPoints_keepsTwoDecimalPlacesForQuarterValues() {
     assertEquals("15.25", formatHintPoints(15.25))
     assertEquals("0.75", formatHintPoints(0.75))
@@ -171,10 +191,10 @@ class CountryLocalizationTest {
 
     assertEquals("🇩🇪", answerOptionLabel(countriesQuestion, germany, AppLanguage.English))
     assertEquals("🇩🇪 (Capital: Berlin)", answerOptionLabel(countriesQuestion, germany, AppLanguage.English, hintUses = 1))
-    assertEquals("🇩🇪 (Столица: Berlin)", answerOptionLabel(countriesQuestion, germany, AppLanguage.Bulgarian, hintUses = 1))
+    assertEquals("🇩🇪 (Столица: Берлин)", answerOptionLabel(countriesQuestion, germany, AppLanguage.Bulgarian, hintUses = 1))
     assertEquals("🇩🇪 (Hauptstadt: Berlin)", answerOptionLabel(countriesQuestion, germany, AppLanguage.German, hintUses = 1))
     assertEquals("🇩🇪 (Country: Germany)", answerOptionLabel(capitalsQuestion, germany, AppLanguage.English, hintUses = 1))
-    assertEquals("🇩🇪 (Държава: ${germany.localizedName(AppLanguage.Bulgarian)})", answerOptionLabel(capitalsQuestion, germany, AppLanguage.Bulgarian, hintUses = 1))
+    assertEquals("🇩🇪 (Държава: Германия)", answerOptionLabel(capitalsQuestion, germany, AppLanguage.Bulgarian, hintUses = 1))
     assertEquals("🇩🇪 (Land: Deutschland)", answerOptionLabel(capitalsQuestion, germany, AppLanguage.German, hintUses = 1))
   }
 }

@@ -113,7 +113,7 @@ internal fun capitalQuestionCountryLabel(
         AppLanguage.Bulgarian -> "Столица"
         AppLanguage.German -> "Hauptstadt"
       }
-    "$prefix: ${question.correctCountry.capital.orEmpty()}"
+    "$prefix: ${question.correctCountry.localizedCapital(language)}"
   } else if (question.topic == QuizTopic.Capitals) {
     val prefix =
       when (language) {
