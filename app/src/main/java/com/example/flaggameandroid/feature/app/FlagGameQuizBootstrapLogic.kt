@@ -23,7 +23,7 @@ internal fun buildStartedQuizState(
   questionGenerator: QuizQuestionGenerator,
   hintDifficulty: HintDifficulty,
   random: Random,
-  hintCount: Int,
+  hintCount: Double,
   displayName: String,
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
   dailyChallengeCache: DailyChallengeCache? = null,
@@ -57,6 +57,7 @@ internal fun buildStartedQuizState(
     mode = config.mode,
     allInType = setup.allInType,
     variants = config.variants,
+    topic = config.topic,
     selectedContinents = setup.selectedContinents,
     instantCorrectionEnabled = setup.instantCorrectionEnabled,
     hintsAllowed = !setup.usesCreateQuizManualHardcore,
@@ -79,7 +80,7 @@ internal fun buildQuizStartResult(
   questionGenerator: QuizQuestionGenerator,
   hintDifficulty: HintDifficulty,
   random: Random,
-  hintCount: Int,
+  hintCount: Double,
   displayName: String,
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
   dailyChallengeCache: DailyChallengeCache? = null,
@@ -100,7 +101,7 @@ internal fun buildQuizStartResult(
     return QuizStartResult(validationError = "Daily challenge already completed for today.")
   }
   if (setup.mode == GameMode.MistakeReview) {
-    val eligibleCount = mistakeReviewEligibleCountryCount(practiceStats)
+    val eligibleCount = mistakeReviewEligibleCountryCount(practiceStats, setup.topic)
     if (eligibleCount < MistakeReviewUnlockCountryCount) {
       return QuizStartResult(validationError = "No missed countries to review yet.")
     }

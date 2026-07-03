@@ -25,6 +25,7 @@ import com.example.flaggameandroid.theme.FlagGameAndroidTheme
 internal fun QuestionPrompt(
   question: FlagQuestion,
   language: AppLanguage,
+  showContextHint: Boolean,
   modifier: Modifier = Modifier,
 ) {
   ElevatedCard(
@@ -37,19 +38,30 @@ internal fun QuestionPrompt(
       horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
     ) {
       when (question.variant) {
-        QuizVariant.FlagToCountry,
-        QuizVariant.TypeCountryName -> {
+        QuizVariant.FlagToText,
+        QuizVariant.TypeText -> {
           Text(
             text = question.correctCountry.emoji,
             fontSize = 62.sp,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
           )
+          if (showContextHint) {
+            capitalQuestionCountryLabel(question, language)?.let { countryLabel ->
+              Text(
+                text = countryLabel,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+              )
+            }
+          }
         }
 
-        QuizVariant.CountryToFlag -> {
+        QuizVariant.TextToFlag -> {
           Text(
-            text = question.correctCountry.localizedName(language),
+            text = question.correctCountry.localizedQuizText(language, question.topic),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.fillMaxWidth(),
@@ -75,10 +87,11 @@ private fun PreviewQuestionPrompt() {
               emoji = "🇩🇪",
               continent = "Europe",
             ),
-            variant = QuizVariant.FlagToCountry,
+            variant = QuizVariant.FlagToText,
             options = emptyList(),
           ),
         language = AppLanguage.English,
+        showContextHint = true,
       )
     }
   }

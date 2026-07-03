@@ -9,6 +9,7 @@ import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
 @Composable
@@ -20,6 +21,7 @@ internal fun FlagGameScreenContent(
   onFavoritesClicked: () -> Unit,
   onSettingsClicked: () -> Unit,
   onGameModesClicked: () -> Unit,
+  onQuizTopicSelected: (QuizTopic) -> Unit,
   onQuitClicked: () -> Unit,
   onLevelUpSeen: () -> Unit,
   onAccountNameChanged: (String) -> Unit,
@@ -61,6 +63,9 @@ internal fun FlagGameScreenContent(
   onCreateQuizPresetSelected: (com.example.flaggameandroid.core.model.CreateQuizPreset) -> Unit,
   onCreateQuizContinentToggled: (String) -> Unit,
   onCreateQuizCountryToggled: (String) -> Unit,
+  onCreateQuizCapitalToggled: (String) -> Unit,
+  onCreateQuizCountryBulkToggled: (Set<String>) -> Unit,
+  onCreateQuizCapitalBulkToggled: (Set<String>) -> Unit,
   onCreateQuizAllCountriesToggled: () -> Unit,
   onSaveCreateQuizClicked: (String, String?) -> FlagGameViewModel.SaveQuizResult,
   onCountryAnswerSelected: (FlagCountry) -> Unit,
@@ -131,7 +136,7 @@ internal fun FlagGameScreenContent(
       GameModesScreen(
         language = uiState.settings.language,
         dailyChallengeCache = uiState.dailyChallengeCache,
-        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats),
+        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, uiState.selectedQuizTopic),
         onGameModesClick = onGameModesClicked,
         onModeSelected = onModeSelected,
         onRefreshDailyChallengeAvailability = onRefreshDailyChallengeAvailability,
@@ -141,7 +146,10 @@ internal fun FlagGameScreenContent(
       GameModesHubScreen(
         language = uiState.settings.language,
         dailyChallengeCache = uiState.dailyChallengeCache,
-        mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats),
+        mistakeReviewEligibleCount =
+          QuizTopic.entries.maxOf { topic ->
+            mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, topic)
+          },
         onModeSelected = onModeSelected,
         onRefreshDailyChallengeAvailability = onRefreshDailyChallengeAvailability,
         modifier = modifier,
@@ -191,6 +199,7 @@ internal fun FlagGameScreenContent(
         onBack = onBackToGameModesClick,
         onVariantToggle = onVariantToggled,
         onInstantCorrectionToggled = onInstantCorrectionToggled,
+        onQuizTopicSelected = onQuizTopicSelected,
         onContinentToggle = onContinentToggled,
         onCreateQuizTrainingToggled = onCreateQuizTrainingToggled,
         onCreateQuizLocalMultiplayerToggled = onCreateQuizLocalMultiplayerToggled,
@@ -209,6 +218,9 @@ internal fun FlagGameScreenContent(
         onCreateQuizPresetSelected = onCreateQuizPresetSelected,
         onCreateQuizContinentToggled = onCreateQuizContinentToggled,
         onCreateQuizCountryToggled = onCreateQuizCountryToggled,
+        onCreateQuizCapitalToggled = onCreateQuizCapitalToggled,
+        onCreateQuizCountryBulkToggled = onCreateQuizCountryBulkToggled,
+        onCreateQuizCapitalBulkToggled = onCreateQuizCapitalBulkToggled,
         onCreateQuizAllCountriesToggled = onCreateQuizAllCountriesToggled,
         onSaveCreateQuizClicked = onSaveCreateQuizClicked,
         modifier = modifier,

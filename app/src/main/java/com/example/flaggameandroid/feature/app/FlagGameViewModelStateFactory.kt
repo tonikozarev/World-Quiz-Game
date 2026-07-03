@@ -2,7 +2,10 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.CreateQuizSource
+import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.ProgressionRules
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.persistence.PersistedAppState
 
 internal fun buildInitialUiState(
@@ -34,7 +37,7 @@ internal fun buildInitialUiState(
     achievements = initialPersistedState.achievements,
     mistakeReviewUnlocked =
       initialPersistedState.mistakeReviewUnlocked ||
-        mistakeReviewEligibleCountryCount(initialPersistedState.countryPracticeStats) >= com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount,
+        mistakeReviewEligibleCountryCount(initialPersistedState.countryPracticeStats, QuizTopic.Mixed) >= com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount,
     levelProgress =
       LevelProgressState(
         level = initialPersistedState.level,
@@ -47,12 +50,23 @@ internal fun buildInitialUiState(
     inactiveIconActive = initialPersistedState.inactiveIconActive,
     countryPracticeStats = initialPersistedState.countryPracticeStats,
     activityCalendar = initialPersistedState.activityCalendar,
-    dailyChallengeCache =
-      buildDailyChallengeCache(
-        countries = countries,
-        dailyChallengeCache = initialPersistedState.dailyChallengeCache,
-        nowEpochMillis = nowEpochMillis,
-      ),
+    dailyChallengeCaches =
+      initialPersistedState.dailyChallengeCaches +
+        (QuizTopic.Countries to
+          buildDailyChallengeCache(
+            countries = countries,
+            topic = QuizTopic.Countries,
+            dailyChallengeCache = initialPersistedState.dailyChallengeCaches[QuizTopic.Countries],
+            nowEpochMillis = nowEpochMillis,
+          )) +
+        (QuizTopic.Mixed to
+          buildDailyChallengeCache(
+            countries = countries,
+            topic = QuizTopic.Mixed,
+            dailyChallengeCache = initialPersistedState.dailyChallengeCaches[QuizTopic.Mixed]
+              ?: initialPersistedState.dailyChallengeCaches[QuizTopic.Countries],
+            nowEpochMillis = nowEpochMillis,
+          )),
     savedQuizTemplates = initialPersistedState.savedQuizTemplates,
   )
 
@@ -64,6 +78,7 @@ internal fun FlagGameUiState.resetToMenu(
   copy(
     screen = AppScreen.Menu,
     quizReturnTarget = AppScreen.GameModes,
+    selectedQuizTopic = QuizTopic.Countries,
     availableContinents = allContinents,
     setup = SetupState(selectedContinents = selectableContinents.toSet()),
     questionCountLimit = questionCountLimit,
@@ -89,19 +104,25 @@ internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
     inactiveIconActive = inactiveIconActive,
     countryPracticeStats = countryPracticeStats,
     activityCalendar = activityCalendar,
-    dailyChallengeCache = dailyChallengeCache,
+    dailyChallengeCaches = dailyChallengeCaches,
     savedQuizTemplates = savedQuizTemplates,
     mistakeReviewUnlocked = mistakeReviewUnlocked,
   )
 
 internal fun buildSetupForMode(
   mode: GameMode,
+  topic: QuizTopic,
   selectableContinents: List<String>,
   countries: List<FlagCountry>,
   displayName: String,
 ): SetupState =
   SetupState(
     mode = mode,
+    topic =
+      when (mode) {
+        GameMode.DailyChallenge -> QuizTopic.Mixed
+        else -> topic
+      },
     instantCorrectionEnabled = mode == GameMode.Training,
     selectedContinents =
       when (mode) {
@@ -118,7 +139,7 @@ internal fun buildSetupForMode(
       when (mode) {
         GameMode.DailyChallenge -> "10"
         GameMode.MistakeReview -> "10"
-        GameMode.CreateQuiz -> "10"
+        GameMode.CreateQuiz -> if (topic == QuizTopic.Mixed) "0" else "10"
         GameMode.WorldFlags -> "10"
         GameMode.LocalMultiplayer -> "10"
         else -> "10"
@@ -126,5 +147,31 @@ internal fun buildSetupForMode(
     speedRunSecondsPerAnswerInput = "5",
     worldFlagsHardcoreEnabled = false,
     worldFlagsTimerEnabled = false,
+    createQuizPreset =
+      when (topic) {
+        QuizTopic.Capitals -> CreateQuizPreset.CapitalPopulationUnderOneMillion
+        QuizTopic.Countries,
+        QuizTopic.Mixed -> CreateQuizPreset.TwoColors
+      },
+    createQuizSource =
+      when (topic) {
+        QuizTopic.Mixed -> CreateQuizSource.ManualCountriesCapitals
+        else -> CreateQuizSource.PresetFilter
+      },
+    createQuizPresets = createQuizDefaultPresetsForTopic(topic),
     playerNames = listOf(displayName, "Player 2"),
+  )
+
+internal fun buildSetupForMode(
+  mode: GameMode,
+  selectableContinents: List<String>,
+  countries: List<FlagCountry>,
+  displayName: String,
+): SetupState =
+  buildSetupForMode(
+    mode = mode,
+    topic = QuizTopic.Countries,
+    selectableContinents = selectableContinents,
+    countries = countries,
+    displayName = displayName,
   )

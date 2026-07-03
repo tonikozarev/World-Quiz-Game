@@ -10,8 +10,11 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.RatingsProgress
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
+import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
+import com.example.flaggameandroid.core.model.capitalQuizMetadata
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.hasSameQuizConfiguration
 import junit.framework.TestCase.assertEquals
@@ -42,7 +45,7 @@ class FlagGameFlowLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(31)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(32),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
       )
 
@@ -79,7 +82,7 @@ class FlagGameFlowLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(31)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(32),
-        hintCount = 1,
+        hintCount = 1.0,
         displayName = "Tony",
       )
 
@@ -157,7 +160,7 @@ class FlagGameFlowLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(31)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(32),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
       )
 
@@ -208,7 +211,7 @@ class FlagGameFlowLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(31)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(32),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
       )
 
@@ -255,7 +258,7 @@ class FlagGameFlowLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(31)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(32),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
       )
 
@@ -384,6 +387,84 @@ class FlagGameFlowLogicTest {
   }
 
   @Test
+  fun createQuizCountryPresetPath_keepsExistingUnionBehavior() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val baseSetup =
+      buildSetupForMode(
+        GameMode.CreateQuiz,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(createQuizSource = CreateQuizSource.PresetFilter)
+
+    val twoColorsPool =
+      countryPoolFor(
+        baseSetup.copy(createQuizPresets = setOf(CreateQuizPreset.TwoColors)),
+        countries,
+      )
+    val threeColorsPool =
+      countryPoolFor(
+        baseSetup.copy(createQuizPresets = setOf(CreateQuizPreset.ThreeColors)),
+        countries,
+      )
+    val combinedPool =
+      countryPoolFor(
+        baseSetup.copy(createQuizPresets = setOf(CreateQuizPreset.TwoColors, CreateQuizPreset.ThreeColors)),
+        countries,
+      )
+
+    assertTrue(combinedPool.isNotEmpty())
+    assertEquals(combinedPool.map { it.code }.distinct().size, combinedPool.size)
+    assertEquals(
+      (twoColorsPool.map { it.code } + threeColorsPool.map { it.code }).toSet(),
+      combinedPool.map { it.code }.toSet(),
+    )
+  }
+
+  @Test
+  fun createQuizCapitalPresetPath_filtersAndDeduplicatesOverlaps() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val baseSetup =
+      buildSetupForMode(
+        GameMode.CreateQuiz,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        topic = QuizTopic.Capitals,
+        createQuizSource = CreateQuizSource.PresetFilter,
+      )
+
+    val pool =
+      countryPoolFor(
+        baseSetup.copy(
+          createQuizPresets =
+            setOf(
+              CreateQuizPreset.CapitalPopulationUnderOneMillion,
+              CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
+              CreateQuizPreset.CapitalNotCoastal,
+            ),
+        ),
+        countries,
+      )
+
+    assertTrue(pool.isNotEmpty())
+    assertEquals(pool.map { it.code }.distinct().size, pool.size)
+    assertEquals(1, pool.count { it.code == "MC" })
+    assertTrue(
+      pool.all { country ->
+        val metadata = capitalQuizMetadata(country.code)
+        metadata != null &&
+          (
+            metadata.population < 1_000_000L ||
+              metadata.areaKm2 < 50.0 ||
+              metadata.notCoastal
+          )
+      },
+    )
+  }
+
+  @Test
   fun awardAchievementsIfEligible_unlocksSpeedRunOneSecondForPerfectRun() {
     val country = FlagCountry(code = "SR", name = "Speedland", emoji = "SR", continent = "Europe")
     val question =
@@ -434,7 +515,7 @@ class FlagGameFlowLogicTest {
         id = "a",
         createdAtEpochMillis = 1L,
         title = "Quiz A",
-        source = CreateQuizSource.ManualCountries,
+        source = CreateQuizSource.ManualCountriesCapitals,
         selectedCountryCodes = setOf("AT", "BG", "DE"),
         variants = setOf(QuizVariant.FlagToCountry),
         questionCount = 3,
@@ -452,6 +533,30 @@ class FlagGameFlowLogicTest {
   }
 
   @Test
+  fun savedQuizTemplateConfigurationDistinguishesMixedCountryAndCapitalSelectionSets() {
+    val base =
+      SavedQuizTemplate(
+        id = "a",
+        createdAtEpochMillis = 1L,
+        title = "Quiz A",
+        topic = QuizTopic.Mixed,
+        source = CreateQuizSource.ManualCountriesCapitals,
+        selectedCountryCodes = setOf("AT", "BG"),
+        selectedCapitalCountryCodes = setOf("AT", "BG"),
+        variants = setOf(QuizVariant.FlagToCountry),
+        questionCount = 4,
+        seed = 1L,
+      )
+    val differentCapitalSelection =
+      base.copy(
+        id = "b",
+        selectedCapitalCountryCodes = setOf("AT", "DE"),
+      )
+
+    assertFalse(base.hasSameQuizConfiguration(differentCapitalSelection))
+  }
+
+  @Test
   fun applyHintToCurrentQuestion_allowsHintAfterAnswerSelectionOutsideTraining() {
     val country = FlagCountry(code = "DE", name = "Germany", emoji = "🇩🇪", continent = "Europe")
     val question =
@@ -465,7 +570,7 @@ class FlagGameFlowLogicTest {
         mode = GameMode.WorldFlags,
         questions = listOf(question),
         questionStates = listOf(QuestionDraftState()),
-        players = listOf(com.example.flaggameandroid.core.model.PlayerProgress("Solo", hintPoints = 2)),
+        players = listOf(com.example.flaggameandroid.core.model.PlayerProgress("Solo", hintPoints = 2.0)),
       ).withSelectedCountry(country)
     val state = FlagGameUiState(quiz = quiz, settings = com.example.flaggameandroid.feature.app.SettingsState())
 

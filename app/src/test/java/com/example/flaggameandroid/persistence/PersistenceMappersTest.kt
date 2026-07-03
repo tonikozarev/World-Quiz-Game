@@ -15,7 +15,7 @@ class PersistenceMappersTest {
     val original =
       PersistedAppState(
         hintDifficulty = HintDifficulty.Hard,
-        hintCount = 7,
+        hintCount = 7.0,
         level = 4,
         hintsTowardNextLevel = 3,
         correctAnswersTowardNextLevel = 19,

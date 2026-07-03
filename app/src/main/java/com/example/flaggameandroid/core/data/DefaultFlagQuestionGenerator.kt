@@ -16,7 +16,7 @@ class DefaultFlagQuestionGenerator : FlagQuestionGenerator {
       config =
         QuizConfig(
           mode = GameMode.Training,
-          variants = setOf(QuizVariant.FlagToCountry),
+          variants = setOf(QuizVariant.FlagToText),
           questionCount = totalQuestions,
         ),
     )

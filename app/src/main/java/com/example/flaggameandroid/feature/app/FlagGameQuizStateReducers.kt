@@ -52,7 +52,7 @@ internal fun QuizState.withTypedAnswer(answer: String): QuizState {
 internal fun QuizState.withVerifiedTypedAnswer(): QuizState {
   val question = currentQuestion ?: return this
   val draft = currentQuestionState
-  if (question.variant != QuizVariant.TypeCountryName) return this
+  if (question.variant != QuizVariant.TypeText) return this
   if (draft.typedAnswer.isBlank() || draft.locked) return this
 
   val updatedDraft =

@@ -60,6 +60,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -248,6 +249,7 @@ internal fun SelectableRow(
   title: String,
   selected: Boolean,
   onClick: () -> Unit,
+  enabled: Boolean = true,
   description: String? = null,
 ) {
   val colors =
@@ -256,7 +258,12 @@ internal fun SelectableRow(
     } else {
       CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     }
-  Card(onClick = onClick, colors = colors, modifier = Modifier.fillMaxWidth()) {
+  Card(
+    onClick = onClick,
+    enabled = enabled,
+    colors = colors,
+    modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.55f),
+  ) {
     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
       Text(title, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
       if (description != null) {
@@ -292,6 +299,7 @@ internal fun AnswerButton(
   option: FlagCountry,
   selectedCountry: FlagCountry?,
   language: AppLanguage,
+  hintUses: Int = 0,
   onCountryAnswerSelected: (FlagCountry) -> Unit,
   enabled: Boolean = true,
   trainingPreview: Boolean = false,
@@ -328,9 +336,19 @@ internal fun AnswerButton(
     shape = RoundedCornerShape(10.dp),
     modifier = Modifier.fillMaxWidth(),
   ) {
+    val isCapitalFlagAnswer = question.variant == QuizVariant.TextToFlag && question.topic == com.example.flaggameandroid.core.model.QuizTopic.Capitals
+    val hasHintAnswerText = question.variant == QuizVariant.TextToFlag && hintUses > 0
     Text(
-      text = if (question.variant == QuizVariant.CountryToFlag) option.emoji else option.localizedName(language),
-      fontSize = if (question.variant == QuizVariant.CountryToFlag) 32.sp else 16.sp,
+      text = answerOptionLabel(question, option, language, hintUses),
+      fontSize =
+        when {
+          isCapitalFlagAnswer || hasHintAnswerText -> 16.sp
+          question.variant == QuizVariant.TextToFlag -> 32.sp
+          else -> 16.sp
+        },
+      maxLines = if (isCapitalFlagAnswer || hasHintAnswerText) 2 else 1,
+      textAlign = TextAlign.Center,
+      overflow = TextOverflow.Ellipsis,
     )
   }
 }
@@ -378,7 +396,7 @@ private fun PreviewResultRow() {
                     FlagCountry("DE", "Germany", "🇩🇪", "Europe"),
                     FlagCountry("AT", "Austria", "🇦🇹", "Europe"),
                   ),
-                variant = QuizVariant.FlagToCountry,
+                variant = QuizVariant.FlagToText,
               ),
             playerName = "Solo",
             selectedCountry = FlagCountry("DE", "Germany", "🇩🇪", "Europe"),

@@ -31,12 +31,13 @@ enum class GameMode(
 }
 
 internal fun startQuizModes(): List<GameMode> =
-  emptyList()
+  listOf(
+    GameMode.DailyChallenge,
+  )
 
 internal fun gameModesHubModes(): List<GameMode> =
   listOf(
     GameMode.CreateQuiz,
-    GameMode.DailyChallenge,
     GameMode.MistakeReview,
   )
 
@@ -44,18 +45,38 @@ enum class QuizVariant(
   val title: String,
   val description: String,
 ) {
-  FlagToCountry(
-    title = "Flag -> country",
-    description = "See a flag and pick the country.",
+  FlagToText(
+    title = "Flag -> text",
+    description = "See a flag and pick the matching text.",
   ),
-  CountryToFlag(
-    title = "Country -> flag",
-    description = "See a country and pick the flag.",
+  TextToFlag(
+    title = "Text -> flag",
+    description = "See text and pick the matching flag.",
   ),
-  TypeCountryName(
-    title = "Type the country",
-    description = "See a flag and write the country name.",
+  TypeText(
+    title = "Type the text",
+    description = "See a flag and write the matching text.",
   ),
+  ;
+
+  companion object {
+    @Suppress("PropertyName")
+    val FlagToCountry: QuizVariant = FlagToText
+
+    @Suppress("PropertyName")
+    val CountryToFlag: QuizVariant = TextToFlag
+
+    @Suppress("PropertyName")
+    val TypeCountryName: QuizVariant = TypeText
+  }
+}
+
+enum class QuizTopic(
+  val title: String,
+) {
+  Countries("Countries"),
+  Capitals("Capitals"),
+  Mixed("Mixed"),
 }
 
 enum class AllInType(

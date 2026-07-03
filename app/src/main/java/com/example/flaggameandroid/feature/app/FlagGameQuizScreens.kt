@@ -69,14 +69,14 @@ fun QuizScreen(
   val isImmediateCorrectionPreview = isImmediateCorrectionEnabled && draft.status == QuestionStatus.Answered
   val isImmediateCorrectionCorrect =
     when (question.variant) {
-      QuizVariant.TypeCountryName ->
+      QuizVariant.TypeText ->
         QuizAnswerChecker.isTypedAnswerCorrect(
           typedAnswer = draft.typedAnswer,
-          acceptedAnswers = question.correctCountry.acceptedTypedAnswers(language),
+          acceptedAnswers = question.correctCountry.acceptedTypedAnswers(language, question.topic),
         )
 
-      QuizVariant.FlagToCountry,
-      QuizVariant.CountryToFlag -> QuizAnswerChecker.isCountrySelectionCorrect(draft.selectedCountry, question.correctCountry)
+      QuizVariant.FlagToText,
+      QuizVariant.TextToFlag -> QuizAnswerChecker.isCountrySelectionCorrect(draft.selectedCountry, question.correctCountry)
     }
   var showQuitDialog by remember { mutableStateOf(false) }
   var showQuizInfo by remember { mutableStateOf(false) }
@@ -176,9 +176,14 @@ fun QuizScreen(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        Text(cleanText(language, UiText.GuessTheFlag), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(
+          localizedQuizHeaderTitle(quiz.currentQuestion, language),
+          style = MaterialTheme.typography.titleSmall,
+          fontWeight = FontWeight.Bold,
+          modifier = Modifier.weight(1f),
+        )
         Text("${quiz.currentQuestionIndex + 1}/${quiz.totalQuestions}", style = MaterialTheme.typography.bodySmall)
-        Text("${cleanText(language, UiText.Hints)}: ${quiz.currentPlayer.hintPoints}", style = MaterialTheme.typography.bodySmall)
+        Text("${cleanText(language, UiText.Hints)}: ${formatHintPoints(quiz.currentPlayer.hintPoints)}", style = MaterialTheme.typography.bodySmall)
       }
     }
 
@@ -200,6 +205,7 @@ fun QuizScreen(
         QuestionPrompt(
           question = question,
           language = language,
+          showContextHint = quiz.currentQuestionState.hintUses > 0,
           modifier = Modifier.weight(1f),
         )
       },
@@ -207,20 +213,14 @@ fun QuizScreen(
       canGoForward = canGoForward,
     )
 
-    if (question.variant == QuizVariant.TypeCountryName) {
+    if (question.variant == QuizVariant.TypeText) {
       Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
           value = quiz.typedAnswer,
           onValueChange = onTypedAnswerChanged,
           enabled = !isImmediateCorrectionLocked,
           label = {
-            Text(
-              when (language) {
-                AppLanguage.English -> "Country name"
-                AppLanguage.Bulgarian -> "Име на държава"
-                AppLanguage.German -> "Ländername"
-              },
-            )
+            Text(text = localizedTypedAnswerFieldLabel(question.topic, language))
           },
           singleLine = true,
           supportingText = {
@@ -270,7 +270,7 @@ fun QuizScreen(
                 style = MaterialTheme.typography.bodySmall,
               )
               Text(
-                text = question.correctCountry.localizedName(language),
+                text = question.correctCountry.localizedQuizText(language, question.topic),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AccentGreen,
@@ -291,6 +291,7 @@ fun QuizScreen(
               option = option,
               selectedCountry = quiz.selectedCountry,
               language = language,
+              hintUses = quiz.currentQuestionState.hintUses,
               onCountryAnswerSelected = onCountryAnswerSelected,
               enabled = !isImmediateCorrectionLocked,
               trainingPreview = isImmediateCorrectionPreview,
@@ -304,18 +305,24 @@ fun QuizScreen(
       showInfo = showQuizInfo,
       onInfoClick = { showQuizInfo = !showQuizInfo },
       showHintButton = quiz.hintsAllowed,
-      hintLabel =
-        if (quiz.currentQuestionState.hintUses == 0) {
-          localizedHintButtonLabel(language)
-        } else {
-          localizedRevealButtonLabel(language)
-        },
-      canUseHint = quiz.hintsAllowed && quiz.currentPlayer.hintPoints >= 1 && quiz.currentQuestionState.hintUses < 2,
+      hintLabel = localizedHintStageButtonLabel(language, quiz.currentQuestionState.hintUses),
+      canUseHint =
+        quiz.hintsAllowed &&
+          !(
+            isImmediateCorrectionLocked &&
+              question.variant != QuizVariant.TypeText
+          ) &&
+          when (quiz.currentQuestionState.hintUses) {
+            0,
+            1 -> quiz.currentPlayer.hintPoints >= 0.75
+            2 -> quiz.currentPlayer.hintPoints >= 0.5
+            else -> false
+          },
       onUseHint = onUseHint,
       unskipLabel = localizedUnskipButtonLabel(language),
       canUnskip = canJump,
       onUnskipQuestion = onUnskipQuestion,
-      verifyLabel = if (isImmediateCorrectionEnabled && question.variant == QuizVariant.TypeCountryName) localizedVerifyButtonLabel(language) else null,
+      verifyLabel = if (isImmediateCorrectionEnabled && question.variant == QuizVariant.TypeText) localizedVerifyButtonLabel(language) else null,
       canVerify = quiz.typedAnswer.isNotBlank() && !isImmediateCorrectionLocked,
       onVerifyTypedAnswer = onVerifyTypedAnswer,
     )
@@ -394,6 +401,7 @@ fun ResultsScreen(
           totalQuestions = playerResults.size,
           correctAnswers = playerResults.count { it.isCorrect },
           showHints = quiz.mode != GameMode.LocalMultiplayer,
+          netScoreText = formatPointValue(playerResults.sumOf { resultPointValue(it) }),
         )
       }
     }

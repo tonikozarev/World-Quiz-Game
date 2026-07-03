@@ -14,12 +14,12 @@ internal fun FlagGameUiState.withTestingToolsVisibleChanged(visible: Boolean): F
 
 internal fun FlagGameUiState.withResetHints(): FlagGameUiState =
   copy(
-    hintCount = 0,
-    quiz = quiz.copy(players = quiz.players.map { player -> player.copy(hintPoints = 0) }),
+    hintCount = 0.0,
+    quiz = quiz.copy(players = quiz.players.map { player -> player.copy(hintPoints = 0.0) }),
   )
 
 internal fun FlagGameUiState.withAddedTestingHints(): FlagGameUiState {
-  val newHintCount = hintCount + 10
+  val newHintCount = hintCount + 10.0
   return copy(
     hintCount = newHintCount,
     quiz = quiz.copy(players = quiz.players.map { player -> player.copy(hintPoints = newHintCount) }),
@@ -28,7 +28,7 @@ internal fun FlagGameUiState.withAddedTestingHints(): FlagGameUiState {
 
 internal fun FlagGameUiState.withTestingLevelUp(): FlagGameUiState {
   val nextLevel = (levelProgress.level + 1).coerceAtMost(ProgressionRules.MaxLevel)
-  val newHintCount = hintCount + 5
+  val newHintCount = hintCount + 5.0
   return copy(
     levelProgress =
       levelProgress.copy(

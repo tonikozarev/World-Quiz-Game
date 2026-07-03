@@ -6,6 +6,7 @@ import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -28,13 +29,13 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(21)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(22),
-        hintCount = 7,
+        hintCount = 7.0,
         displayName = "Tony",
       )
 
     assertEquals(GameMode.Training, quiz.mode)
     assertEquals(12, quiz.totalQuestions)
-    assertEquals(7, quiz.currentPlayer.hintPoints)
+    assertEquals(7.0, quiz.currentPlayer.hintPoints)
     assertEquals(12, quiz.questionStates.size)
     assertTrue(quiz.questions.all { it.variant == QuizVariant.FlagToCountry })
   }
@@ -61,7 +62,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(25)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(26),
-        hintCount = 3,
+        hintCount = 3.0,
         displayName = "Tony",
         practiceStats = practiceStats,
       )
@@ -92,7 +93,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(27)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(28),
-        hintCount = 3,
+        hintCount = 3.0,
         displayName = "Tony",
         practiceStats = practiceStats,
       )
@@ -119,12 +120,27 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(21)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(22),
-        hintCount = 7,
+        hintCount = 7.0,
         displayName = "Tony",
       )
 
     assertEquals("Choose at least one continent.", result.validationError)
     assertNull(result.quiz)
+  }
+
+  @Test
+  fun dailyChallenge_forcesMixedTopicAtSetupTime() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val setup =
+      buildSetupForMode(
+        GameMode.DailyChallenge,
+        QuizTopic.Countries,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      )
+
+    assertEquals(QuizTopic.Mixed, setup.topic)
   }
 
   @Test
@@ -140,7 +156,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(1)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(2),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
         nowEpochMillis = now,
       ).quiz!!
@@ -151,7 +167,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(9)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(10),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
         nowEpochMillis = now,
       ).quiz!!
@@ -160,6 +176,7 @@ class FlagGameQuizBootstrapLogicTest {
       first.questions.map { it.correctCountry.code to it.variant },
       second.questions.map { it.correctCountry.code to it.variant },
     )
+    assertEquals(QuizTopic.Mixed, first.topic)
   }
 
   @Test
@@ -175,7 +192,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(1)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(2),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
         nowEpochMillis = now,
         timeZone = AppTimeZone.UtcPlus3,
@@ -194,7 +211,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(3)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(4),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
         dailyChallengeCache = completedCache,
         nowEpochMillis = now,
@@ -226,7 +243,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(31)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(32),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
         practiceStats = lockedStats,
       )
@@ -257,7 +274,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(33)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(34),
-        hintCount = 0,
+        hintCount = 0.0,
         displayName = "Tony",
         practiceStats = unlockedStats,
         mistakeReviewUnlocked = true,
@@ -291,14 +308,14 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(23)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(24),
-        hintCount = 4,
+        hintCount = 4.0,
         displayName = "Tony",
       )
 
     assertEquals(GameMode.WorldFlags, quiz.mode)
     assertTrue(quiz.startedAtEpochMillis > 0L)
     assertEquals(10, quiz.totalQuestions)
-    assertEquals(4, quiz.currentPlayer.hintPoints)
+    assertEquals(4.0, quiz.currentPlayer.hintPoints)
   }
 
   @Test
@@ -323,7 +340,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(41)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(42),
-        hintCount = 2,
+        hintCount = 2.0,
         displayName = "Tony",
       )
 
@@ -356,7 +373,7 @@ class FlagGameQuizBootstrapLogicTest {
         questionGenerator = QuizQuestionGenerator(Random(43)),
         hintDifficulty = HintDifficulty.Medium,
         random = Random(44),
-        hintCount = 2,
+        hintCount = 2.0,
         displayName = "Tony",
       )
 

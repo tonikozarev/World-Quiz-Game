@@ -7,7 +7,7 @@ import com.example.flaggameandroid.feature.app.AppLanguage
 @Entity(tableName = "progress")
 data class ProgressEntity(
   @PrimaryKey val id: Int = SingletonId,
-  val hintCount: Int,
+  val hintCount: Double,
   val level: Int,
   val hintsTowardNextLevel: Int,
   val correctAnswersTowardNextLevel: Int,

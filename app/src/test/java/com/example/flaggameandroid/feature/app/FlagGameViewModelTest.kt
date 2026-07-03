@@ -7,6 +7,7 @@ import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.RatingsProgress
 import com.example.flaggameandroid.persistence.PersistedAppState
 import com.example.flaggameandroid.persistence.PersistedQuizHistory
@@ -108,6 +109,36 @@ class FlagGameViewModelTest {
       viewModel.uiState.value.availableContinents,
     )
     assertTrue("Antarctica" !in viewModel.uiState.value.setup.selectedContinents)
+  }
+
+  @Test
+  fun createQuizMixedKeepsCountryAndCapitalSelectionsSeparate() {
+    val viewModel = viewModel()
+
+    viewModel.onQuizTopicSelected(QuizTopic.Mixed)
+    viewModel.onModeSelected(GameMode.CreateQuiz)
+    viewModel.onCreateQuizCountryToggled("AT")
+    viewModel.onCreateQuizCountryToggled("BG")
+    viewModel.onCreateQuizCountryToggled("DE")
+    viewModel.onCreateQuizCapitalToggled("AT")
+    viewModel.onCreateQuizCapitalToggled("BG")
+    viewModel.onCreateQuizCapitalToggled("DE")
+
+    val setup = viewModel.uiState.value.setup
+    assertEquals(CreateQuizSource.ManualCountriesCapitals, setup.createQuizSource)
+    assertEquals(setOf("AT", "BG", "DE"), setup.selectedCountryCodes)
+    assertEquals(setOf("AT", "BG", "DE"), setup.selectedCapitalCountryCodes)
+    assertEquals("6", setup.questionCountInput)
+    assertEquals(6, viewModel.uiState.value.questionCountLimit)
+
+    viewModel.onStartQuiz()
+
+    val quiz = viewModel.uiState.value.quiz
+    assertEquals(GameMode.CreateQuiz, quiz.mode)
+    assertEquals(6, quiz.totalQuestions)
+    assertEquals(3, quiz.questions.map { it.correctCountry.code }.distinct().size)
+    assertTrue(quiz.questions.any { it.topic == QuizTopic.Countries })
+    assertTrue(quiz.questions.any { it.topic == QuizTopic.Capitals })
   }
 
   @Test
@@ -228,7 +259,7 @@ class FlagGameViewModelTest {
 
     val player = viewModel.uiState.value.quiz.players.first()
     assertEquals(10, player.score)
-    assertEquals(0, player.hintPoints)
+    assertEquals(0.0, player.hintPoints)
     assertEquals(1, player.earnedHintPoints)
     assertEquals(5, player.correctStreak)
   }
@@ -245,9 +276,9 @@ class FlagGameViewModelTest {
 
     val player = viewModel.uiState.value.quiz.players.first()
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
-    assertEquals(1, player.hintPoints)
+    assertEquals(1.0, player.hintPoints)
     assertEquals(1, player.earnedHintPoints)
-    assertEquals(1, viewModel.uiState.value.hintCount)
+    assertEquals(1.0, viewModel.uiState.value.hintCount)
   }
 
   @Test
@@ -268,7 +299,7 @@ class FlagGameViewModelTest {
 
     val player = viewModel.uiState.value.quiz.players.first()
     assertEquals(14, player.score)
-    assertEquals(0, player.hintPoints)
+    assertEquals(0.0, player.hintPoints)
     assertEquals(0, player.earnedHintPoints)
     assertEquals(3, player.correctStreak)
   }
@@ -278,25 +309,25 @@ class FlagGameViewModelTest {
     val viewModel =
       viewModel(
         PersistedAppState(
-          hintCount = 10,
+          hintCount = 10.0,
         ),
       )
     startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 2)
 
-    assertEquals(10, viewModel.uiState.value.quiz.currentPlayer.hintPoints)
+    assertEquals(10.0, viewModel.uiState.value.quiz.currentPlayer.hintPoints)
     viewModel.onUseHint()
 
     var quiz = viewModel.uiState.value.quiz
-    assertEquals(9, quiz.currentPlayer.hintPoints)
+    assertEquals(9.25, quiz.currentPlayer.hintPoints)
     assertTrue(quiz.hintUsedOnCurrentQuestion)
-    assertEquals(2, quiz.hiddenOptionCodes.size)
+    assertEquals(0, quiz.hiddenOptionCodes.size)
 
     viewModel.onUseHint()
     quiz = viewModel.uiState.value.quiz
-    assertEquals(8, quiz.currentPlayer.hintPoints)
+    assertEquals(8.5, quiz.currentPlayer.hintPoints)
     assertTrue(quiz.hintUsedOnCurrentQuestion)
-    assertEquals(1, quiz.currentQuestion?.options?.count { it.code !in quiz.hiddenOptionCodes })
-    assertEquals(quiz.currentQuestion?.correctCountry, quiz.selectedCountry)
+    assertEquals(2, quiz.currentQuestion?.options?.count { it.code !in quiz.hiddenOptionCodes })
+    assertEquals(null, quiz.selectedCountry)
   }
 
   @Test
@@ -304,7 +335,7 @@ class FlagGameViewModelTest {
     val viewModel =
       viewModel(
         PersistedAppState(
-          hintCount = 5,
+          hintCount = 5.0,
         ),
       )
     startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 6)
@@ -325,7 +356,7 @@ class FlagGameViewModelTest {
     assertEquals(AppScreen.Results, state.screen)
     assertEquals(11, player.score)
     assertEquals(1, player.earnedHintPoints)
-    assertEquals(5, state.hintCount)
+    assertEquals(5.25, state.hintCount)
     assertEquals(5, player.correctStreak)
     assertEquals(4, state.quiz.results[4].hintStreak)
     assertEquals(1, state.quiz.results[4].hintUses)
@@ -336,7 +367,7 @@ class FlagGameViewModelTest {
     val viewModel =
       viewModel(
         PersistedAppState(
-          hintCount = 5,
+          hintCount = 5.0,
         ),
       )
     startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 6)
@@ -348,6 +379,7 @@ class FlagGameViewModelTest {
 
     viewModel.onUseHint()
     viewModel.onUseHint()
+    viewModel.onUseHint()
     viewModel.onNextQuestion()
     answerCurrentCorrectly(viewModel)
     viewModel.onNextQuestion()
@@ -357,10 +389,11 @@ class FlagGameViewModelTest {
     assertEquals(AppScreen.Results, state.screen)
     assertEquals(10, player.score)
     assertEquals(0, player.earnedHintPoints)
-    assertEquals(3, state.hintCount)
+    assertEquals(3.0, state.hintCount)
     assertEquals(1, player.correctStreak)
     assertEquals(0, state.quiz.results[4].hintStreak)
-    assertEquals(2, state.quiz.results[4].hintUses)
+    assertEquals(3, state.quiz.results[4].hintUses)
+    assertEquals(true, state.quiz.results[4].revealed)
   }
 
   @Test
@@ -376,7 +409,7 @@ class FlagGameViewModelTest {
     }
 
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
-    assertEquals(1, viewModel.uiState.value.hintCount)
+    assertEquals(1.0, viewModel.uiState.value.hintCount)
   }
 
   @Test
@@ -430,7 +463,7 @@ class FlagGameViewModelTest {
     val viewModel =
       viewModel(
         PersistedAppState(
-          hintCount = 7,
+          hintCount = 7.0,
           ratings = RatingsProgress(bronzeCount = 49),
           achievements =
             com.example.flaggameandroid.core.model.AchievementsProgress().unlock(
@@ -501,7 +534,7 @@ class FlagGameViewModelTest {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)
-    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountries)
+    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountriesCapitals)
     viewModel.onCreateQuizManualHardcoreToggled()
     viewModel.onStartQuiz()
 
@@ -569,9 +602,9 @@ class FlagGameViewModelTest {
     viewModel.onQuestionCountChanged(2)
     viewModel.onStartQuiz()
 
-    assertEquals(10, viewModel.uiState.value.quiz.currentPlayer.hintPoints)
+    assertEquals(10.0, viewModel.uiState.value.quiz.currentPlayer.hintPoints)
     viewModel.onUseHint()
-    assertEquals(9, viewModel.uiState.value.hintCount)
+    assertEquals(9.25, viewModel.uiState.value.hintCount)
 
     answerCurrentCorrectly(viewModel)
     viewModel.onNextQuestion()
@@ -579,7 +612,7 @@ class FlagGameViewModelTest {
     viewModel.onNextQuestion()
 
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
-    assertEquals(9, viewModel.uiState.value.hintCount)
+    assertEquals(9.25, viewModel.uiState.value.hintCount)
     assertEquals(0, viewModel.uiState.value.quiz.players.sumOf { it.earnedHintPoints })
   }
 
@@ -588,10 +621,10 @@ class FlagGameViewModelTest {
     val viewModel = viewModel()
 
     viewModel.onAddTestingHintsClicked()
-    assertEquals(10, viewModel.uiState.value.hintCount)
+    assertEquals(10.0, viewModel.uiState.value.hintCount)
 
     viewModel.onResetHintsClicked()
-    assertEquals(0, viewModel.uiState.value.hintCount)
+    assertEquals(0.0, viewModel.uiState.value.hintCount)
   }
 
   @Test
@@ -612,7 +645,7 @@ class FlagGameViewModelTest {
     val viewModel =
       viewModel(
         PersistedAppState(
-          hintCount = 22,
+          hintCount = 22.0,
           level = 4,
           hintsTowardNextLevel = 7,
           correctAnswersTowardNextLevel = 88,
@@ -627,7 +660,7 @@ class FlagGameViewModelTest {
     assertEquals(7, progress.hintsTowardNextLevel)
     assertEquals(88, progress.correctAnswersTowardNextLevel)
     assertEquals(6, progress.eligibleQuizzesTowardNextLevel)
-    assertEquals(27, viewModel.uiState.value.hintCount)
+    assertEquals(27.0, viewModel.uiState.value.hintCount)
 
     viewModel.onTestingResetLevelClicked()
 
@@ -636,7 +669,7 @@ class FlagGameViewModelTest {
     assertEquals(7, progress.hintsTowardNextLevel)
     assertEquals(88, progress.correctAnswersTowardNextLevel)
     assertEquals(6, progress.eligibleQuizzesTowardNextLevel)
-    assertEquals(27, viewModel.uiState.value.hintCount)
+    assertEquals(27.0, viewModel.uiState.value.hintCount)
   }
 
   @Test
@@ -667,7 +700,7 @@ class FlagGameViewModelTest {
     val state = viewModel.uiState.value
     assertEquals(2, state.levelProgress.level)
     assertTrue(state.levelProgress.levelUpVisible)
-    assertEquals(35, state.hintCount)
+    assertEquals(35.0, state.hintCount)
     assertEquals(0, state.levelProgress.eligibleQuizzesTowardNextLevel)
     assertEquals(0, state.levelProgress.hintsTowardNextLevel)
     assertEquals(0, state.levelProgress.correctAnswersTowardNextLevel)
@@ -682,11 +715,11 @@ class FlagGameViewModelTest {
       completePerfectContinentsQuiz(viewModel, questionCount = 10)
     }
 
-    assertEquals(27, viewModel.uiState.value.hintCount)
+    assertEquals(27.0, viewModel.uiState.value.hintCount)
 
     completePerfectContinentsQuiz(viewModel, questionCount = 10)
 
-    assertEquals(35, viewModel.uiState.value.hintCount)
+    assertEquals(35.0, viewModel.uiState.value.hintCount)
     assertEquals(2, viewModel.uiState.value.levelProgress.level)
   }
 
@@ -715,7 +748,7 @@ class FlagGameViewModelTest {
 
     val finalProgress = viewModel.uiState.value.levelProgress
     assertEquals(3, finalProgress.level)
-    assertEquals(85, viewModel.uiState.value.hintCount)
+    assertEquals(85.0, viewModel.uiState.value.hintCount)
     assertEquals(0, finalProgress.hintsTowardNextLevel)
     assertEquals(0, finalProgress.correctAnswersTowardNextLevel)
     assertEquals(0, finalProgress.eligibleQuizzesTowardNextLevel)
@@ -957,18 +990,18 @@ class FlagGameViewModelTest {
   private fun answerCurrentCorrectly(viewModel: FlagGameViewModel) {
     val question = viewModel.uiState.value.quiz.currentQuestion!!
     when (question.variant) {
-      QuizVariant.TypeCountryName -> viewModel.onTypedAnswerChanged(question.correctCountry.name)
-      QuizVariant.FlagToCountry,
-      QuizVariant.CountryToFlag -> viewModel.onCountryAnswerSelected(question.correctCountry)
+      QuizVariant.TypeText -> viewModel.onTypedAnswerChanged(question.correctCountry.name)
+      QuizVariant.FlagToText,
+      QuizVariant.TextToFlag -> viewModel.onCountryAnswerSelected(question.correctCountry)
     }
   }
 
   private fun answerCurrentWrongly(viewModel: FlagGameViewModel) {
     val question = viewModel.uiState.value.quiz.currentQuestion!!
     when (question.variant) {
-      QuizVariant.TypeCountryName -> viewModel.onTypedAnswerChanged("wrong answer")
-      QuizVariant.FlagToCountry,
-      QuizVariant.CountryToFlag -> viewModel.onCountryAnswerSelected(question.options.first { it.code != question.correctCountry.code })
+      QuizVariant.TypeText -> viewModel.onTypedAnswerChanged("wrong answer")
+      QuizVariant.FlagToText,
+      QuizVariant.TextToFlag -> viewModel.onCountryAnswerSelected(question.options.first { it.code != question.correctCountry.code })
     }
   }
 

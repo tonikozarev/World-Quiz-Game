@@ -12,7 +12,7 @@ class AppContainer(
       context,
       FlagGameDatabase::class.java,
       "flag_game.db",
-    ).addMigrations(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7).build()
+    ).addMigrations(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8).build()
 
   val settingsStore: SettingsStore = DataStoreSettingsStore(context.flagGameSettingsDataStore)
 

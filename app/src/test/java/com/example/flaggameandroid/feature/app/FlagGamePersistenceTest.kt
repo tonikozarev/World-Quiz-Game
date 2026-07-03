@@ -7,6 +7,7 @@ import com.example.flaggameandroid.core.model.DailyChallengeTheme
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.persistence.PersistedAppState
@@ -27,19 +28,20 @@ class FlagGamePersistenceTest {
           PersistedAppState(
             hintDifficulty = HintDifficulty.Hard,
             reminderEnabled = false,
-            hintCount = 7,
+            hintCount = 7.0,
             level = 3,
             hintsTowardNextLevel = 4,
             correctAnswersTowardNextLevel = 18,
             eligibleQuizzesTowardNextLevel = 2,
             mistakeReviewUnlocked = true,
+            dailyChallengeCaches = emptyMap(),
           ),
       )
 
     val state = viewModel.uiState.value
     assertEquals(HintDifficulty.Hard, state.settings.hintDifficulty)
     assertEquals(false, state.settings.reminderEnabled)
-    assertEquals(7, state.hintCount)
+    assertEquals(7.0, state.hintCount)
     assertEquals(3, state.levelProgress.level)
     assertEquals(4, state.levelProgress.hintsTowardNextLevel)
     assertEquals(18, state.levelProgress.correctAnswersTowardNextLevel)
@@ -113,14 +115,17 @@ class FlagGamePersistenceTest {
         progressStore = progressStore,
         initialPersistedState =
           PersistedAppState(
-            dailyChallengeCache =
-              DailyChallengeCache(
-                dayKey = 123L,
-                theme = DailyChallengeTheme.Europe,
-                questionCount = 10,
-                seed = 42L,
-                completed = true,
-                completedAtEpochMillis = 1_234_567L,
+            dailyChallengeCaches =
+              mapOf(
+                QuizTopic.Countries to
+                  DailyChallengeCache(
+                    dayKey = 123L,
+                    theme = DailyChallengeTheme.Europe,
+                    questionCount = 10,
+                    seed = 42L,
+                    completed = true,
+                    completedAtEpochMillis = 1_234_567L,
+                  ),
               ),
           ),
       )
@@ -141,10 +146,12 @@ class FlagGamePersistenceTest {
         id = "saved-1",
         createdAtEpochMillis = 1L,
         title = "My quiz",
-        source = CreateQuizSource.ManualCountries,
+        topic = QuizTopic.Mixed,
+        source = CreateQuizSource.ManualCountriesCapitals,
         selectedCountryCodes = setOf("DE", "BG", "AT"),
+        selectedCapitalCountryCodes = setOf("DE", "BG", "AT"),
         variants = setOf(QuizVariant.FlagToCountry),
-        questionCount = 3,
+        questionCount = 6,
         seed = 99L,
       )
     val viewModel =
@@ -160,6 +167,7 @@ class FlagGamePersistenceTest {
     assertEquals(AppScreen.Setup, viewModel.uiState.value.screen)
     assertEquals(GameMode.CreateQuiz, viewModel.uiState.value.setup.mode)
     assertEquals(3, viewModel.uiState.value.setup.selectedCountryCodes.size)
+    assertEquals(3, viewModel.uiState.value.setup.selectedCapitalCountryCodes.size)
     assertTrue(viewModel.uiState.value.quiz.questions.isEmpty())
   }
 

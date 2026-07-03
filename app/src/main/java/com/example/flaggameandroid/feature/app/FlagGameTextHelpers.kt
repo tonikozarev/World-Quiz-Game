@@ -5,7 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import com.example.flaggameandroid.core.model.FlagCountry
+import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
 private fun tr(language: AppLanguage, english: String, bulgarian: String, german: String): String =
@@ -19,8 +21,110 @@ internal fun wrongOptionLabel(
   country: FlagCountry,
   variant: QuizVariant,
   language: AppLanguage,
+  topic: QuizTopic = QuizTopic.Countries,
 ): String =
-  if (variant == QuizVariant.CountryToFlag) country.emoji else country.localizedName(language)
+  when {
+    variant == QuizVariant.TextToFlag && topic == QuizTopic.Capitals ->
+      "${country.localizedName(language)} ${country.emoji}"
+    variant == QuizVariant.TextToFlag -> country.emoji
+    else -> country.localizedQuizText(language, topic)
+  }
+
+internal fun reviewAnswerLabel(
+  country: FlagCountry,
+  variant: QuizVariant,
+  language: AppLanguage,
+  topic: QuizTopic,
+): String =
+  when {
+    variant == QuizVariant.TextToFlag -> "${country.localizedName(language)} ${country.emoji}"
+    topic == QuizTopic.Capitals -> "${country.localizedQuizText(language, topic)} ${country.emoji}"
+    else -> "${country.localizedName(language)} ${country.emoji}"
+  }
+
+internal fun answerOptionLabel(
+  question: FlagQuestion,
+  option: FlagCountry,
+  language: AppLanguage,
+  hintUses: Int = 0,
+): String =
+  if (question.variant == QuizVariant.TextToFlag) {
+    if (hintUses > 0) {
+      localizedHintContextLabel(language, question.topic)?.let { prefix ->
+        val contextValue =
+          when (question.topic) {
+            QuizTopic.Countries -> option.localizedQuizText(language, QuizTopic.Capitals)
+            QuizTopic.Capitals -> option.localizedName(language)
+            QuizTopic.Mixed -> ""
+          }
+        if (contextValue.isNotBlank()) {
+          "${option.emoji} ($prefix: $contextValue)"
+        } else {
+          option.emoji
+        }
+      } ?: option.emoji
+    } else {
+      option.emoji
+    }
+  } else {
+    option.localizedQuizText(language, question.topic)
+  }
+
+internal fun localizedHintContextLabel(
+  language: AppLanguage,
+  topic: QuizTopic,
+): String? =
+  when (topic) {
+    QuizTopic.Countries -> tr(language, "Capital", "Столица", "Hauptstadt")
+    QuizTopic.Capitals -> tr(language, "Country", "Държава", "Land")
+    QuizTopic.Mixed -> null
+  }
+
+internal fun localizedQuizHeaderTitle(
+  question: FlagQuestion?,
+  language: AppLanguage,
+): String =
+  when {
+    question?.variant == QuizVariant.FlagToText && question.topic == QuizTopic.Capitals ->
+      tr(language, "What is the capital?", "Коя е столицата?", "Was ist die Hauptstadt?")
+    question?.variant == QuizVariant.FlagToText ->
+      tr(language, "What is the country?", "Коя е държавата?", "Welches Land ist das?")
+    question?.variant == QuizVariant.TextToFlag && question.topic == QuizTopic.Capitals ->
+      tr(language, "What is the flag?", "Кой е флагът?", "Welche Flagge ist das?")
+    question?.variant == QuizVariant.TextToFlag ->
+      tr(language, "What is the flag?", "Кой е флагът?", "Welche Flagge ist das?")
+    question?.variant == QuizVariant.TypeText && question.topic == QuizTopic.Capitals ->
+      tr(language, "Type the capital", "Напиши столицата", "Hauptstadt eingeben")
+    question?.variant == QuizVariant.TypeText ->
+      tr(language, "Type the country", "Напиши държавата", "Land eingeben")
+    else -> tr(language, "Guess the flag", "Познай флага", "Errate die Flagge")
+  }
+
+internal fun capitalQuestionCountryLabel(
+  question: FlagQuestion,
+  language: AppLanguage,
+): String? =
+  if (question.variant == QuizVariant.TextToFlag) {
+    null
+  } else if (question.topic == QuizTopic.Countries) {
+    val prefix =
+      when (language) {
+        AppLanguage.English -> "Capital"
+        AppLanguage.Bulgarian -> "Столица"
+        AppLanguage.German -> "Hauptstadt"
+      }
+    "$prefix: ${question.correctCountry.localizedCapital(language)}"
+  } else if (question.topic == QuizTopic.Capitals) {
+    val prefix =
+      when (language) {
+        AppLanguage.English -> "Country"
+        AppLanguage.Bulgarian -> "Държава"
+        AppLanguage.German -> "Land"
+      }
+    "$prefix: ${question.correctCountry.localizedName(language)}"
+  } else {
+    null
+  }
 
 internal val AvatarOptions =
   listOf(
@@ -94,6 +198,16 @@ internal fun languageDescription(language: AppLanguage): String =
 internal fun localizedHintButtonLabel(language: AppLanguage): String =
   tr(language, "Hint", "Жокер", "Hinweis")
 
+internal fun localizedTypedAnswerFieldLabel(
+  topic: QuizTopic,
+  language: AppLanguage,
+): String =
+  when (topic) {
+    QuizTopic.Countries -> tr(language, "Country name", "Име на държава", "Ländername")
+    QuizTopic.Capitals -> tr(language, "Capital name", "Име на столица", "Hauptstadt")
+    QuizTopic.Mixed -> tr(language, "Text", "Текст", "Text")
+  }
+
 internal fun localizedTimeZoneTitle(language: AppLanguage): String =
   tr(language, "Time zone", "Часова зона", "Zeitzone")
 
@@ -119,6 +233,9 @@ internal fun localizedUnskipButtonLabel(language: AppLanguage): String =
 
 internal fun formatScore(score: Int): String =
   if (score % 2 == 0) (score / 2).toString() else "${score / 2}.5"
+
+internal fun formatHintPoints(hintPoints: Double): String =
+  if (hintPoints % 1.0 == 0.0) hintPoints.toInt().toString() else "%.2f".format(java.util.Locale.US, hintPoints)
 
 internal fun modeSelectionTitle(language: AppLanguage): String =
   cleanModeSelectionTitle(language)
@@ -243,7 +360,7 @@ internal fun speedRunTotalBudgetMillis(quiz: QuizState): Long {
   val secondsPerAnswer = quiz.speedRunSecondsPerAnswer.coerceAtLeast(1)
   val totalSeconds =
     quiz.questions.sumOf { question ->
-      if (question.variant == QuizVariant.TypeCountryName) {
+      if (question.variant == QuizVariant.TypeText) {
         secondsPerAnswer * 2
       } else {
         secondsPerAnswer
@@ -282,3 +399,13 @@ internal fun formatElapsedTime(totalMillis: Long): String {
   val seconds = totalSeconds % 60L
   return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
 }
+
+internal fun localizedHintStageButtonLabel(
+  language: AppLanguage,
+  hintUses: Int,
+): String =
+  when (hintUses) {
+    0 -> tr(language, "Hint 1/2", "Жокер 1/2", "Hinweis 1/2")
+    1 -> tr(language, "Hint 2/2", "Жокер 2/2", "Hinweis 2/2")
+    else -> localizedRevealButtonLabel(language)
+  }

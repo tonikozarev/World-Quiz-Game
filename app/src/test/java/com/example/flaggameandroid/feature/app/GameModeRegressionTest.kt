@@ -3,10 +3,13 @@ package com.example.flaggameandroid.feature.app
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
 import com.example.flaggameandroid.core.model.CountryPracticeStats
+import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.CreateQuizSource
+import com.example.flaggameandroid.core.model.capitalQuizMetadata
 import com.example.flaggameandroid.core.model.gameModesHubModes
 import com.example.flaggameandroid.core.model.startQuizModes
 import com.example.flaggameandroid.persistence.PersistedAppState
@@ -54,17 +57,112 @@ class GameModeRegressionTest {
   @Test
   fun modeLists_useStableExplicitOrder() {
     assertEquals(
-      emptyList<GameMode>(),
+      listOf(
+        GameMode.DailyChallenge,
+      ),
       startQuizModes(),
     )
     assertEquals(
       listOf(
         GameMode.CreateQuiz,
-        GameMode.DailyChallenge,
         GameMode.MistakeReview,
       ),
       gameModesHubModes(),
     )
+  }
+
+  @Test
+  fun dailyChallenge_ignoresSelectedTopicAndUsesMixedTopic() {
+    val viewModel = viewModel()
+
+    viewModel.onQuizTopicSelected(QuizTopic.Capitals)
+    viewModel.onModeSelected(GameMode.DailyChallenge)
+
+    assertEquals(AppScreen.Quiz, viewModel.uiState.value.screen)
+    assertEquals(QuizTopic.Mixed, viewModel.uiState.value.quiz.topic)
+  }
+
+  @Test
+  fun capitalsPresetPool_usesCapitalSpecificPresetsOnly() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val baseSetup =
+      buildSetupForMode(
+        GameMode.CreateQuiz,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        topic = QuizTopic.Capitals,
+        createQuizSource = CreateQuizSource.PresetFilter,
+      )
+
+    val pool =
+      countryPoolFor(
+        baseSetup.copy(
+          createQuizPresets =
+            setOf(
+              CreateQuizPreset.CapitalPopulationUnderOneMillion,
+              CreateQuizPreset.CapitalNotCoastal,
+            ),
+        ),
+        countries,
+      )
+
+    assertTrue(pool.isNotEmpty())
+    assertEquals(pool.map { it.code }.distinct().size, pool.size)
+    assertTrue(
+      pool.all { country ->
+        val metadata = capitalQuizMetadata(country.code)
+        metadata != null && (metadata.population < 1_000_000L || metadata.notCoastal)
+      },
+    )
+  }
+
+  @Test
+  fun capitalPresetOrder_andDefaults_areStable() {
+    assertEquals(
+      listOf(
+        CreateQuizPreset.CapitalPopulationUnderOneMillion,
+        CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
+        CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
+        CreateQuizPreset.CapitalPopulationOverThirtyMillion,
+        CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
+        CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm,
+        CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm,
+        CreateQuizPreset.CapitalAreaOverEightHundredSquareKm,
+        CreateQuizPreset.CapitalNotCoastal,
+      ),
+      createQuizPresetOrderFor(QuizTopic.Capitals),
+    )
+    assertEquals(
+      setOf(
+        CreateQuizPreset.CapitalPopulationUnderOneMillion,
+        CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
+        CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
+        CreateQuizPreset.CapitalPopulationOverThirtyMillion,
+      ),
+      createQuizDefaultPresetsForTopic(QuizTopic.Capitals),
+    )
+  }
+
+  @Test
+  fun presetFilterCountryPool_deduplicatesCountriesMatchingMultiplePresets() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val baseSetup =
+      buildSetupForMode(
+        GameMode.CreateQuiz,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(
+        createQuizSource = CreateQuizSource.PresetFilter,
+        createQuizPresets = setOf(CreateQuizPreset.Nato, CreateQuizPreset.EuUnion),
+      )
+
+    val pool = countryPoolFor(baseSetup, countries)
+
+    assertEquals(pool.map { it.code }.distinct().size, pool.size)
+    assertTrue(pool.any { it.code == "DE" })
   }
 
   @Test
@@ -160,7 +258,7 @@ class GameModeRegressionTest {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)
-    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountries)
+    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountriesCapitals)
     viewModel.onCreateQuizManualHardcoreToggled()
     viewModel.onStartQuiz()
 
@@ -174,7 +272,7 @@ class GameModeRegressionTest {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)
-    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountries)
+    viewModel.onCreateQuizSourceSelected(CreateQuizSource.ManualCountriesCapitals)
     viewModel.onCreateQuizManualHardcoreToggled()
     QuizVariant.entries.filterNot { it == QuizVariant.TypeCountryName }.forEach(viewModel::onVariantToggled)
     viewModel.onStartQuiz()
@@ -200,7 +298,7 @@ class GameModeRegressionTest {
     viewModel.onNextQuestion()
 
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
-    assertEquals(1, viewModel.uiState.value.hintCount)
+    assertEquals(1.0, viewModel.uiState.value.hintCount)
   }
 
   @Test
@@ -215,7 +313,7 @@ class GameModeRegressionTest {
     }
 
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
-    assertEquals(1, viewModel.uiState.value.hintCount)
+    assertEquals(1.0, viewModel.uiState.value.hintCount)
   }
 
   private fun startSingleVariantQuiz(
@@ -233,9 +331,9 @@ class GameModeRegressionTest {
   private fun answerCurrentCorrectly(viewModel: FlagGameViewModel) {
     val question = viewModel.uiState.value.quiz.currentQuestion!!
     when (question.variant) {
-      QuizVariant.TypeCountryName -> viewModel.onTypedAnswerChanged(question.correctCountry.name)
-      QuizVariant.FlagToCountry,
-      QuizVariant.CountryToFlag -> viewModel.onCountryAnswerSelected(question.correctCountry)
+      QuizVariant.TypeText -> viewModel.onTypedAnswerChanged(question.correctCountry.name)
+      QuizVariant.FlagToText,
+      QuizVariant.TextToFlag -> viewModel.onCountryAnswerSelected(question.correctCountry)
     }
   }
 }

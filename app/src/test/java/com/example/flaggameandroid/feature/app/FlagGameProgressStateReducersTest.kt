@@ -12,7 +12,7 @@ class FlagGameProgressStateReducersTest {
   fun withTestingLevelUp_incrementsLevelAndAddsFiveHints() {
     val state =
       FlagGameUiState(
-        hintCount = 7,
+        hintCount = 7.0,
         levelProgress = LevelProgressState(level = 2, hintsTowardNextLevel = 3),
       )
 
@@ -20,8 +20,8 @@ class FlagGameProgressStateReducersTest {
 
     assertEquals(3, updated.levelProgress.level)
     assertTrue(updated.levelProgress.levelUpVisible)
-    assertEquals(12, updated.hintCount)
-    assertEquals(12, updated.quiz.currentPlayer.hintPoints)
+    assertEquals(12.0, updated.hintCount)
+    assertEquals(12.0, updated.quiz.currentPlayer.hintPoints)
   }
 
   @Test

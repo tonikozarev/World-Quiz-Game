@@ -8,6 +8,7 @@ import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.ProgressionRules
 import com.example.flaggameandroid.core.model.QuestionResult
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
 import com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount
@@ -29,7 +30,7 @@ internal data class QuizCompletionSummary(
   val updatedCountryPracticeStats: Map<String, com.example.flaggameandroid.core.model.CountryPracticeStats>,
   val updatedMistakeReviewUnlocked: Boolean,
   val updatedActivityCalendar: Map<Long, ActivityDayRecord>,
-  val updatedDailyChallengeCache: com.example.flaggameandroid.core.model.DailyChallengeCache?,
+  val updatedDailyChallengeCaches: Map<QuizTopic, com.example.flaggameandroid.core.model.DailyChallengeCache>,
   val updatedSavedQuizTemplates: List<SavedQuizTemplate>,
 )
 
@@ -129,7 +130,7 @@ internal fun buildQuizCompletionSummary(
     )
   val updatedMistakeReviewUnlocked =
     state.mistakeReviewUnlocked ||
-      mistakeReviewEligibleCountryCount(updatedCountryPracticeStats) >= MistakeReviewUnlockCountryCount
+      mistakeReviewEligibleCountryCount(updatedCountryPracticeStats, QuizTopic.Mixed) >= MistakeReviewUnlockCountryCount
   val updatedActivityCalendar =
     updateActivityCalendar(
       previous = state.activityCalendar,
@@ -143,14 +144,16 @@ internal fun buildQuizCompletionSummary(
       updatedActivityCalendar = updatedActivityCalendar,
       completedAtEpochMillis = completionTime,
     )
-  val updatedDailyChallengeCache =
+  val updatedDailyChallengeCaches =
     if (quiz.mode == GameMode.DailyChallenge) {
-      state.dailyChallengeCache?.copy(
-        completed = true,
-        completedAtEpochMillis = completionTime,
-      ) ?: state.dailyChallengeCache
-      } else {
-      state.dailyChallengeCache
+      state.dailyChallengeCaches.withDailyChallengeCache(
+        state.dailyChallengeCache?.copy(
+          completed = true,
+          completedAtEpochMillis = completionTime,
+        )
+      )
+    } else {
+      state.dailyChallengeCaches
     }
   val updatedSavedQuizTemplates =
     if (quiz.savedQuizTemplateId == null) {
@@ -181,7 +184,7 @@ internal fun buildQuizCompletionSummary(
     updatedCountryPracticeStats = updatedCountryPracticeStats,
     updatedMistakeReviewUnlocked = updatedMistakeReviewUnlocked,
     updatedActivityCalendar = updatedActivityCalendar,
-    updatedDailyChallengeCache = updatedDailyChallengeCache,
+    updatedDailyChallengeCaches = updatedDailyChallengeCaches,
     updatedSavedQuizTemplates = updatedSavedQuizTemplates,
   )
 }
@@ -211,7 +214,7 @@ internal fun buildQuizCompletionResult(
         countryPracticeStats = summary.updatedCountryPracticeStats,
         mistakeReviewUnlocked = summary.updatedMistakeReviewUnlocked,
         activityCalendar = summary.updatedActivityCalendar,
-        dailyChallengeCache = summary.updatedDailyChallengeCache,
+        dailyChallengeCaches = summary.updatedDailyChallengeCaches,
         savedQuizTemplates = summary.updatedSavedQuizTemplates,
       ),
     summary = summary,

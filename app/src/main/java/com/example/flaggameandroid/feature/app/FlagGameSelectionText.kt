@@ -3,6 +3,7 @@
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.MedalTier
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
 private fun tr(language: AppLanguage, english: String, bulgarian: String, german: String): String =
@@ -36,7 +37,7 @@ internal fun localizedModeTitle(
 ): String =
   when (mode) {
     GameMode.Training -> tr(language, "Training", "Тренировка", "Training")
-    GameMode.CreateQuiz -> tr(language, "Create a quiz", "Създай тест", "Quiz erstellen")
+    GameMode.CreateQuiz -> tr(language, "Custom Quiz", "Персонален тест", "Benutzerdefiniertes Quiz")
     GameMode.WorldFlags ->
       tr(language, "Country Flags", "Държавни флагове", "Länderflaggen")
     GameMode.DailyChallenge -> tr(language, "Daily challenge", "Дневно предизвикателство", "Tägliche Herausforderung")
@@ -58,21 +59,53 @@ internal fun localUtcMidnightResetLabel(): String {
 internal fun localizedVariantTitle(
   variant: QuizVariant,
   language: AppLanguage,
+  topic: QuizTopic = QuizTopic.Countries,
 ): String =
   when (variant) {
-    QuizVariant.FlagToCountry -> tr(language, "Flag -> country", "Флаг -> държава", "Flagge -> Land")
-    QuizVariant.CountryToFlag -> tr(language, "Country -> flag", "Държава -> флаг", "Land -> Flagge")
-    QuizVariant.TypeCountryName -> tr(language, "Type the country", "Напиши държавата", "Land eingeben")
+    QuizVariant.FlagToText ->
+      when (topic) {
+        QuizTopic.Countries -> tr(language, "Flag -> country", "Флаг -> държава", "Flagge -> Land")
+        QuizTopic.Capitals -> tr(language, "Flag -> capital", "Флаг -> столица", "Flagge -> Hauptstadt")
+        QuizTopic.Mixed -> tr(language, "Flag -> text", "Флаг -> текст", "Flagge -> Text")
+      }
+    QuizVariant.TextToFlag ->
+      when (topic) {
+        QuizTopic.Countries -> tr(language, "Country -> flag", "Държава -> флаг", "Land -> Flagge")
+        QuizTopic.Capitals -> tr(language, "Capital -> flag", "Столица -> флаг", "Hauptstadt -> Flagge")
+        QuizTopic.Mixed -> tr(language, "Text -> flag", "Текст -> флаг", "Text -> Flagge")
+      }
+    QuizVariant.TypeText ->
+      when (topic) {
+        QuizTopic.Countries -> tr(language, "Type the country", "Напиши държавата", "Land eingeben")
+        QuizTopic.Capitals -> tr(language, "Type the capital", "Напиши столицата", "Hauptstadt eingeben")
+        QuizTopic.Mixed -> tr(language, "Type the text", "Напиши текста", "Text eingeben")
+      }
   }
 
 internal fun localizedVariantDescription(
   variant: QuizVariant,
   language: AppLanguage,
+  topic: QuizTopic = QuizTopic.Countries,
 ): String =
   when (variant) {
-    QuizVariant.FlagToCountry -> tr(language, "See a flag and pick the country.", "Виж флаг и избери държавата.", "Sieh eine Flagge und wähle das Land.")
-    QuizVariant.CountryToFlag -> tr(language, "See a country and pick the flag.", "Виж държава и избери флага.", "Sieh ein Land und wähle die Flagge.")
-    QuizVariant.TypeCountryName -> tr(language, "See a flag and write the country name.", "Виж флаг и напиши името на държавата.", "Sieh eine Flagge und tippe den Ländernamen.")
+    QuizVariant.FlagToText ->
+      when (topic) {
+        QuizTopic.Countries -> tr(language, "See a flag and pick the country.", "Виж флаг и избери държавата.", "Sieh eine Flagge und wähle das Land.")
+        QuizTopic.Capitals -> tr(language, "See a flag and pick the capital.", "Виж флаг и избери столицата.", "Sieh eine Flagge und wähle die Hauptstadt.")
+        QuizTopic.Mixed -> tr(language, "See a flag and pick the matching text.", "Виж флаг и избери съответния текст.", "Sieh eine Flagge und wähle den passenden Text.")
+      }
+    QuizVariant.TextToFlag ->
+      when (topic) {
+        QuizTopic.Countries -> tr(language, "See a country and pick the flag.", "Виж държава и избери флага.", "Sieh ein Land und wähle die Flagge.")
+        QuizTopic.Capitals -> tr(language, "See a capital and pick the flag.", "Виж столица и избери флага.", "Sieh eine Hauptstadt und wähle die Flagge.")
+        QuizTopic.Mixed -> tr(language, "See text and pick the flag.", "Виж текст и избери флага.", "Sieh Text und wähle die Flagge.")
+      }
+    QuizVariant.TypeText ->
+      when (topic) {
+        QuizTopic.Countries -> tr(language, "See a flag and write the country name.", "Виж флаг и напиши името на държавата.", "Sieh eine Flagge und tippe den Ländernamen.")
+        QuizTopic.Capitals -> tr(language, "See a flag and write the capital.", "Виж флаг и напиши столицата.", "Sieh eine Flagge und tippe die Hauptstadt.")
+        QuizTopic.Mixed -> tr(language, "See a flag and write the matching text.", "Виж флаг и напиши съответния текст.", "Sieh eine Flagge und tippe den passenden Text.")
+      }
   }
 
 internal fun localizedHintDifficultyTitle(
@@ -131,6 +164,19 @@ internal fun cleanModeSelectionTitle(language: AppLanguage): String =
 
 internal fun localizedGameModesHubTitle(language: AppLanguage): String =
   tr(language, "Game modes", "Режими на игра", "Spielmodi")
+
+internal fun localizedQuizTopicTitle(language: AppLanguage): String =
+  tr(language, "Choose type of quiz", "Избери тип тест", "Quiz-Typ auswählen")
+
+internal fun localizedQuizTopicLabel(
+  topic: QuizTopic,
+  language: AppLanguage,
+): String =
+  when (topic) {
+    QuizTopic.Countries -> tr(language, "Countries", "Държави", "Länder")
+    QuizTopic.Capitals -> tr(language, "Capitals", "Столици", "Hauptstädte")
+    QuizTopic.Mixed -> tr(language, "Both", "И двете", "Beide")
+  }
 
 internal fun localizedSavedTestsTitle(
   language: AppLanguage,
