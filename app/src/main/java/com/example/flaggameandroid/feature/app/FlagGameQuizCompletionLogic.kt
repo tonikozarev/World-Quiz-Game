@@ -1,6 +1,5 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.ActivityDayRecord
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
@@ -56,38 +55,23 @@ internal fun buildQuizCompletionSummary(
       scoredPlayers.sumOf { it.earnedHintPoints }
     }
   val quizWithResults = quiz.copy(results = completedResults)
-  val qualifiesForPerfectNoBluffLevel =
-    quiz.mode == GameMode.WorldFlags &&
-      quiz.allInType == AllInType.NoBluffAllTough &&
-      quiz.variants.size == QuizVariant.entries.size &&
-      completedResults.isNotEmpty() &&
-      completedResults.all { it.isCorrect }
-  val perfectNoBluffLevelGain =
-    if (qualifiesForPerfectNoBluffLevel) {
-      if (state.settings.hintDifficulty == HintDifficulty.Impossible) 2 else 1
-    } else {
-      0
-    }
-  val shouldProgressLevel =
-    quiz.mode == GameMode.WorldFlags && !qualifiesForPerfectNoBluffLevel
+  val shouldProgressLevel = quiz.mode == GameMode.WorldFlags
   val eligibleQuizCompletions = if (shouldProgressLevel && completedResults.size >= 10) 1 else 0
   val progressResult =
-    advanceLevelProgress(
-      progress = state.levelProgress,
-      earnedHints = if (shouldProgressLevel) releasedHints else 0,
-      correctAnswers = if (shouldProgressLevel) correctAnswers else 0,
-      eligibleQuizCompletions = eligibleQuizCompletions,
-    )
-  val finalProgress =
-    if (qualifiesForPerfectNoBluffLevel) {
-      val targetLevel = (state.levelProgress.level + perfectNoBluffLevelGain).coerceAtMost(ProgressionRules.MaxLevel)
-      state.levelProgress.copy(
-        level = targetLevel,
-        levelUpVisible = targetLevel > state.levelProgress.level,
+    if (shouldProgressLevel) {
+      advanceLevelProgress(
+        progress = state.levelProgress,
+        earnedHints = releasedHints,
+        correctAnswers = correctAnswers,
+        eligibleQuizCompletions = eligibleQuizCompletions,
       )
     } else {
-      progressResult.progress
+      LevelProgressResult(
+        progress = state.levelProgress,
+        bonusHints = 0,
+      )
     }
+  val finalProgress = progressResult.progress
   val updatedRatings =
     awardMedalIfEligible(
       ratings = state.ratings,
@@ -110,14 +94,7 @@ internal fun buildQuizCompletionSummary(
           countries.count { it.continent == selectedContinent }
         } ?: 0,
     )
-  val noBluffBonusHints =
-    if (qualifiesForPerfectNoBluffLevel) {
-      val gainedLevels = (finalProgress.level - state.levelProgress.level).coerceAtLeast(0)
-      gainedLevels * 5
-    } else {
-      0
-    }
-  val totalBonusHints = progressResult.bonusHints + noBluffBonusHints
+  val totalBonusHints = progressResult.bonusHints
   val newHintCount = state.hintCount + releasedHints + totalBonusHints
   val finalPlayers =
     scoredPlayers.map { player -> player.copy(hintPoints = newHintCount) }

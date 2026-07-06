@@ -18,6 +18,7 @@ import com.example.flaggameandroid.core.model.DailyChallengeCache
 import com.example.flaggameandroid.core.model.DailyChallengeTheme
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizVariant
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.RatingsProgress
 
 sealed interface AppScreen {
@@ -74,6 +75,7 @@ data class SettingsState(
 
 data class SetupState(
   val mode: GameMode = GameMode.Training,
+  val topic: QuizTopic = QuizTopic.Countries,
   val variants: Set<QuizVariant> = QuizVariant.entries.toSet(),
   val topic: QuizTopic = QuizTopic.Countries,
   val selectedContinents: Set<String> = emptySet(),
@@ -164,6 +166,7 @@ data class QuestionDraftState(
 data class QuizState(
   val mode: GameMode? = null,
   val allInType: AllInType? = null,
+  val topic: QuizTopic = QuizTopic.Countries,
   val variants: Set<QuizVariant> = emptySet(),
   val topic: QuizTopic = QuizTopic.Countries,
   val selectedContinents: Set<String> = emptySet(),
@@ -278,6 +281,7 @@ data class FlagGameUiState(
   val selectedQuizTopic: QuizTopic = QuizTopic.Countries,
   val settings: SettingsState = SettingsState(),
   val setup: SetupState = SetupState(),
+  val selectedQuizTopic: QuizTopic = QuizTopic.Countries,
   val quiz: QuizState = QuizState(),
   val availableContinents: List<String> = emptyList(),
   val questionCountLimit: Int = 195,

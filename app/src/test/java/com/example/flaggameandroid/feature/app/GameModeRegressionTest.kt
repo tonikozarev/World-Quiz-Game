@@ -41,7 +41,7 @@ class GameModeRegressionTest {
 
   @Test
   fun eachGameModeCanStartAQuizFromDefaultSetup() {
-    gameModesHubModes().filterNot { it == GameMode.MistakeReview }.forEach { mode ->
+    startQuizModes().filterNot { it == GameMode.MistakeReview }.forEach { mode ->
       val viewModel = viewModel()
 
       viewModel.onModeSelected(mode)
@@ -302,12 +302,12 @@ class GameModeRegressionTest {
   }
 
   @Test
-  fun impossibleDifficultyAwardsHintOnlyAfterFiftyCorrectInARow() {
+  fun impossibleDifficultyAwardsHintOnlyAfterTwentyFiveCorrectInARow() {
     val viewModel = viewModel()
 
     viewModel.onHintDifficultySelected(HintDifficulty.Impossible)
-    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 50)
-    repeat(50) {
+    startSingleVariantQuiz(viewModel, QuizVariant.FlagToCountry, count = 25)
+    repeat(25) {
       answerCurrentCorrectly(viewModel)
       viewModel.onNextQuestion()
     }

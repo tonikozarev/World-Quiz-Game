@@ -20,10 +20,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -46,8 +42,6 @@ internal fun HeroPanel(
   onSettingsClick: () -> Unit,
   onQuitClick: () -> Unit,
 ) {
-  var showInfo by remember { mutableStateOf(false) }
-
   ElevatedCard(
     colors = androidx.compose.material3.CardDefaults.elevatedCardColors(containerColor = Color.Transparent),
     modifier = Modifier.fillMaxWidth(),
@@ -88,21 +82,18 @@ internal fun HeroPanel(
             fontWeight = FontWeight.ExtraBold,
             modifier = Modifier.weight(1f),
           )
-          HeroInfoButton(onClick = { showInfo = !showInfo })
         }
-        if (showInfo) {
-          Surface(
-            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            shape = RoundedCornerShape(10.dp),
-            modifier = Modifier.fillMaxWidth(),
-          ) {
-            Text(
-              text = subtitle,
-              modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-              style = MaterialTheme.typography.bodyMedium,
-            )
-          }
+        Surface(
+          color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
+          contentColor = MaterialTheme.colorScheme.onPrimary,
+          shape = RoundedCornerShape(10.dp),
+          modifier = Modifier.fillMaxWidth(),
+        ) {
+          Text(
+            text = subtitle,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            style = MaterialTheme.typography.bodyMedium,
+          )
         }
         Surface(
           color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.13f),

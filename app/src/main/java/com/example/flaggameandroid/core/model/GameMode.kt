@@ -85,6 +85,6 @@ enum class AllInType(
 ) {
   NoBluffAllTough(
     title = "No Bluff, All Tough",
-    description = "All countries with only the variants you choose. Perfect clear with all 3 variants gives +1 full level, or +2 if the hint setting is 'the impossible one'.",
+    description = "All countries with only the variants you choose.",
   ),
 }

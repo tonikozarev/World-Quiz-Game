@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -61,6 +62,7 @@ internal fun ProfileEditorDialog(
   var nameDraft by remember(profile.accountName) { mutableStateOf(profile.accountName) }
   var avatarDraft by remember(profile.avatarIndex) { mutableStateOf(profile.avatarIndex) }
   var avatarPickerVisible by remember { mutableStateOf(false) }
+  var nameEditorVisible by remember { mutableStateOf(true) }
 
   if (avatarPickerVisible) {
     AvatarPickerSheet(
@@ -77,46 +79,82 @@ internal fun ProfileEditorDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(cleanText(language, UiText.Profile)) },
+    title = {
+      Text(
+        text = "${profile.displayName} (lvl ${levelProgress.level})",
+        style = MaterialTheme.typography.titleLarge,
+      )
+    },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-          Surface(
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-            shape = CircleShape,
+      Box(
+        modifier =
+          Modifier
+            .heightIn(max = 560.dp)
+            .verticalScroll(rememberScrollState()),
+      ) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+          Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
           ) {
-            Text(
-              text = avatarFor(avatarDraft),
-              modifier = Modifier.padding(10.dp),
-              fontSize = 28.sp,
+            Surface(
+              color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+              shape = CircleShape,
+            ) {
+              Text(
+                text = avatarFor(avatarDraft),
+                modifier = Modifier.padding(10.dp),
+                fontSize = 28.sp,
+              )
+            }
+            OutlinedButton(
+              onClick = { nameEditorVisible = !nameEditorVisible },
+              contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+              modifier = Modifier.weight(1f),
+            ) {
+              Text(
+                when (language) {
+                  AppLanguage.English -> "Name ✏️"
+                  AppLanguage.Bulgarian -> "Име ✏️"
+                  AppLanguage.German -> "Name ✏️"
+                },
+                maxLines = 1,
+              )
+            }
+            OutlinedButton(
+              onClick = { avatarPickerVisible = true },
+              contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+              modifier = Modifier.weight(1f),
+            ) {
+              Text(
+                when (language) {
+                  AppLanguage.English -> "Avatar ✏️"
+                  AppLanguage.Bulgarian -> "Аватар ✏️"
+                  AppLanguage.German -> "Avatar ✏️"
+                },
+                maxLines = 1,
+              )
+            }
+          }
+          if (nameEditorVisible) {
+            OutlinedTextField(
+              value = nameDraft,
+              onValueChange = { nameDraft = it.take(24) },
+              label = { Text(cleanText(language, UiText.AccountName)) },
+              placeholder = { Text("Player 1") },
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth(),
             )
           }
-          Button(onClick = { avatarPickerVisible = true }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
-            Text(
-              when (language) {
-                AppLanguage.English -> "✎ Change icon"
-                AppLanguage.Bulgarian -> "✎ Промени иконата"
-                AppLanguage.German -> "✎ Symbol ändern"
-              },
-            )
-          }
+          NextLevelRequirementsCard(
+            levelProgress = levelProgress,
+            language = language,
+          )
+          ActivityCalendarCard(
+            activityCalendar = activityCalendar,
+            language = language,
+          )
         }
-        OutlinedTextField(
-          value = nameDraft,
-          onValueChange = { nameDraft = it.take(24) },
-          label = { Text(cleanText(language, UiText.AccountName)) },
-          placeholder = { Text("Player 1") },
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth(),
-        )
-        NextLevelRequirementsCard(
-          levelProgress = levelProgress,
-          language = language,
-        )
-        ActivityCalendarCard(
-          activityCalendar = activityCalendar,
-          language = language,
-        )
       }
     },
     confirmButton = {
@@ -164,18 +202,28 @@ private fun NextLevelRequirementsCard(
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold,
       )
-      Text(
-        "${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
-          if (levelProgress.hintsTowardNextLevelDisplay >= levelProgress.hintsNeeded) " ✔" else "",
-      )
-      Text(
-        "${levelProgress.correctAnswersTowardNextLevelDisplay}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}" +
-          if (levelProgress.correctAnswersTowardNextLevelDisplay >= levelProgress.correctAnswersNeeded) " ✔" else "",
-      )
-      Text(
-        "${levelProgress.eligibleQuizzesTowardNextLevelDisplay}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}" +
-          if (levelProgress.eligibleQuizzesTowardNextLevelDisplay >= levelProgress.eligibleQuizzesNeeded) " ✔" else "",
-      )
+      if (ProgressionRules.isMaxLevel(levelProgress.level)) {
+        Text(
+          when (language) {
+            AppLanguage.English -> "You achieved max level."
+            AppLanguage.Bulgarian -> "Достигна максималното ниво."
+            AppLanguage.German -> "Du hast das Maximallevel erreicht."
+          },
+        )
+      } else {
+        Text(
+          "${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
+            if (levelProgress.hintsTowardNextLevelDisplay >= levelProgress.hintsNeeded) " ✔" else "",
+        )
+        Text(
+          "${levelProgress.correctAnswersTowardNextLevelDisplay}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}" +
+            if (levelProgress.correctAnswersTowardNextLevelDisplay >= levelProgress.correctAnswersNeeded) " ✔" else "",
+        )
+        Text(
+          "${levelProgress.eligibleQuizzesTowardNextLevelDisplay}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}" +
+            if (levelProgress.eligibleQuizzesTowardNextLevelDisplay >= levelProgress.eligibleQuizzesNeeded) " ✔" else "",
+        )
+      }
     }
   }
 }

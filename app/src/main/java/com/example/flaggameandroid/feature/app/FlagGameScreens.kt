@@ -55,12 +55,12 @@ fun FlagGameRoute(
     when (uiState.screen) {
       AppScreen.Menu -> showExitDialog = true
       AppScreen.GameModes,
+      AppScreen.GameModesHub,
       AppScreen.Medals,
       AppScreen.Achievements,
       AppScreen.Favorites,
       AppScreen.Settings,
       AppScreen.Results -> resolvedViewModel.onBackToGameModes()
-      AppScreen.GameModesHub -> resolvedViewModel.onBackToGameModes()
       AppScreen.Setup -> resolvedViewModel.onBackToGameModes()
       AppScreen.Quiz -> Unit
     }

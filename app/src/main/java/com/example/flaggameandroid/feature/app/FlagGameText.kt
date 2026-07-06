@@ -89,6 +89,12 @@ internal fun cleanText(
         AppLanguage.Bulgarian -> "Избери икона за профила"
         AppLanguage.German -> "Profilsymbol wählen"
       }
+    UiText.Hints ->
+      when (language) {
+        AppLanguage.English -> "Collected hints"
+        AppLanguage.Bulgarian -> "Събрани жокери"
+        AppLanguage.German -> "Gesammelte Hinweise"
+      }
     UiText.Close ->
       when (language) {
         AppLanguage.English -> "Close"
