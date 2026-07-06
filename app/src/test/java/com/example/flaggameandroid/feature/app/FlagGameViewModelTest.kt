@@ -880,7 +880,7 @@ class FlagGameViewModelTest {
     viewModel.onQuestionCountChanged(4)
     viewModel.onStartQuiz()
 
-    assertEquals("Player 1", viewModel.uiState.value.quiz.currentPlayer.name)
+    assertEquals("Player", viewModel.uiState.value.quiz.currentPlayer.name)
     answerCurrentCorrectly(viewModel)
     viewModel.onNextQuestion()
 
@@ -889,9 +889,9 @@ class FlagGameViewModelTest {
     viewModel.onNextQuestion()
 
     val players = viewModel.uiState.value.quiz.players
-    assertEquals(2, players.first { it.name == "Player 1" }.score)
+    assertEquals(2, players.first { it.name == "Player" }.score)
     assertEquals(0, players.first { it.name == "Player 2" }.score)
-    assertEquals("Player 1", viewModel.uiState.value.quiz.currentPlayer.name)
+    assertEquals("Player", viewModel.uiState.value.quiz.currentPlayer.name)
   }
 
   @Test

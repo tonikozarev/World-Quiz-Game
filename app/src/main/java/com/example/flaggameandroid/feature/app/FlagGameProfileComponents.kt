@@ -57,12 +57,14 @@ internal fun ProfileEditorDialog(
   activityCalendar: Map<Long, ActivityDayRecord>,
   language: AppLanguage,
   onDismiss: () -> Unit,
-  onSave: (String, Int) -> Unit,
+  onAccountNameChanged: (String) -> Unit,
+  onAvatarSelected: (Int) -> Unit,
 ) {
   var nameDraft by remember(profile.accountName) { mutableStateOf(profile.accountName) }
   var avatarDraft by remember(profile.avatarIndex) { mutableStateOf(profile.avatarIndex) }
   var avatarPickerVisible by remember { mutableStateOf(false) }
-  var nameEditorVisible by remember { mutableStateOf(true) }
+  var nameEditorVisible by remember { mutableStateOf(false) }
+  var nameEditorDraft by remember(nameDraft) { mutableStateOf(nameDraft) }
 
   if (avatarPickerVisible) {
     AvatarPickerSheet(
@@ -72,7 +74,51 @@ internal fun ProfileEditorDialog(
       onDismiss = { avatarPickerVisible = false },
       onAvatarSelected = {
         avatarDraft = it
+        onAvatarSelected(it)
         avatarPickerVisible = false
+      },
+    )
+  }
+
+  if (nameEditorVisible) {
+    AlertDialog(
+      onDismissRequest = { nameEditorVisible = false },
+      title = {
+        Text(
+          text = "Nickname",
+          style = MaterialTheme.typography.titleLarge,
+        )
+      },
+      text = {
+        OutlinedTextField(
+          value = nameEditorDraft,
+          onValueChange = { nameEditorDraft = it.take(15) },
+          placeholder = { Text("Player") },
+          singleLine = true,
+          modifier = Modifier.fillMaxWidth(),
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            nameDraft = nameEditorDraft.trim().take(15)
+            nameEditorDraft = nameDraft
+            onAccountNameChanged(nameDraft)
+            nameEditorVisible = false
+          },
+        ) {
+          Text("✓")
+        }
+      },
+      dismissButton = {
+        TextButton(
+          onClick = {
+            nameEditorDraft = nameDraft
+            nameEditorVisible = false
+          },
+        ) {
+          Text("✕")
+        }
       },
     )
   }
@@ -81,7 +127,7 @@ internal fun ProfileEditorDialog(
     onDismissRequest = onDismiss,
     title = {
       Text(
-        text = "${profile.displayName} (lvl ${levelProgress.level})",
+        text = "Player info",
         style = MaterialTheme.typography.titleLarge,
       )
     },
@@ -94,10 +140,12 @@ internal fun ProfileEditorDialog(
       ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
           Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
           ) {
             Surface(
+              onClick = { avatarPickerVisible = true },
               color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
               shape = CircleShape,
             ) {
@@ -107,44 +155,31 @@ internal fun ProfileEditorDialog(
                 fontSize = 28.sp,
               )
             }
-            OutlinedButton(
-              onClick = { nameEditorVisible = !nameEditorVisible },
-              contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
-              modifier = Modifier.weight(1f),
+            Row(
+              horizontalArrangement = Arrangement.spacedBy(6.dp),
+              verticalAlignment = Alignment.CenterVertically,
             ) {
               Text(
-                when (language) {
-                  AppLanguage.English -> "Name ✏️"
-                  AppLanguage.Bulgarian -> "Име ✏️"
-                  AppLanguage.German -> "Name ✏️"
-                },
+                text = nameDraft.ifBlank { profile.displayName }.take(15),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
               )
+              Surface(
+                onClick = { nameEditorVisible = !nameEditorVisible },
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                contentColor = MaterialTheme.colorScheme.primary,
+                shape = CircleShape,
+              ) {
+                Text(
+                  text = "\u270E",
+                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                  style = MaterialTheme.typography.labelMedium,
+                  fontWeight = FontWeight.Bold,
+                )
+              }
             }
-            OutlinedButton(
-              onClick = { avatarPickerVisible = true },
-              contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
-              modifier = Modifier.weight(1f),
-            ) {
-              Text(
-                when (language) {
-                  AppLanguage.English -> "Avatar ✏️"
-                  AppLanguage.Bulgarian -> "Аватар ✏️"
-                  AppLanguage.German -> "Avatar ✏️"
-                },
-                maxLines = 1,
-              )
-            }
-          }
-          if (nameEditorVisible) {
-            OutlinedTextField(
-              value = nameDraft,
-              onValueChange = { nameDraft = it.take(24) },
-              label = { Text(cleanText(language, UiText.AccountName)) },
-              placeholder = { Text("Player 1") },
-              singleLine = true,
-              modifier = Modifier.fillMaxWidth(),
-            )
           }
           NextLevelRequirementsCard(
             levelProgress = levelProgress,
@@ -158,23 +193,12 @@ internal fun ProfileEditorDialog(
       }
     },
     confirmButton = {
-      Button(onClick = { onSave(nameDraft, avatarDraft) }) {
-        Text(
-          when (language) {
-            AppLanguage.English -> "Save"
-            AppLanguage.Bulgarian -> "Запази"
-            AppLanguage.German -> "Speichern"
-          },
-        )
-      }
-    },
-    dismissButton = {
       TextButton(onClick = onDismiss) {
         Text(
           when (language) {
-            AppLanguage.English -> "Cancel"
-            AppLanguage.Bulgarian -> "Отказ"
-            AppLanguage.German -> "Abbrechen"
+            AppLanguage.English -> "Close"
+            AppLanguage.Bulgarian -> "Затвори"
+            AppLanguage.German -> "Schließen"
           },
         )
       }
@@ -193,15 +217,6 @@ private fun NextLevelRequirementsCard(
     modifier = Modifier.fillMaxWidth(),
   ) {
     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text(
-        when (language) {
-          AppLanguage.English -> "Next level requirements (for lvl ${levelProgress.level + 1})"
-          AppLanguage.Bulgarian -> "Изисквания за следващо ниво (за ниво ${levelProgress.level + 1})"
-          AppLanguage.German -> "Anforderungen für das nächste Level (für Level ${levelProgress.level + 1})"
-        },
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Bold,
-      )
       if (ProgressionRules.isMaxLevel(levelProgress.level)) {
         Text(
           when (language) {
@@ -209,8 +224,19 @@ private fun NextLevelRequirementsCard(
             AppLanguage.Bulgarian -> "Достигна максималното ниво."
             AppLanguage.German -> "Du hast das Maximallevel erreicht."
           },
+          style = MaterialTheme.typography.titleSmall,
+          fontWeight = FontWeight.Bold,
         )
       } else {
+        Text(
+          when (language) {
+            AppLanguage.English -> "Level ${levelProgress.level + 1}. Next level requirements:"
+            AppLanguage.Bulgarian -> "Ниво ${levelProgress.level + 1}. Изисквания за следващо ниво:"
+            AppLanguage.German -> "Level ${levelProgress.level + 1}. Anforderungen für das nächste Level:"
+          },
+          style = MaterialTheme.typography.titleSmall,
+          fontWeight = FontWeight.Bold,
+        )
         Text(
           "${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
             if (levelProgress.hintsTowardNextLevelDisplay >= levelProgress.hintsNeeded) " ✔" else "",
@@ -716,7 +742,8 @@ private fun PreviewProfileEditorDialog() {
         activityCalendar = emptyMap(),
         language = AppLanguage.English,
         onDismiss = {},
-        onSave = { _, _ -> },
+        onAccountNameChanged = {},
+        onAvatarSelected = {},
       )
     }
   }

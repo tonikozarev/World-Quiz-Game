@@ -83,17 +83,19 @@ internal fun HeroPanel(
             modifier = Modifier.weight(1f),
           )
         }
-        Surface(
-          color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
-          contentColor = MaterialTheme.colorScheme.onPrimary,
-          shape = RoundedCornerShape(10.dp),
-          modifier = Modifier.fillMaxWidth(),
-        ) {
-          Text(
-            text = subtitle,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            style = MaterialTheme.typography.bodyMedium,
-          )
+        if (subtitle.isNotBlank()) {
+          Surface(
+            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth(),
+          ) {
+            Text(
+              text = subtitle,
+              modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+              style = MaterialTheme.typography.bodyMedium,
+            )
+          }
         }
         Surface(
           color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.13f),

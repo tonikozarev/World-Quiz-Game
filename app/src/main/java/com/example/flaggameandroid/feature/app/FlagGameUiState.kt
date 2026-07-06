@@ -56,7 +56,7 @@ data class ProfileState(
   val avatarIndex: Int = 0,
 ) {
   val displayName: String
-    get() = accountName.ifBlank { "Player 1" }
+    get() = accountName.ifBlank { "Player" }
 }
 
 enum class MultiplayerQuizBase(

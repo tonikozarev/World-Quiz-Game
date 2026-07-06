@@ -76,11 +76,8 @@ fun MenuScreen(
       activityCalendar = activityCalendar,
       language = language,
       onDismiss = { profileDialogVisible = false },
-      onSave = { name, avatarIndex ->
-        onAccountNameChanged(name)
-        onAvatarSelected(avatarIndex)
-        profileDialogVisible = false
-      },
+      onAccountNameChanged = onAccountNameChanged,
+      onAvatarSelected = onAvatarSelected,
     )
   }
 

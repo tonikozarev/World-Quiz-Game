@@ -13,9 +13,9 @@ internal fun cleanText(
       }
     UiText.HeroSubtitle ->
       when (language) {
-        AppLanguage.English -> "Practice flags, earn achievements, collect medals, and track your progress across every country."
-        AppLanguage.Bulgarian -> "Практикувай флагове, печели постижения, събирай медали и следи напредъка си във всяка държава."
-        AppLanguage.German -> "Übe Flaggen, sammle Erfolge und Medaillen und verfolge deinen Fortschritt."
+        AppLanguage.English -> ""
+        AppLanguage.Bulgarian -> ""
+        AppLanguage.German -> ""
       }
     UiText.Start ->
       when (language) {
@@ -91,9 +91,9 @@ internal fun cleanText(
       }
     UiText.Hints ->
       when (language) {
-        AppLanguage.English -> "Collected hints"
-        AppLanguage.Bulgarian -> "Събрани жокери"
-        AppLanguage.German -> "Gesammelte Hinweise"
+        AppLanguage.English -> "collected hints"
+        AppLanguage.Bulgarian -> "събрани жокери"
+        AppLanguage.German -> "gesammelte Hinweise"
       }
     UiText.Close ->
       when (language) {
