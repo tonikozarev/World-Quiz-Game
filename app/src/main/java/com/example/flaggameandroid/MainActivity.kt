@@ -27,7 +27,6 @@ open class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    appContainer.engagementCoordinator.onAppOpened()
 
     enableEdgeToEdge(
       statusBarStyle = SystemBarStyle.dark(
@@ -51,18 +50,23 @@ open class MainActivity : ComponentActivity() {
     }
 
     lifecycleScope.launch {
-      val reminderEnabled = appContainer.settingsStore.loadReminderEnabled()
-      if (reminderEnabled &&
-        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
-        ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-      ) {
-        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+      runCatching {
+        appContainer.engagementCoordinator.onAppOpened()
+        val reminderEnabled = appContainer.settingsStore.loadReminderEnabled()
+        if (reminderEnabled &&
+          android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+          ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+          notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
       }
     }
   }
 
   override fun onStop() {
     super.onStop()
-    appContainer.engagementCoordinator.syncLauncherIconToPersistedState()
+    runCatching {
+      appContainer.engagementCoordinator.syncLauncherIconToPersistedState()
+    }
   }
 }
