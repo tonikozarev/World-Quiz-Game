@@ -227,9 +227,9 @@ fun QuizScreen(
             quiz.typedHintPrefix?.let {
               Text(
                 when (language) {
-                  AppLanguage.English -> "Hint: starts with $it"
-                  AppLanguage.Bulgarian -> "Подсказка: започва с $it"
-                    AppLanguage.German -> "Hinweis: beginnt mit $it"
+                  AppLanguage.English -> "Hint: $it"
+                  AppLanguage.Bulgarian -> "Подсказка: $it"
+                  AppLanguage.German -> "Hinweis: $it"
                 },
               )
             }

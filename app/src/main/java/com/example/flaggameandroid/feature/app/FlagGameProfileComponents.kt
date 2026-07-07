@@ -303,11 +303,11 @@ private fun ActivityCalendarCard(
         ) {
           Text("<-")
         }
-        Text(
-          text = visibleMonth.labelForCalendar(language),
-          style = MaterialTheme.typography.bodyMedium,
-          fontWeight = FontWeight.Normal,
-        )
+      Text(
+        text = visibleMonth.labelForCalendar(language),
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.Normal,
+      )
         TextButton(
           onClick = { if (canGoForward) visibleMonthOffset -= 1 },
           enabled = canGoForward,
@@ -333,39 +333,48 @@ private fun ActivityCalendarCard(
             )
           }
         }
-        monthGrid.forEach { week ->
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-          ) {
-            week.forEach { day ->
-              Surface(
-                color =
-                  when (day.state) {
-                    MonthActivityDayState.Completed -> Color(0xFF2F9E68)
-                    MonthActivityDayState.Missed -> Color(0xFFB84A4A)
-                    MonthActivityDayState.Pending -> MaterialTheme.colorScheme.surfaceVariant
-                    MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
-                  },
-                shape = RoundedCornerShape(999.dp),
-                modifier = Modifier.weight(1f),
+        Box(
+          modifier =
+            Modifier
+              .fillMaxWidth()
+              .height(160.dp),
+        ) {
+          Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            monthGrid.forEach { week ->
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
               ) {
-                Box(
-                  modifier = Modifier.height(18.dp).fillMaxWidth(),
-                  contentAlignment = Alignment.Center,
-                ) {
-                  Text(
-                    text = day.day?.toString().orEmpty(),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
+                week.forEach { day ->
+                  Surface(
                     color =
                       when (day.state) {
-                        MonthActivityDayState.Completed -> Color.White
-                        MonthActivityDayState.Missed -> Color.White
-                        MonthActivityDayState.Pending -> MaterialTheme.colorScheme.onSurface
-                        MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                        MonthActivityDayState.Completed -> Color(0xFF2F9E68)
+                        MonthActivityDayState.Missed -> Color(0xFFB84A4A)
+                        MonthActivityDayState.Pending -> MaterialTheme.colorScheme.surfaceVariant
+                        MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
                       },
-                  )
+                    shape = RoundedCornerShape(999.dp),
+                    modifier = Modifier.weight(1f),
+                  ) {
+                    Box(
+                      modifier = Modifier.height(18.dp).fillMaxWidth(),
+                      contentAlignment = Alignment.Center,
+                    ) {
+                      Text(
+                        text = day.day?.toString().orEmpty(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color =
+                          when (day.state) {
+                            MonthActivityDayState.Completed -> Color.White
+                            MonthActivityDayState.Missed -> Color.White
+                            MonthActivityDayState.Pending -> MaterialTheme.colorScheme.onSurface
+                            MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                          },
+                      )
+                    }
+                  }
                 }
               }
             }
