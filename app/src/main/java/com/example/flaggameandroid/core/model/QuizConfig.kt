@@ -17,12 +17,6 @@ data class QuizConfig(
   val players: List<String> = listOf("Solo"),
   val poolSource: QuizPoolSource = QuizPoolSource.Standard,
   val dailyChallengeTheme: DailyChallengeTheme? = null,
-  val questionSpecs: List<QuizQuestionSpec> = emptyList(),
-)
-
-data class QuizQuestionSpec(
-  val countryCode: String,
-  val topic: QuizTopic,
 )
 
 data class PlayerProgress(

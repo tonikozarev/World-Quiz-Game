@@ -4,7 +4,6 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.QuizConfig
-import com.example.flaggameandroid.core.model.QuizQuestionSpec
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals

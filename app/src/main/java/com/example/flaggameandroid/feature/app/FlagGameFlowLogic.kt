@@ -1,6 +1,7 @@
 ﻿package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizAnswerChecker
+import com.example.flaggameandroid.core.data.QuizQuestionSpec
 import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.AchievementsProgress
 import com.example.flaggameandroid.core.model.CreateQuizPreset
@@ -298,8 +299,8 @@ internal fun configFor(
         setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
         setup.topic == QuizTopic.Mixed
       ) {
-        setup.selectedCountryCodes.map { code -> com.example.flaggameandroid.core.model.QuizQuestionSpec(code, QuizTopic.Countries) } +
-          setup.selectedCapitalCountryCodes.map { code -> com.example.flaggameandroid.core.model.QuizQuestionSpec(code, QuizTopic.Capitals) }
+        setup.selectedCountryCodes.map { code -> QuizQuestionSpec(code, QuizTopic.Countries) } +
+          setup.selectedCapitalCountryCodes.map { code -> QuizQuestionSpec(code, QuizTopic.Capitals) }
       } else {
         emptyList()
       },
@@ -538,7 +539,15 @@ internal fun awardAchievementsIfEligible(
     completedResults.size == totalCatalogCountries &&
     distinctCountries == totalCatalogCountries
   ) {
-    updatedAchievements = updatedAchievements.unlock(AchievementId.NoBluffLegend, completedAtEpochMillis)
+    updatedAchievements =
+      updatedAchievements.unlock(
+        when (quiz.topic) {
+          QuizTopic.Countries -> AchievementId.HardcoreCountriesLegend
+          QuizTopic.Capitals -> AchievementId.HardcoreCapitalsLegend
+          QuizTopic.Mixed -> AchievementId.HardcoreLegend
+        },
+        completedAtEpochMillis,
+      )
   }
 
   val selectedContinent = quiz.selectedContinents.singleOrNull()

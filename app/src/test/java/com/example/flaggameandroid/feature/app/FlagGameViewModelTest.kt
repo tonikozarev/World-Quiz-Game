@@ -823,7 +823,7 @@ class FlagGameViewModelTest {
     }
 
     assertEquals(AppScreen.Results, viewModel.uiState.value.screen)
-    assertEquals(0, viewModel.uiState.value.levelProgress.eligibleQuizzesTowardNextLevel)
+    assertEquals(2, viewModel.uiState.value.levelProgress.eligibleQuizzesTowardNextLevel)
   }
 
   @Test
