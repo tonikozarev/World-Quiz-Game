@@ -91,9 +91,9 @@ internal fun cleanText(
       }
     UiText.Hints ->
       when (language) {
-        AppLanguage.English -> "collected hints"
-        AppLanguage.Bulgarian -> "събрани жокери"
-        AppLanguage.German -> "gesammelte Hinweise"
+        AppLanguage.English -> "Collected hints"
+        AppLanguage.Bulgarian -> "Събрани жокери"
+        AppLanguage.German -> "Gesammelte Hinweise"
       }
     UiText.Close ->
       when (language) {

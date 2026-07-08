@@ -30,12 +30,14 @@ internal class ReminderNotificationPoster(
 
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
     notificationManager.createNotificationChannel(channel)
+    EngagementDebugLogger.debug("Reminder notification channel ensured.")
   }
 
   fun postReminderNotification() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
       ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
     ) {
+      EngagementDebugLogger.warn("Reminder notification skipped: POST_NOTIFICATIONS permission not granted.")
       return
     }
 
@@ -60,6 +62,9 @@ internal class ReminderNotificationPoster(
         .build()
 
     NotificationManagerCompat.from(context).notify(NotificationIds.DailyReminder, notification)
+    EngagementDebugLogger.info(
+      "Reminder notification posted at ${EngagementDebugLogger.formatEpoch(System.currentTimeMillis())}.",
+    )
   }
 }
 

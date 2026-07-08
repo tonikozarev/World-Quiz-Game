@@ -59,16 +59,12 @@ class GameModeRegressionTest {
     assertEquals(
       listOf(
         GameMode.DailyChallenge,
-      ),
-      startQuizModes(),
-    )
-    assertEquals(
-      listOf(
         GameMode.CreateQuiz,
         GameMode.MistakeReview,
       ),
-      gameModesHubModes(),
+      startQuizModes(),
     )
+    assertEquals(emptyList<GameMode>(), gameModesHubModes())
   }
 
   @Test

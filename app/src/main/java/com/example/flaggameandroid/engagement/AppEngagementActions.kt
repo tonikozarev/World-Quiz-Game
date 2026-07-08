@@ -11,7 +11,9 @@ internal fun recordAppOpened(
 ) {
   runBlocking {
     val progress = progressStore.loadProgress()
-    progressStore.saveProgress(progress.copy(lastOpenedAtEpochMillis = nowProvider()))
+    val now = nowProvider()
+    progressStore.saveProgress(progress.copy(lastOpenedAtEpochMillis = now))
+    EngagementDebugLogger.info("App opened at ${EngagementDebugLogger.formatEpoch(now)}.")
   }
 }
 
@@ -29,14 +31,25 @@ internal fun triggerDailyEngagementNudge(
     val settingsReminderEnabled = settingsStore.loadReminderEnabled()
     val progress = progressStore.loadProgress()
     val shouldNudge = DailyEngagementRules.shouldTriggerDailyNudge(progress.lastOpenedAtEpochMillis, now, ZoneOffset.UTC)
-    if (!shouldNudge) return@runBlocking
+    EngagementDebugLogger.info(
+      "Daily nudge check at ${EngagementDebugLogger.formatEpoch(now)}. " +
+        "lastOpened=${EngagementDebugLogger.formatEpoch(progress.lastOpenedAtEpochMillis.coerceAtLeast(0L))}, " +
+        "reminderEnabled=$settingsReminderEnabled, shouldNudge=$shouldNudge",
+    )
+    if (!shouldNudge) {
+      EngagementDebugLogger.debug("Daily nudge skipped because the app was already opened in the current UTC day.")
+      return@runBlocking
+    }
 
     val updatedProgress = progress.copy(inactiveIconActive = true)
     progressStore.saveProgress(updatedProgress)
     launcherIconController.setInactiveLauncherIcon(active = true)
+    EngagementDebugLogger.info("Inactive launcher icon activated for daily engagement nudge.")
 
     if (settingsReminderEnabled) {
       reminderNotifier.postReminderNotification()
+    } else {
+      EngagementDebugLogger.debug("Reminder notification not posted because reminders are disabled in settings.")
     }
   }
 }

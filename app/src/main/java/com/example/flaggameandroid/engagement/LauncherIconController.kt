@@ -13,6 +13,7 @@ internal class LauncherIconController(
   fun syncLauncherIconToPersistedState() {
     runBlocking {
       val progress = progressStore.loadProgress()
+      EngagementDebugLogger.debug("Syncing launcher icon to persisted state: inactive=${progress.inactiveIconActive}")
       setInactiveLauncherIcon(active = progress.inactiveIconActive)
     }
   }
@@ -31,6 +32,11 @@ internal class LauncherIconController(
       inactiveAlias,
       if (active) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
       PackageManager.DONT_KILL_APP,
+    )
+    EngagementDebugLogger.info(
+      "Launcher icon switched. inactiveActive=$active, " +
+        "defaultState=${packageManager.getComponentEnabledSetting(defaultAlias)}, " +
+        "inactiveState=${packageManager.getComponentEnabledSetting(inactiveAlias)}",
     )
   }
 }

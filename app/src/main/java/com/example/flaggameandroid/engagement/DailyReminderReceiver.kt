@@ -10,6 +10,10 @@ class DailyReminderReceiver : BroadcastReceiver() {
     context: Context,
     intent: Intent,
   ) {
+    EngagementDebugLogger.info(
+      "DailyReminderReceiver fired at ${EngagementDebugLogger.formatEpoch(System.currentTimeMillis())} " +
+        "with action=${intent.action}",
+    )
     AppGraph.from(context.applicationContext).engagementCoordinator.onDailyCheckTriggered()
   }
 }

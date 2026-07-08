@@ -148,18 +148,6 @@ fun GameModesScreen(
         onClick = { onModeSelected(mode) },
       )
     }
-
-    NavigationCard(
-      title = localizedGameModesHubTitle(language),
-      description =
-        when (language) {
-          AppLanguage.English -> "Create your own quiz."
-          AppLanguage.Bulgarian -> "Създай свой тест."
-          AppLanguage.German -> "Erstelle dein eigenes Quiz."
-        },
-      openLabel = cleanText(language, UiText.Open),
-      onClick = onGameModesClick,
-    )
   }
 }
 

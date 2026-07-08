@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import java.time.ZoneId
 
 internal class DailyReminderScheduler(
@@ -15,12 +16,43 @@ internal class DailyReminderScheduler(
     val pendingIntent = dailyCheckPendingIntent()
     val triggerAtMillis = DailyEngagementRules.nextReminderEpochMillis(nowProvider(), zoneId)
 
-    alarmManager.setInexactRepeating(
-      AlarmManager.RTC_WAKEUP,
-      triggerAtMillis,
-      AlarmManager.INTERVAL_DAY,
-      pendingIntent,
-    )
+    alarmManager.cancel(pendingIntent)
+
+    when {
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms() -> {
+        EngagementDebugLogger.info(
+          "Scheduling exact daily reminder at ${EngagementDebugLogger.formatEpoch(triggerAtMillis)} " +
+            "(zone=$zoneId, exact=true)",
+        )
+        alarmManager.setExactAndAllowWhileIdle(
+          AlarmManager.RTC_WAKEUP,
+          triggerAtMillis,
+          pendingIntent,
+        )
+      }
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+        EngagementDebugLogger.info(
+          "Scheduling while-idle daily reminder at ${EngagementDebugLogger.formatEpoch(triggerAtMillis)} " +
+            "(zone=$zoneId, exact=false)",
+        )
+        alarmManager.setAndAllowWhileIdle(
+          AlarmManager.RTC_WAKEUP,
+          triggerAtMillis,
+          pendingIntent,
+        )
+      }
+      else -> {
+        EngagementDebugLogger.info(
+          "Scheduling standard daily reminder at ${EngagementDebugLogger.formatEpoch(triggerAtMillis)} " +
+            "(zone=$zoneId, exact=false)",
+        )
+        alarmManager.set(
+          AlarmManager.RTC_WAKEUP,
+          triggerAtMillis,
+          pendingIntent,
+        )
+      }
+    }
   }
 
   private fun dailyCheckPendingIntent(): PendingIntent {
