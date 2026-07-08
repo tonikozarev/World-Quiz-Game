@@ -18,10 +18,10 @@ enum class CreateQuizPreset(
   Stars("Stars"),
   Crosses("Crosses"),
   Animals("Animals"),
-  CapitalPopulationUnderOneMillion("Population < 1M"),
-  CapitalPopulationOneToSixPointFiveMillion("Population 1M-6.5M"),
-  CapitalPopulationSixPointFiveToThirtyMillion("Population 6.5M-30M"),
-  CapitalPopulationOverThirtyMillion("Population > 30M"),
+  CapitalPopulationUnderOneMillion("Population < 250k"),
+  CapitalPopulationOneToSixPointFiveMillion("Population 250k-1M"),
+  CapitalPopulationSixPointFiveToThirtyMillion("Population 1M-2.5M"),
+  CapitalPopulationOverThirtyMillion("Population > 2.5M"),
   CapitalAreaUnderFiftySquareKm("Area < 50 km²"),
   CapitalAreaFiftyToThreeHundredSquareKm("Area 50-300 km²"),
   CapitalAreaThreeHundredToEightHundredSquareKm("Area 300-800 km²"),
@@ -33,14 +33,6 @@ enum class CreateQuizPreset(
   CommonwealthOfNations("Commonwealth flags"),
   AfricanUnion("African Union flags"),
   OrganisationOfIslamicCooperation("OIC flags"),
-}
-
-enum class SavedQuizDifficulty(
-  val title: String,
-) {
-  Easy("Easy"),
-  ItIsOk("It's OK"),
-  Tough("Tough"),
 }
 
 data class SavedQuizTemplate(
@@ -59,7 +51,6 @@ data class SavedQuizTemplate(
   val createQuizLocalMultiplayerEnabled: Boolean = false,
   val playerNames: List<String> = emptyList(),
   val completionCount: Int = 0,
-  val difficulty: SavedQuizDifficulty = SavedQuizDifficulty.ItIsOk,
 )
 
 internal fun SavedQuizTemplate.hasSameQuizConfiguration(other: SavedQuizTemplate): Boolean =
