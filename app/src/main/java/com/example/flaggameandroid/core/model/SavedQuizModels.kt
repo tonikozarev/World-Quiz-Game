@@ -33,7 +33,6 @@ enum class CreateQuizPreset(
   CommonwealthOfNations("Commonwealth flags"),
   AfricanUnion("African Union flags"),
   OrganisationOfIslamicCooperation("OIC flags"),
-  NoSymbols("No symbols"),
 }
 
 enum class SavedQuizDifficulty(

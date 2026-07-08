@@ -55,7 +55,7 @@ data class ProfileState(
   val avatarIndex: Int = 0,
 ) {
   val displayName: String
-    get() = accountName.ifBlank { "Player 1" }
+    get() = accountName.ifBlank { "Player" }
 }
 
 enum class MultiplayerQuizBase(
@@ -74,8 +74,8 @@ data class SettingsState(
 
 data class SetupState(
   val mode: GameMode = GameMode.Training,
-  val variants: Set<QuizVariant> = QuizVariant.entries.toSet(),
   val topic: QuizTopic = QuizTopic.Countries,
+  val variants: Set<QuizVariant> = QuizVariant.entries.toSet(),
   val selectedContinents: Set<String> = emptySet(),
   val instantCorrectionEnabled: Boolean = true,
   val worldFlagsHardcoreEnabled: Boolean = false,
@@ -164,8 +164,8 @@ data class QuestionDraftState(
 data class QuizState(
   val mode: GameMode? = null,
   val allInType: AllInType? = null,
-  val variants: Set<QuizVariant> = emptySet(),
   val topic: QuizTopic = QuizTopic.Countries,
+  val variants: Set<QuizVariant> = emptySet(),
   val selectedContinents: Set<String> = emptySet(),
   val instantCorrectionEnabled: Boolean = false,
   val questions: List<FlagQuestion> = emptyList(),

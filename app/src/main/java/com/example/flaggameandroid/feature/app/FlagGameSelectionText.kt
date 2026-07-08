@@ -64,15 +64,15 @@ internal fun localizedVariantTitle(
   when (variant) {
     QuizVariant.FlagToText ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "Flag -> country", "Флаг -> държава", "Flagge -> Land")
-        QuizTopic.Capitals -> tr(language, "Flag -> capital", "Флаг -> столица", "Flagge -> Hauptstadt")
-        QuizTopic.Mixed -> tr(language, "Flag -> text", "Флаг -> текст", "Flagge -> Text")
+        QuizTopic.Countries -> tr(language, "Flag -> Country", "Флаг -> Държава", "Flagge -> Land")
+        QuizTopic.Capitals -> tr(language, "Flag -> Capital", "Флаг -> Столица", "Flagge -> Hauptstadt")
+        QuizTopic.Mixed -> tr(language, "Flag -> Text", "Флаг -> Текст", "Flagge -> Text")
       }
     QuizVariant.TextToFlag ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "Country -> flag", "Държава -> флаг", "Land -> Flagge")
-        QuizTopic.Capitals -> tr(language, "Capital -> flag", "Столица -> флаг", "Hauptstadt -> Flagge")
-        QuizTopic.Mixed -> tr(language, "Text -> flag", "Текст -> флаг", "Text -> Flagge")
+        QuizTopic.Countries -> tr(language, "Country -> Flag", "Държава -> Флаг", "Land -> Flagge")
+        QuizTopic.Capitals -> tr(language, "Capital -> Flag", "Столица -> Флаг", "Hauptstadt -> Flagge")
+        QuizTopic.Mixed -> tr(language, "Text -> Flag", "Текст -> Флаг", "Text -> Flagge")
       }
     QuizVariant.TypeText ->
       when (topic) {
@@ -116,7 +116,7 @@ internal fun localizedHintDifficultyTitle(
     HintDifficulty.Rookie -> tr(language, "Easy (Every 3-streak)", "Лесно (Всеки 3 поредни ✔)", "Einsteiger (Alle 3 in Folge)")
     HintDifficulty.Medium -> tr(language, "Medium (Every 5-streak)", "Средно (5 поредни ✔)", "Mittel (Alle 5 in Folge)")
     HintDifficulty.Hard -> tr(language, "Hard (Every 10-streak)", "Трудно (10 поредни ✔)", "Schwer (Alle 10 in Folge)")
-    HintDifficulty.Impossible -> tr(language, "Impossible (Every 50-streak)", "Невъзможно (50 поредни ✔)", "Unmöglich (Alle 50 in Folge)")
+    HintDifficulty.Impossible -> tr(language, "Impossible (Every 25-streak)", "Невъзможно (25 поредни ✔)", "Unmöglich (Alle 25 in Folge)")
   }
 
 internal fun localizedHintDifficultyShortRule(
@@ -127,7 +127,7 @@ internal fun localizedHintDifficultyShortRule(
     HintDifficulty.Rookie -> tr(language, "Every 3-streak", "Всеки 3 верни поред", "Alle 3 in Folge")
     HintDifficulty.Medium -> tr(language, "Every 5-streak", "Всеки 5 верни поред", "Alle 5 in Folge")
     HintDifficulty.Hard -> tr(language, "Every 10-streak", "Всеки 10 верни поред", "Alle 10 in Folge")
-    HintDifficulty.Impossible -> tr(language, "Every 50-streak", "Всеки 50 верни поред", "Alle 50 in Folge")
+    HintDifficulty.Impossible -> tr(language, "Every 25-streak", "Всеки 25 верни поред", "Alle 25 in Folge")
   }
 
 internal fun localizedHintDifficultyDescription(
@@ -138,7 +138,7 @@ internal fun localizedHintDifficultyDescription(
     HintDifficulty.Rookie -> tr(language, "Collect 1 hint for every 3 correct answers in a row.", "Събирай 1 жокер за всеки 3 верни отговора поред.", "Sammle 1 Hinweis für je 3 richtige Antworten in Folge.")
     HintDifficulty.Medium -> tr(language, "Collect 1 hint for every 5 correct answers in a row.", "Събирай 1 жокер за всеки 5 верни отговора поред.", "Sammle 1 Hinweis für jeweils 5 richtige Antworten in Folge.")
     HintDifficulty.Hard -> tr(language, "Collect 1 hint for every 10 correct answers in a row.", "Събирай 1 жокер за всеки 10 верни отговора поред.", "Sammle 1 Hinweis für jeweils 10 richtige Antworten in Folge.")
-    HintDifficulty.Impossible -> tr(language, "Collect 1 hint for every 50 correct answers in a row.", "Събирай 1 жокер за всеки 50 верни отговора поред.", "Sammle 1 Hinweis für jeweils 50 richtige Antworten in Folge.")
+    HintDifficulty.Impossible -> tr(language, "Collect 1 hint for every 25 correct answers in a row.", "Събирай 1 жокер за всеки 25 верни отговора поред.", "Sammle 1 Hinweis für jeweils 25 richtige Antworten in Folge.")
   }
 
 internal fun localizedMedalTitle(

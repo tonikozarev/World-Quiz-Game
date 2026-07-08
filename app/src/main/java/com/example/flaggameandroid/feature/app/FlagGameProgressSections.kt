@@ -162,5 +162,5 @@ internal fun hintDifficultyDescription(difficulty: HintDifficulty): String =
     HintDifficulty.Rookie -> "Collect 1 hint for every correct answer."
     HintDifficulty.Medium -> "Collect 1 hint for every 5 correct answers in a row."
     HintDifficulty.Hard -> "Collect 1 hint for every 10 correct answers in a row."
-    HintDifficulty.Impossible -> "Collect 1 hint for every 50 correct answers in a row."
+    HintDifficulty.Impossible -> "Collect 1 hint for every 25 correct answers in a row."
   }

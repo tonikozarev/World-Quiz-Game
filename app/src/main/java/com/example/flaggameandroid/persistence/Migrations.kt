@@ -21,3 +21,22 @@ val Migration7To8 =
       db.execSQL("ALTER TABLE progress_new RENAME TO progress")
     }
   }
+
+val Migration8To9 =
+  object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL(
+        """
+        CREATE TABLE IF NOT EXISTS quiz_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+          mode TEXT NOT NULL,
+          totalQuestions INTEGER NOT NULL,
+          correctAnswers INTEGER NOT NULL,
+          skippedAnswers INTEGER NOT NULL,
+          netScore INTEGER NOT NULL,
+          completedAtEpochMillis INTEGER NOT NULL
+        )
+        """.trimIndent(),
+      )
+    }
+  }

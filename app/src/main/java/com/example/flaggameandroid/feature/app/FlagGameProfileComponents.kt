@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,11 +57,14 @@ internal fun ProfileEditorDialog(
   activityCalendar: Map<Long, ActivityDayRecord>,
   language: AppLanguage,
   onDismiss: () -> Unit,
-  onSave: (String, Int) -> Unit,
+  onAccountNameChanged: (String) -> Unit,
+  onAvatarSelected: (Int) -> Unit,
 ) {
   var nameDraft by remember(profile.accountName) { mutableStateOf(profile.accountName) }
   var avatarDraft by remember(profile.avatarIndex) { mutableStateOf(profile.avatarIndex) }
   var avatarPickerVisible by remember { mutableStateOf(false) }
+  var nameEditorVisible by remember { mutableStateOf(false) }
+  var nameEditorDraft by remember(nameDraft) { mutableStateOf(nameDraft) }
 
   if (avatarPickerVisible) {
     AvatarPickerSheet(
@@ -70,73 +74,131 @@ internal fun ProfileEditorDialog(
       onDismiss = { avatarPickerVisible = false },
       onAvatarSelected = {
         avatarDraft = it
+        onAvatarSelected(it)
         avatarPickerVisible = false
+      },
+    )
+  }
+
+  if (nameEditorVisible) {
+    AlertDialog(
+      onDismissRequest = { nameEditorVisible = false },
+      title = {
+        Text(
+          text = "Nickname",
+          style = MaterialTheme.typography.titleLarge,
+        )
+      },
+      text = {
+        OutlinedTextField(
+          value = nameEditorDraft,
+          onValueChange = { nameEditorDraft = it.take(15) },
+          placeholder = { Text("Player") },
+          singleLine = true,
+          modifier = Modifier.fillMaxWidth(),
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            nameDraft = nameEditorDraft.trim().take(15)
+            nameEditorDraft = nameDraft
+            onAccountNameChanged(nameDraft)
+            nameEditorVisible = false
+          },
+        ) {
+          Text("✓")
+        }
+      },
+      dismissButton = {
+        TextButton(
+          onClick = {
+            nameEditorDraft = nameDraft
+            nameEditorVisible = false
+          },
+        ) {
+          Text("✕")
+        }
       },
     )
   }
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(cleanText(language, UiText.Profile)) },
+    title = {
+      Text(
+        text = "Player info",
+        style = MaterialTheme.typography.titleLarge,
+      )
+    },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-          Surface(
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-            shape = CircleShape,
+      Box(
+        modifier =
+          Modifier
+            .heightIn(max = 560.dp)
+            .verticalScroll(rememberScrollState()),
+      ) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
           ) {
-            Text(
-              text = avatarFor(avatarDraft),
-              modifier = Modifier.padding(10.dp),
-              fontSize = 28.sp,
-            )
+            Surface(
+              onClick = { avatarPickerVisible = true },
+              color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+              shape = CircleShape,
+            ) {
+              Text(
+                text = avatarFor(avatarDraft),
+                modifier = Modifier.padding(10.dp),
+                fontSize = 28.sp,
+              )
+            }
+            Row(
+              horizontalArrangement = Arrangement.spacedBy(6.dp),
+              verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Text(
+                text = nameDraft.ifBlank { profile.displayName }.take(15),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+              )
+              Surface(
+                onClick = { nameEditorVisible = !nameEditorVisible },
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                contentColor = MaterialTheme.colorScheme.primary,
+                shape = CircleShape,
+              ) {
+                Text(
+                  text = "\u270E",
+                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                  style = MaterialTheme.typography.labelMedium,
+                  fontWeight = FontWeight.Bold,
+                )
+              }
+            }
           }
-          Button(onClick = { avatarPickerVisible = true }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
-            Text(
-              when (language) {
-                AppLanguage.English -> "✎ Change icon"
-                AppLanguage.Bulgarian -> "✎ Промени иконата"
-                AppLanguage.German -> "✎ Symbol ändern"
-              },
-            )
-          }
+          NextLevelRequirementsCard(
+            levelProgress = levelProgress,
+            language = language,
+          )
+          ActivityCalendarCard(
+            activityCalendar = activityCalendar,
+            language = language,
+          )
         }
-        OutlinedTextField(
-          value = nameDraft,
-          onValueChange = { nameDraft = it.take(24) },
-          label = { Text(cleanText(language, UiText.AccountName)) },
-          placeholder = { Text("Player 1") },
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth(),
-        )
-        NextLevelRequirementsCard(
-          levelProgress = levelProgress,
-          language = language,
-        )
-        ActivityCalendarCard(
-          activityCalendar = activityCalendar,
-          language = language,
-        )
       }
     },
     confirmButton = {
-      Button(onClick = { onSave(nameDraft, avatarDraft) }) {
-        Text(
-          when (language) {
-            AppLanguage.English -> "Save"
-            AppLanguage.Bulgarian -> "Запази"
-            AppLanguage.German -> "Speichern"
-          },
-        )
-      }
-    },
-    dismissButton = {
       TextButton(onClick = onDismiss) {
         Text(
           when (language) {
-            AppLanguage.English -> "Cancel"
-            AppLanguage.Bulgarian -> "Отказ"
-            AppLanguage.German -> "Abbrechen"
+            AppLanguage.English -> "Close"
+            AppLanguage.Bulgarian -> "Затвори"
+            AppLanguage.German -> "Schließen"
           },
         )
       }
@@ -155,27 +217,39 @@ private fun NextLevelRequirementsCard(
     modifier = Modifier.fillMaxWidth(),
   ) {
     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text(
-        when (language) {
-          AppLanguage.English -> "Next level requirements (for lvl ${levelProgress.level + 1})"
-          AppLanguage.Bulgarian -> "Изисквания за следващо ниво (за ниво ${levelProgress.level + 1})"
-          AppLanguage.German -> "Anforderungen für das nächste Level (für Level ${levelProgress.level + 1})"
-        },
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Bold,
-      )
-      Text(
-        "${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
-          if (levelProgress.hintsTowardNextLevelDisplay >= levelProgress.hintsNeeded) " ✔" else "",
-      )
-      Text(
-        "${levelProgress.correctAnswersTowardNextLevelDisplay}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}" +
-          if (levelProgress.correctAnswersTowardNextLevelDisplay >= levelProgress.correctAnswersNeeded) " ✔" else "",
-      )
-      Text(
-        "${levelProgress.eligibleQuizzesTowardNextLevelDisplay}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}" +
-          if (levelProgress.eligibleQuizzesTowardNextLevelDisplay >= levelProgress.eligibleQuizzesNeeded) " ✔" else "",
-      )
+      if (ProgressionRules.isMaxLevel(levelProgress.level)) {
+        Text(
+          when (language) {
+            AppLanguage.English -> "You achieved max level."
+            AppLanguage.Bulgarian -> "Достигна максималното ниво."
+            AppLanguage.German -> "Du hast das Maximallevel erreicht."
+          },
+          style = MaterialTheme.typography.titleSmall,
+          fontWeight = FontWeight.Bold,
+        )
+      } else {
+        Text(
+          when (language) {
+            AppLanguage.English -> "Level ${levelProgress.level + 1}. Next level requirements:"
+            AppLanguage.Bulgarian -> "Ниво ${levelProgress.level + 1}. Изисквания за следващо ниво:"
+            AppLanguage.German -> "Level ${levelProgress.level + 1}. Anforderungen für das nächste Level:"
+          },
+          style = MaterialTheme.typography.titleSmall,
+          fontWeight = FontWeight.Bold,
+        )
+        Text(
+          "💡 ${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
+            if (levelProgress.hintsTowardNextLevelDisplay >= levelProgress.hintsNeeded) " ✔" else "",
+        )
+        Text(
+          "🎯 ${levelProgress.correctAnswersTowardNextLevelDisplay}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}" +
+            if (levelProgress.correctAnswersTowardNextLevelDisplay >= levelProgress.correctAnswersNeeded) " ✔" else "",
+        )
+        Text(
+          "📝 ${levelProgress.eligibleQuizzesTowardNextLevelDisplay}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}" +
+            if (levelProgress.eligibleQuizzesTowardNextLevelDisplay >= levelProgress.eligibleQuizzesNeeded) " ✔" else "",
+        )
+      }
     }
   }
 }
@@ -229,11 +303,11 @@ private fun ActivityCalendarCard(
         ) {
           Text("<-")
         }
-        Text(
-          text = visibleMonth.labelForCalendar(language),
-          style = MaterialTheme.typography.bodyMedium,
-          fontWeight = FontWeight.Normal,
-        )
+      Text(
+        text = visibleMonth.labelForCalendar(language),
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.Normal,
+      )
         TextButton(
           onClick = { if (canGoForward) visibleMonthOffset -= 1 },
           enabled = canGoForward,
@@ -259,39 +333,48 @@ private fun ActivityCalendarCard(
             )
           }
         }
-        monthGrid.forEach { week ->
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-          ) {
-            week.forEach { day ->
-              Surface(
-                color =
-                  when (day.state) {
-                    MonthActivityDayState.Completed -> Color(0xFF2F9E68)
-                    MonthActivityDayState.Missed -> Color(0xFFB84A4A)
-                    MonthActivityDayState.Pending -> MaterialTheme.colorScheme.surfaceVariant
-                    MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
-                  },
-                shape = RoundedCornerShape(999.dp),
-                modifier = Modifier.weight(1f),
+        Box(
+          modifier =
+            Modifier
+              .fillMaxWidth()
+              .height(160.dp),
+        ) {
+          Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            monthGrid.forEach { week ->
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
               ) {
-                Box(
-                  modifier = Modifier.height(18.dp).fillMaxWidth(),
-                  contentAlignment = Alignment.Center,
-                ) {
-                  Text(
-                    text = day.day?.toString().orEmpty(),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
+                week.forEach { day ->
+                  Surface(
                     color =
                       when (day.state) {
-                        MonthActivityDayState.Completed -> Color.White
-                        MonthActivityDayState.Missed -> Color.White
-                        MonthActivityDayState.Pending -> MaterialTheme.colorScheme.onSurface
-                        MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                        MonthActivityDayState.Completed -> Color(0xFF2F9E68)
+                        MonthActivityDayState.Missed -> Color(0xFFB84A4A)
+                        MonthActivityDayState.Pending -> MaterialTheme.colorScheme.surfaceVariant
+                        MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
                       },
-                  )
+                    shape = RoundedCornerShape(999.dp),
+                    modifier = Modifier.weight(1f),
+                  ) {
+                    Box(
+                      modifier = Modifier.height(18.dp).fillMaxWidth(),
+                      contentAlignment = Alignment.Center,
+                    ) {
+                      Text(
+                        text = day.day?.toString().orEmpty(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color =
+                          when (day.state) {
+                            MonthActivityDayState.Completed -> Color.White
+                            MonthActivityDayState.Missed -> Color.White
+                            MonthActivityDayState.Pending -> MaterialTheme.colorScheme.onSurface
+                            MonthActivityDayState.Disabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                          },
+                      )
+                    }
+                  }
                 }
               }
             }
@@ -668,7 +751,8 @@ private fun PreviewProfileEditorDialog() {
         activityCalendar = emptyMap(),
         language = AppLanguage.English,
         onDismiss = {},
-        onSave = { _, _ -> },
+        onAccountNameChanged = {},
+        onAvatarSelected = {},
       )
     }
   }

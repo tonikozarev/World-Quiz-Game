@@ -1,5 +1,7 @@
 package com.example.flaggameandroid.core.model
 
+import com.example.flaggameandroid.core.data.QuizQuestionSpec
+
 data class QuizConfig(
   val mode: GameMode,
   val variants: Set<QuizVariant>,
@@ -15,11 +17,6 @@ data class QuizConfig(
   val players: List<String> = listOf("Solo"),
   val poolSource: QuizPoolSource = QuizPoolSource.Standard,
   val dailyChallengeTheme: DailyChallengeTheme? = null,
-)
-
-data class QuizQuestionSpec(
-  val countryCode: String,
-  val topic: QuizTopic,
 )
 
 data class PlayerProgress(
@@ -98,7 +95,7 @@ enum class HintDifficulty(
   ),
   Impossible(
     title = "The impossible one",
-    correctStreakRequired = 50,
+    correctStreakRequired = 25,
     variantWeights =
       mapOf(
         QuizVariant.FlagToText to 20,

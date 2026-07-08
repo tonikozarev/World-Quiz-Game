@@ -2,6 +2,9 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.AchievementsProgress
+import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
+import com.example.flaggameandroid.core.model.CreateQuizSource
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.RatingsProgress
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -82,6 +85,33 @@ class FlagGameProgressStateReducersTest {
     assertEquals(0.34f, correctOnly.progressFraction, 0.01f)
     assertEquals(0.33f, quizzesOnly.progressFraction, 0.01f)
     assertEquals(1f, full.progressFraction, 0.0001f)
+  }
+
+  @Test
+  fun withCreateQuizManualHardcoreToggled_setsFixedQuestionCountAndResetsToZero() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val baseState =
+      FlagGameUiState(
+        setup =
+          buildSetupForMode(
+            mode = com.example.flaggameandroid.core.model.GameMode.CreateQuiz,
+            topic = QuizTopic.Mixed,
+            selectableContinents = listOf("Europe"),
+            countries = countries,
+            displayName = "Tony",
+          ).copy(
+            createQuizSource = CreateQuizSource.ManualCountriesCapitals,
+            questionCountInput = "7",
+          ),
+      )
+
+    val enabled = baseState.withCreateQuizManualHardcoreToggled(countries)
+    val disabled = enabled.withCreateQuizManualHardcoreToggled(countries)
+
+    assertTrue(enabled.setup.createQuizManualHardcoreEnabled)
+    assertEquals("390", enabled.setup.questionCountInput)
+    assertTrue(!disabled.setup.createQuizManualHardcoreEnabled)
+    assertEquals("0", disabled.setup.questionCountInput)
   }
 
   @Test

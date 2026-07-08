@@ -64,7 +64,11 @@ internal fun ScreenShell(
 ) {
   val backgroundGradient =
     Brush.verticalGradient(
-      colors = listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface),
+      colors =
+        listOf(
+          MaterialTheme.colorScheme.background,
+          MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f),
+        ),
     )
 
   Box(

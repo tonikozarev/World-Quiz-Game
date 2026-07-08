@@ -781,20 +781,24 @@ class FlagGameViewModel(
     fun factory(context: Context): ViewModelProvider.Factory =
       viewModelFactory {
         initializer {
-          val container = AppGraph.from(context.applicationContext)
-          val initialPersistedState =
-            runBlocking {
-              val hintDifficulty = container.settingsStore.loadHintDifficulty()
-              val reminderEnabled = container.settingsStore.loadReminderEnabled()
-              val progress = container.progressStore.loadProgress()
-              progress.copy(hintDifficulty = hintDifficulty, reminderEnabled = reminderEnabled)
-            }
-          FlagGameViewModel(
-            settingsStore = container.settingsStore,
-            progressStore = container.progressStore,
-            engagementCoordinator = container.engagementCoordinator,
-            initialPersistedState = initialPersistedState,
-          )
+          runCatching {
+            val container = AppGraph.from(context.applicationContext)
+            val initialPersistedState =
+              runBlocking {
+                val hintDifficulty = container.settingsStore.loadHintDifficulty()
+                val reminderEnabled = container.settingsStore.loadReminderEnabled()
+                val progress = container.progressStore.loadProgress()
+                progress.copy(hintDifficulty = hintDifficulty, reminderEnabled = reminderEnabled)
+              }
+            FlagGameViewModel(
+              settingsStore = container.settingsStore,
+              progressStore = container.progressStore,
+              engagementCoordinator = container.engagementCoordinator,
+              initialPersistedState = initialPersistedState,
+            )
+          }.getOrElse {
+            FlagGameViewModel(initialPersistedState = PersistedAppState())
+          }
         }
       }
   }

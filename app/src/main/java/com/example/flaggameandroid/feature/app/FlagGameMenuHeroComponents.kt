@@ -20,19 +20,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.flaggameandroid.theme.AccentGold
+import com.example.flaggameandroid.theme.Ink900
 
 @Composable
 internal fun HeroPanel(
@@ -46,8 +44,7 @@ internal fun HeroPanel(
   onSettingsClick: () -> Unit,
   onQuitClick: () -> Unit,
 ) {
-  var showInfo by remember { mutableStateOf(false) }
-
+  val darkTheme = isSystemInDarkTheme()
   ElevatedCard(
     colors = androidx.compose.material3.CardDefaults.elevatedCardColors(containerColor = Color.Transparent),
     modifier = Modifier.fillMaxWidth(),
@@ -76,21 +73,17 @@ internal fun HeroPanel(
           HeroGoldPill(cleanHeroPill(1, language), modifier = Modifier.weight(1f))
           HeroGoldPill(cleanHeroPill(2, language), modifier = Modifier.weight(1f))
         }
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(10.dp),
-          verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
           Text(
             text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 25.sp),
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = if (darkTheme) Color.White else Ink900,
             fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
           )
-          HeroInfoButton(onClick = { showInfo = !showInfo })
         }
-        if (showInfo) {
+        if (subtitle.isNotBlank()) {
           Surface(
             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
             contentColor = MaterialTheme.colorScheme.onPrimary,
