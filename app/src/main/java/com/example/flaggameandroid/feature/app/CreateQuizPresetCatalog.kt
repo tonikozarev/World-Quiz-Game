@@ -16,10 +16,10 @@ internal fun createQuizDefaultPresetsForTopic(topic: QuizTopic): Set<CreateQuizP
   when (topic) {
     QuizTopic.Capitals ->
       setOf(
-        CreateQuizPreset.CapitalPopulationUnderOneMillion,
-        CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
-        CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
-        CreateQuizPreset.CapitalPopulationOverThirtyMillion,
+        CreateQuizPreset.CapitalPopulationUnderQuarterMillion,
+        CreateQuizPreset.CapitalPopulationQuarterToOneMillion,
+        CreateQuizPreset.CapitalPopulationOneToTwoPointFiveMillion,
+        CreateQuizPreset.CapitalPopulationOverTwoPointFiveMillion,
       )
     QuizTopic.Countries,
     QuizTopic.Mixed ->
@@ -77,10 +77,10 @@ private val countryCreateQuizPresetOrder =
 
 private val capitalCreateQuizPresetOrder =
   listOf(
-    CreateQuizPreset.CapitalPopulationUnderOneMillion,
-    CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
-    CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
-    CreateQuizPreset.CapitalPopulationOverThirtyMillion,
+    CreateQuizPreset.CapitalPopulationUnderQuarterMillion,
+    CreateQuizPreset.CapitalPopulationQuarterToOneMillion,
+    CreateQuizPreset.CapitalPopulationOneToTwoPointFiveMillion,
+    CreateQuizPreset.CapitalPopulationOverTwoPointFiveMillion,
     CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
     CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm,
     CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm,
@@ -139,7 +139,7 @@ private fun localizedCountryCreateQuizPresetTitle(
       AppLanguage.German -> "NATO-Flaggen"
     }
     CreateQuizPreset.EuUnion -> when (language) {
-      AppLanguage.English -> "EU union flags"
+      AppLanguage.English -> "EU Union flags"
       AppLanguage.Bulgarian -> "Флагове на ЕС"
       AppLanguage.German -> "EU-Flaggen"
     }
@@ -163,25 +163,25 @@ private fun localizedCountryCreateQuizPresetTitle(
       AppLanguage.Bulgarian -> "Флагове на ОИС"
       AppLanguage.German -> "OIC-Flaggen"
     }
-    CreateQuizPreset.CapitalPopulationUnderOneMillion -> when (language) {
-      AppLanguage.English -> "Population < 1M"
-      AppLanguage.Bulgarian -> "Население < 1M"
-      AppLanguage.German -> "Bevölkerung < 1 Mio."
+    CreateQuizPreset.CapitalPopulationUnderQuarterMillion -> when (language) {
+      AppLanguage.English -> "Population < 250k"
+      AppLanguage.Bulgarian -> "Население < 250k"
+      AppLanguage.German -> "Bevölkerung < 250k"
     }
-    CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion -> when (language) {
-      AppLanguage.English -> "Population 1M-6.5M"
-      AppLanguage.Bulgarian -> "Население 1M-6.5M"
-      AppLanguage.German -> "Bevölkerung 1-6,5 Mio."
+    CreateQuizPreset.CapitalPopulationQuarterToOneMillion -> when (language) {
+      AppLanguage.English -> "Population 250k-1M"
+      AppLanguage.Bulgarian -> "Население 250k-1M"
+      AppLanguage.German -> "Bevölkerung 250k-1 Mio."
     }
-    CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion -> when (language) {
-      AppLanguage.English -> "Population 6.5M-30M"
-      AppLanguage.Bulgarian -> "Население 6.5M-30M"
-      AppLanguage.German -> "Bevölkerung 6,5-30 Mio."
+    CreateQuizPreset.CapitalPopulationOneToTwoPointFiveMillion -> when (language) {
+      AppLanguage.English -> "Population 1M-2.5M"
+      AppLanguage.Bulgarian -> "Население 1M-2.5M"
+      AppLanguage.German -> "Bevölkerung 1-2,5 Mio."
     }
-    CreateQuizPreset.CapitalPopulationOverThirtyMillion -> when (language) {
-      AppLanguage.English -> "Population > 30M"
-      AppLanguage.Bulgarian -> "Население > 30M"
-      AppLanguage.German -> "Bevölkerung > 30 Mio."
+    CreateQuizPreset.CapitalPopulationOverTwoPointFiveMillion -> when (language) {
+      AppLanguage.English -> "Population > 2.5M"
+      AppLanguage.Bulgarian -> "Население > 2.5M"
+      AppLanguage.German -> "Bevölkerung > 2,5 Mio."
     }
     CreateQuizPreset.CapitalAreaUnderFiftySquareKm -> when (language) {
       AppLanguage.English -> "Area < 50 km²"
@@ -230,10 +230,10 @@ private fun matchesCountryCreateQuizPreset(
     CreateQuizPreset.CommonwealthOfNations -> code in createQuizCommonwealthOfNationsCountryCodes
     CreateQuizPreset.AfricanUnion -> code in createQuizAfricanUnionCountryCodes
     CreateQuizPreset.OrganisationOfIslamicCooperation -> code in createQuizOrganisationOfIslamicCooperationCountryCodes
-    CreateQuizPreset.CapitalPopulationUnderOneMillion,
-    CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
-    CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
-    CreateQuizPreset.CapitalPopulationOverThirtyMillion,
+    CreateQuizPreset.CapitalPopulationUnderQuarterMillion,
+    CreateQuizPreset.CapitalPopulationQuarterToOneMillion,
+    CreateQuizPreset.CapitalPopulationOneToTwoPointFiveMillion,
+    CreateQuizPreset.CapitalPopulationOverTwoPointFiveMillion,
     CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
     CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm,
     CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm,
@@ -249,10 +249,10 @@ private fun matchesCapitalCreateQuizPreset(
   val code = country.code
   val metadata = capitalQuizMetadata(country.code) ?: return false
   return when (preset) {
-    CreateQuizPreset.CapitalPopulationUnderOneMillion -> metadata.population < 1_000_000L
-    CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion -> metadata.population in 1_000_000L until 6_500_000L
-    CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion -> metadata.population in 6_500_000L..30_000_000L
-    CreateQuizPreset.CapitalPopulationOverThirtyMillion -> metadata.population > 30_000_000L
+    CreateQuizPreset.CapitalPopulationUnderQuarterMillion -> metadata.population < 250_000L
+    CreateQuizPreset.CapitalPopulationQuarterToOneMillion -> metadata.population in 250_000L until 1_000_000L
+    CreateQuizPreset.CapitalPopulationOneToTwoPointFiveMillion -> metadata.population in 1_000_000L until 2_500_000L
+    CreateQuizPreset.CapitalPopulationOverTwoPointFiveMillion -> metadata.population > 2_500_000L
     CreateQuizPreset.CapitalAreaUnderFiftySquareKm -> metadata.areaKm2 < 50.0
     CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm -> metadata.areaKm2 in 50.0..300.0
     CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm -> metadata.areaKm2 in 300.0..800.0

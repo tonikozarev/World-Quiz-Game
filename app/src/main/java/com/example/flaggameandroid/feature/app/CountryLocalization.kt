@@ -22,7 +22,7 @@ internal fun FlagCountry.acceptedTypedAnswers(
   topic: QuizTopic = QuizTopic.Countries,
 ): List<String> {
   if (topic == QuizTopic.Capitals) {
-    return listOfNotNull(capital?.trim(), localizedCapital(language)).distinct()
+    return acceptedCapitalAnswers(language)
   }
   val localizedAliases = localizedCountryAliases[language].orEmpty()[code].orEmpty()
   return when (language) {
@@ -30,6 +30,21 @@ internal fun FlagCountry.acceptedTypedAnswers(
     AppLanguage.Bulgarian,
     AppLanguage.German -> listOf(localizedName(language)) + localizedAliases
   }.distinct()
+}
+
+internal fun FlagCountry.acceptedCapitalAnswers(language: AppLanguage): List<String> {
+  val mainCapital = capital?.trim().orEmpty()
+  if (mainCapital.isBlank()) return listOf(localizedName(language))
+
+  val secondaryAnswers = secondaryCapitalAnswersByCountryCode[code].orEmpty()
+  return buildList {
+    add(mainCapital)
+    add(localizedCapital(language))
+    secondaryAnswers.forEach { answer ->
+      add(answer)
+      add(answer.localizedCapitalAnswer(language))
+    }
+  }.map { it.trim() }.filter { it.isNotBlank() }.distinct()
 }
 
 internal fun FlagCountry.localizedQuizText(
@@ -59,6 +74,14 @@ internal fun FlagCountry.localizedCapital(language: AppLanguage): String {
     AppLanguage.German -> rawCapital
   }
 }
+
+private fun String.localizedCapitalAnswer(language: AppLanguage): String =
+  localizedCapitalAliases[language].orEmpty()[this]
+    ?: when (language) {
+      AppLanguage.English -> this
+      AppLanguage.Bulgarian -> toBulgarianDisplayName()
+      AppLanguage.German -> this
+    }
 
 private fun String.toBulgarianDisplayName(): String {
   val normalized = Normalizer.normalize(this, Normalizer.Form.NFD).replace("\\p{Mn}+".toRegex(), "")

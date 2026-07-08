@@ -10,7 +10,6 @@ import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.QuizTopic
-import com.example.flaggameandroid.core.model.SavedQuizDifficulty
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.RatingsProgress
 import com.example.flaggameandroid.feature.app.AppLanguage
@@ -206,7 +205,6 @@ private fun List<SavedQuizTemplate>.serializeSavedQuizTemplates(): String =
       if (template.createQuizLocalMultiplayerEnabled) "1" else "0",
       template.playerNames.joinToString(separator = "."),
       template.completionCount.toString(),
-      template.difficulty.name,
     ).joinToString(separator = ",")
   }
 
@@ -219,19 +217,23 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
         val parts = row.split(",")
         if (parts.size < 11) return@mapNotNull null
         val hasTopic = parts.size >= 15
-        val topic = if (hasTopic) QuizTopic.entries.firstOrNull { it.name == parts[3] } ?: QuizTopic.Countries else QuizTopic.Countries
+        val topic =
+          if (hasTopic) {
+            QuizTopic.entries.firstOrNull { it.name == parts[3] } ?: QuizTopic.Countries
+          } else {
+            QuizTopic.Countries
+          }
         val sourceIndex = if (hasTopic) 4 else 3
         val presetIndex = if (hasTopic) 5 else 4
         val selectedCodesIndex = if (hasTopic) 6 else 5
-        val selectedCapitalCodesIndex = if (hasTopic && parts.size >= 16) 7 else -1
-        val questionCodesIndex = if (hasTopic) if (parts.size >= 16) 8 else 7 else 6
-        val variantsIndex = if (hasTopic) if (parts.size >= 16) 9 else 8 else 7
-        val questionCountIndex = if (hasTopic) if (parts.size >= 16) 10 else 9 else 8
-        val seedIndex = if (hasTopic) if (parts.size >= 16) 11 else 10 else 9
-        val multiplayerIndex = if (hasTopic) if (parts.size >= 16) 12 else 11 else 10
-        val playersIndex = if (hasTopic) if (parts.size >= 16) 13 else 12 else 11
-        val completionIndex = if (hasTopic) if (parts.size >= 16) 14 else 13 else 12
-        val difficultyIndex = if (hasTopic) if (parts.size >= 16) 15 else 14 else 13
+        val selectedCapitalCodesIndex = if (hasTopic) 7 else -1
+        val questionCodesIndex = if (hasTopic) 8 else 6
+        val variantsIndex = if (hasTopic) 9 else 7
+        val questionCountIndex = if (hasTopic) 10 else 8
+        val seedIndex = if (hasTopic) 11 else 9
+        val multiplayerIndex = if (hasTopic) 12 else 10
+        val playersIndex = if (hasTopic) 13 else 11
+        val completionIndex = if (hasTopic) 14 else 12
         val source = CreateQuizSource.entries.firstOrNull { it.name == parts[sourceIndex] } ?: CreateQuizSource.PresetFilter
         val preset = parts[presetIndex].takeIf { it.isNotBlank() }?.let { name -> CreateQuizPreset.entries.firstOrNull { it.name == name } }
         val selectedCountryCodes = parts[selectedCodesIndex].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
@@ -283,7 +285,6 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           createQuizLocalMultiplayerEnabled = createQuizLocalMultiplayerEnabled,
           playerNames = playerNames,
           completionCount = parts[if (modernFormat) completionIndex else if (parts.size >= (if (hasTopic) 13 else 12)) seedIndex + 1 else seedIndex].toIntOrNull() ?: 0,
-          difficulty = SavedQuizDifficulty.entries.firstOrNull { it.name == parts[if (modernFormat) difficultyIndex else if (parts.size >= (if (hasTopic) 13 else 12)) seedIndex + 2 else seedIndex + 1] } ?: SavedQuizDifficulty.ItIsOk,
         )
       }
       .toList()

@@ -733,9 +733,9 @@ fun SetupScreen(
           !setup.surpriseMe && !isCreateQuizManual,
           !setup.usesCreateQuizTraining && activeCreateQuizSource == CreateQuizSource.PresetFilter,
           when (language) {
-            AppLanguage.English -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-            AppLanguage.Bulgarian -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-            AppLanguage.German -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+            AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+            AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+            AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
           },
           onSurpriseMe,
           questionCountChangeHandler,
@@ -897,9 +897,9 @@ fun SetupScreen(
             !setup.surpriseMe && !isMistakeReview,
             !isMistakeReview,
             when (language) {
-              AppLanguage.English -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-              AppLanguage.Bulgarian -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-              AppLanguage.German -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+              AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+              AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+              AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
             },
             onSurpriseMe,
             questionCountChangeHandler,
@@ -1578,9 +1578,9 @@ private fun QuestionCountStickyOverlay(
     showRandomButton = setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.PresetFilter,
     randomButtonText =
       when (language) {
-        AppLanguage.English -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-        AppLanguage.Bulgarian -> if (setup.surpriseMe) "Custom count" else "Randomizer"
-        AppLanguage.German -> if (setup.surpriseMe) "Custom count" else "Randomizer"
+        AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+        AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+        AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
       },
     onRandomButtonClick = onSurpriseMe,
     onValueChange =

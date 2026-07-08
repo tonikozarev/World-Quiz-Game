@@ -101,7 +101,7 @@ class GameModeRegressionTest {
         baseSetup.copy(
           createQuizPresets =
             setOf(
-              CreateQuizPreset.CapitalPopulationUnderOneMillion,
+              CreateQuizPreset.CapitalPopulationUnderQuarterMillion,
               CreateQuizPreset.CapitalNotCoastal,
             ),
         ),
@@ -122,10 +122,10 @@ class GameModeRegressionTest {
   fun capitalPresetOrder_andDefaults_areStable() {
     assertEquals(
       listOf(
-        CreateQuizPreset.CapitalPopulationUnderOneMillion,
-        CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
-        CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
-        CreateQuizPreset.CapitalPopulationOverThirtyMillion,
+        CreateQuizPreset.CapitalPopulationUnderQuarterMillion,
+        CreateQuizPreset.CapitalPopulationQuarterToOneMillion,
+        CreateQuizPreset.CapitalPopulationOneToTwoPointFiveMillion,
+        CreateQuizPreset.CapitalPopulationOverTwoPointFiveMillion,
         CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
         CreateQuizPreset.CapitalAreaFiftyToThreeHundredSquareKm,
         CreateQuizPreset.CapitalAreaThreeHundredToEightHundredSquareKm,
@@ -136,10 +136,10 @@ class GameModeRegressionTest {
     )
     assertEquals(
       setOf(
-        CreateQuizPreset.CapitalPopulationUnderOneMillion,
-        CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
-        CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
-        CreateQuizPreset.CapitalPopulationOverThirtyMillion,
+        CreateQuizPreset.CapitalPopulationUnderQuarterMillion,
+        CreateQuizPreset.CapitalPopulationQuarterToOneMillion,
+        CreateQuizPreset.CapitalPopulationOneToTwoPointFiveMillion,
+        CreateQuizPreset.CapitalPopulationOverTwoPointFiveMillion,
       ),
       createQuizDefaultPresetsForTopic(QuizTopic.Capitals),
     )

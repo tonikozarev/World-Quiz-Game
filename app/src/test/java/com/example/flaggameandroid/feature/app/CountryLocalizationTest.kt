@@ -1,4 +1,4 @@
-package com.example.flaggameandroid.feature.app
+﻿package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizAnswerChecker
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
@@ -76,6 +76,19 @@ class CountryLocalizationTest {
       QuizAnswerChecker.isTypedAnswerCorrect(
         "Wien",
         austria.acceptedTypedAnswers(AppLanguage.German, QuizTopic.Capitals),
+      ),
+    )
+  }
+
+  @Test
+  fun capitalTypedAnswers_acceptSecondaryCapitalAnswersWithoutChangingTheDisplayedMainCapital() {
+    val benin = catalog.first { it.code == "BJ" }
+
+    assertEquals("Porto-Novo", benin.localizedCapital(AppLanguage.English))
+    assertTrue(
+      QuizAnswerChecker.isTypedAnswerCorrect(
+        "Cotonou",
+        benin.acceptedTypedAnswers(AppLanguage.English, QuizTopic.Capitals),
       ),
     )
   }
