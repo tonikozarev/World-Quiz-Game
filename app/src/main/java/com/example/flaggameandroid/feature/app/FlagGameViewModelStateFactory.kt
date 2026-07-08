@@ -149,7 +149,7 @@ internal fun buildSetupForMode(
     worldFlagsTimerEnabled = false,
     createQuizPreset =
       when (topic) {
-        QuizTopic.Capitals -> CreateQuizPreset.CapitalPopulationUnderOneMillion
+        QuizTopic.Capitals -> CreateQuizPreset.CapitalPopulationUnderQuarterMillion
         QuizTopic.Countries,
         QuizTopic.Mixed -> CreateQuizPreset.TwoColors
       },

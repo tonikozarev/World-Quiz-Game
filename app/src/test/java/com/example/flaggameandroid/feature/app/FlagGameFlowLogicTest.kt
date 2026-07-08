@@ -440,7 +440,7 @@ class FlagGameFlowLogicTest {
         baseSetup.copy(
           createQuizPresets =
             setOf(
-              CreateQuizPreset.CapitalPopulationUnderOneMillion,
+              CreateQuizPreset.CapitalPopulationUnderQuarterMillion,
               CreateQuizPreset.CapitalAreaUnderFiftySquareKm,
               CreateQuizPreset.CapitalNotCoastal,
             ),
