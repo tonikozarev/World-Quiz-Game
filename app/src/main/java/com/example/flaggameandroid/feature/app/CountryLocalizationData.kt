@@ -180,3 +180,20 @@ internal val localizedCapitalAliases: Map<AppLanguage, Map<String, String>> =
       ),
     AppLanguage.English to emptyMap(),
   )
+
+internal val secondaryCapitalAnswersByCountryCode: Map<String, List<String>> =
+  mapOf(
+    "BJ" to listOf("Cotonou"),
+    "BO" to listOf("La Paz"),
+    "BI" to listOf("Bujumbura"),
+    "CI" to listOf("Abidjan"),
+    "SZ" to listOf("Lobamba"),
+    "MY" to listOf("Putrajaya"),
+    "NL" to listOf("The Hague", "Den Haag"),
+    "ZA" to listOf("Cape Town", "Bloemfontein"),
+    "LK" to listOf("Sri Jayawardenepura Kotte", "Kotte"),
+    "TZ" to listOf("Dar es Salaam"),
+    "YE" to listOf("Aden"),
+    "PS" to listOf("East Jerusalem", "Jerusalem"),
+    "GQ" to listOf("Malabo"),
+  )

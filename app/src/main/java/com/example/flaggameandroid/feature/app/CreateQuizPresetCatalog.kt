@@ -139,7 +139,7 @@ private fun localizedCountryCreateQuizPresetTitle(
       AppLanguage.German -> "NATO-Flaggen"
     }
     CreateQuizPreset.EuUnion -> when (language) {
-      AppLanguage.English -> "EU union flags"
+      AppLanguage.English -> "EU Union flags"
       AppLanguage.Bulgarian -> "Флагове на ЕС"
       AppLanguage.German -> "EU-Flaggen"
     }

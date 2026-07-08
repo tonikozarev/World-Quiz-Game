@@ -28,7 +28,7 @@ enum class CreateQuizPreset(
   CapitalAreaOverEightHundredSquareKm("Area > 800 km²"),
   CapitalNotCoastal("Not coastal"),
   Nato("NATO flags"),
-  EuUnion("EU union flags"),
+  EuUnion("EU Union flags"),
   WorldTradeOrganization("WTO flags"),
   CommonwealthOfNations("Commonwealth flags"),
   AfricanUnion("African Union flags"),
