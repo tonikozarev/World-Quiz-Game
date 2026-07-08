@@ -64,15 +64,15 @@ internal fun localizedVariantTitle(
   when (variant) {
     QuizVariant.FlagToText ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "Flag -> country", "Флаг -> държава", "Flagge -> Land")
-        QuizTopic.Capitals -> tr(language, "Flag -> capital", "Флаг -> столица", "Flagge -> Hauptstadt")
-        QuizTopic.Mixed -> tr(language, "Flag -> text", "Флаг -> текст", "Flagge -> Text")
+        QuizTopic.Countries -> tr(language, "Flag -> Country", "Флаг -> Държава", "Flagge -> Land")
+        QuizTopic.Capitals -> tr(language, "Flag -> Capital", "Флаг -> Столица", "Flagge -> Hauptstadt")
+        QuizTopic.Mixed -> tr(language, "Flag -> Text", "Флаг -> Текст", "Flagge -> Text")
       }
     QuizVariant.TextToFlag ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "Country -> flag", "Държава -> флаг", "Land -> Flagge")
-        QuizTopic.Capitals -> tr(language, "Capital -> flag", "Столица -> флаг", "Hauptstadt -> Flagge")
-        QuizTopic.Mixed -> tr(language, "Text -> flag", "Текст -> флаг", "Text -> Flagge")
+        QuizTopic.Countries -> tr(language, "Country -> Flag", "Държава -> Флаг", "Land -> Flagge")
+        QuizTopic.Capitals -> tr(language, "Capital -> Flag", "Столица -> Флаг", "Hauptstadt -> Flagge")
+        QuizTopic.Mixed -> tr(language, "Text -> Flag", "Текст -> Флаг", "Text -> Flagge")
       }
     QuizVariant.TypeText ->
       when (topic) {

@@ -67,7 +67,6 @@ private val countryCreateQuizPresetOrder =
     CreateQuizPreset.Stars,
     CreateQuizPreset.Crosses,
     CreateQuizPreset.Animals,
-    CreateQuizPreset.NoSymbols,
     CreateQuizPreset.Nato,
     CreateQuizPreset.EuUnion,
     CreateQuizPreset.WorldTradeOrganization,
@@ -133,11 +132,6 @@ private fun localizedCountryCreateQuizPresetTitle(
       AppLanguage.English -> "Animals"
       AppLanguage.Bulgarian -> "Животни"
       AppLanguage.German -> "Tiere"
-    }
-    CreateQuizPreset.NoSymbols -> when (language) {
-      AppLanguage.English -> "No symbols"
-      AppLanguage.Bulgarian -> "Без символи"
-      AppLanguage.German -> "Ohne Symbole"
     }
     CreateQuizPreset.Nato -> when (language) {
       AppLanguage.English -> "NATO flags"
@@ -236,7 +230,6 @@ private fun matchesCountryCreateQuizPreset(
     CreateQuizPreset.CommonwealthOfNations -> code in createQuizCommonwealthOfNationsCountryCodes
     CreateQuizPreset.AfricanUnion -> code in createQuizAfricanUnionCountryCodes
     CreateQuizPreset.OrganisationOfIslamicCooperation -> code in createQuizOrganisationOfIslamicCooperationCountryCodes
-    CreateQuizPreset.NoSymbols -> false
     CreateQuizPreset.CapitalPopulationUnderOneMillion,
     CreateQuizPreset.CapitalPopulationOneToSixPointFiveMillion,
     CreateQuizPreset.CapitalPopulationSixPointFiveToThirtyMillion,
@@ -273,7 +266,6 @@ private fun matchesCapitalCreateQuizPreset(
     CreateQuizPreset.Stars,
     CreateQuizPreset.Crosses,
     CreateQuizPreset.Animals,
-    CreateQuizPreset.NoSymbols,
     CreateQuizPreset.Nato,
     CreateQuizPreset.EuUnion,
     CreateQuizPreset.WorldTradeOrganization,
@@ -293,17 +285,21 @@ private val createQuizTwoColorCountries =
 private val createQuizThreeColorCountries =
   setOf(
     "AM", "AO", "AR", "AU", "BA", "BB", "BE", "BF", "BI", "BG", "BJ", "BO", "BS", "BW", "BY",
-    "CD", "CG", "CI", "CL", "CM", "CO", "CR", "CU", "CV", "CY", "CZ", "DZ", "EE", "FR", "GA",
-    "GB", "GN", "HU", "IE", "IR", "IS", "JM", "KH", "KP", "LA", "LB", "LI", "LT", "LU", "MH",
-    "MG", "ML", "MN", "MR", "MV", "MW", "NE", "NL", "NO", "NP", "NR", "NZ", "PA", "RO", "RU",
-    "RW", "VC", "WS", "SI", "SK", "SL", "SN", "TH", "TT", "US", "UY", "YE",
+    "CD", "CG", "CI", "CL", "CM", "CO", "CR", "CU", "CV", "CY", "CZ", "DE", "DZ", "EE", "FR",
+    "GA", "GB", "GN", "HU", "IE", "IR", "IS", "JM", "KH", "KP", "LA", "LB", "LI", "LR", "LT",
+    "LU", "MH", "MG", "ML", "MN", "MR", "MT", "MV", "MW", "NE", "NL", "NO", "NP", "NR", "NZ",
+    "PA", "RO", "RU", "RW", "VC", "WS", "SI", "SK", "SL", "SN", "TD", "TH", "TT", "US", "UY",
+    "YE",
   )
 
 private val createQuizFourPlusColorCountries =
   setOf(
-    "AD", "AE", "AG", "AZ", "BT", "BZ", "DM", "DO", "EC", "ES", "ET", "FJ", "GD", "GT", "GY",
-    "HN", "IQ", "IT", "JO", "KN", "KR", "LC", "MD", "ME", "MM", "MU", "MX", "MY", "NA", "NI",
-    "OM", "PA", "PG", "PH", "PR", "SV", "SY", "TL", "TM", "TW", "TZ", "VA", "VE", "ZA", "ZW",
+    "AD", "AE", "AF", "AG", "AZ", "BN", "BR", "BT", "BZ", "CF", "DJ", "DM", "DO", "EC", "EG",
+    "ER", "ES", "ET", "FJ", "GD", "GH", "GM", "GQ", "GT", "GW", "GY", "HR", "HT", "IN", "IQ",
+    "IT", "JO", "KE", "KI", "KM", "KN", "KR", "KW", "LC", "LK", "LS", "LY", "MD", "ME", "MM",
+    "MU", "MX", "MY", "MZ", "NA", "NI", "OM", "PG", "PH", "PS", "PT", "PY", "RS", "SB", "SD",
+    "SM", "SR", "SS", "ST", "SV", "SY", "SZ", "TG", "TJ", "TL", "TM", "TV", "TZ", "UG", "UZ",
+    "VA", "VE", "VU", "ZA", "ZM", "ZW",
   )
 
 private val createQuizCrossCountries =

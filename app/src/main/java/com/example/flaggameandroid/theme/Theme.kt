@@ -30,11 +30,11 @@ private val LightColorScheme =
     primary = Ink800,
     secondary = AccentGold,
     tertiary = AccentGreen,
-    background = Color(0xFFF4EEDD),
-    surface = Color(0xFFF8F1E4),
-    surfaceVariant = Color(0xFFE9DCC6),
-    primaryContainer = Color(0xFFE3D3B7),
-    secondaryContainer = Color(0xFFF0DEB6),
+    background = Color(0xFFA9B4C5),
+    surface = Color(0xFFD9E1EC),
+    surfaceVariant = Color(0xFFC8D3E1),
+    primaryContainer = Color(0xFFCBD7E6),
+    secondaryContainer = Color(0xFFE8D8B8),
     tertiaryContainer = Color(0xFFDCE9D8),
     onPrimary = Color.White,
     onSecondary = Ink900,
@@ -42,7 +42,7 @@ private val LightColorScheme =
     onBackground = Ink900,
     onSurface = Ink900,
     onSurfaceVariant = Ink900,
-    outline = Color(0xFFB8A98B),
+    outline = Color(0xFF78889E),
   )
 
 @Composable

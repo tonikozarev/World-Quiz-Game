@@ -238,15 +238,15 @@ private fun NextLevelRequirementsCard(
           fontWeight = FontWeight.Bold,
         )
         Text(
-          "${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
+          "💡 ${levelProgress.hintsTowardNextLevelDisplay}/${levelProgress.hintsNeeded} ${cleanText(language, UiText.Hints)}" +
             if (levelProgress.hintsTowardNextLevelDisplay >= levelProgress.hintsNeeded) " ✔" else "",
         )
         Text(
-          "${levelProgress.correctAnswersTowardNextLevelDisplay}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}" +
+          "🎯 ${levelProgress.correctAnswersTowardNextLevelDisplay}/${levelProgress.correctAnswersNeeded} ${cleanText(language, UiText.CorrectAnswers)}" +
             if (levelProgress.correctAnswersTowardNextLevelDisplay >= levelProgress.correctAnswersNeeded) " ✔" else "",
         )
         Text(
-          "${levelProgress.eligibleQuizzesTowardNextLevelDisplay}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}" +
+          "📝 ${levelProgress.eligibleQuizzesTowardNextLevelDisplay}/${levelProgress.eligibleQuizzesNeeded} ${cleanText(language, UiText.CompletedTests)}" +
             if (levelProgress.eligibleQuizzesTowardNextLevelDisplay >= levelProgress.eligibleQuizzesNeeded) " ✔" else "",
         )
       }
