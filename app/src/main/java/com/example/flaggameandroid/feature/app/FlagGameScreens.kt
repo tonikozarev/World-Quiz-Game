@@ -92,7 +92,6 @@ fun FlagGameRoute(
     onQuestionCountChanged = resolvedViewModel::onQuestionCountChanged,
     onSpeedRunSecondsChanged = resolvedViewModel::onSpeedRunSecondsChanged,
     onSurpriseMeClicked = resolvedViewModel::onSurpriseMeClicked,
-    onMultiplayerBaseSelected = resolvedViewModel::onMultiplayerBaseSelected,
     onPlayerNameChanged = resolvedViewModel::onPlayerNameChanged,
     onAddPlayer = resolvedViewModel::onAddPlayer,
     onRemovePlayer = resolvedViewModel::onRemovePlayer,

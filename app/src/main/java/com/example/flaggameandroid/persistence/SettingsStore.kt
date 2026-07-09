@@ -20,7 +20,7 @@ class DataStoreSettingsStore(
   override suspend fun loadHintDifficulty(): HintDifficulty {
     return dataStore.data
       .map { preferences ->
-        preferences[HintDifficultyKey]?.let(HintDifficulty::valueOf) ?: HintDifficulty.Medium
+        preferences[HintDifficultyKey]?.let(::parseHintDifficulty) ?: HintDifficulty.Medium
       }
       .first()
   }
@@ -35,6 +35,12 @@ class DataStoreSettingsStore(
     val HintDifficultyKey = stringPreferencesKey("hint_difficulty")
   }
 }
+
+private fun parseHintDifficulty(value: String): HintDifficulty =
+  when (value) {
+    "Easy" -> HintDifficulty.Easy
+    else -> HintDifficulty.valueOf(value)
+  }
 
 class InMemorySettingsStore(
   initialHintDifficulty: HintDifficulty = HintDifficulty.Medium,

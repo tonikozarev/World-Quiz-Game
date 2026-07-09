@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.luminance
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
@@ -306,15 +307,18 @@ internal fun worldFlagsRewardInfo(
 internal fun displayModeTitle(
   mode: GameMode?,
   language: AppLanguage,
+  sessionMode: QuizSessionMode = QuizSessionMode.Standard,
 ): String =
-  when (mode) {
-    GameMode.Training -> cleanModeTitle(GameMode.Training, language)
-    GameMode.CreateQuiz -> cleanModeTitle(GameMode.CreateQuiz, language)
-    GameMode.WorldFlags -> cleanModeTitle(GameMode.WorldFlags, language)
-    GameMode.DailyChallenge -> cleanModeTitle(GameMode.DailyChallenge, language)
-    GameMode.MistakeReview -> cleanModeTitle(GameMode.MistakeReview, language)
-    GameMode.LocalMultiplayer -> cleanModeTitle(GameMode.LocalMultiplayer, language)
-    null -> tr(language, "Quiz", "Тест", "Quiz")
+  when (sessionMode) {
+    QuizSessionMode.Training -> localizedSessionModeTitle(QuizSessionMode.Training, language)
+    QuizSessionMode.LocalMultiplayer -> localizedSessionModeTitle(QuizSessionMode.LocalMultiplayer, language)
+    QuizSessionMode.Standard ->
+      when (mode) {
+        GameMode.CreateQuiz -> cleanModeTitle(GameMode.CreateQuiz, language)
+        GameMode.DailyChallenge -> cleanModeTitle(GameMode.DailyChallenge, language)
+        GameMode.MistakeReview -> cleanModeTitle(GameMode.MistakeReview, language)
+        null -> localizedSessionModeTitle(QuizSessionMode.Standard, language)
+      }
   }
 
 @Composable

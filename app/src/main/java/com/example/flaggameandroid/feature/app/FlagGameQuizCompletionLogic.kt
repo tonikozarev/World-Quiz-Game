@@ -7,6 +7,7 @@ import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.ProgressionRules
 import com.example.flaggameandroid.core.model.QuestionResult
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
@@ -47,15 +48,16 @@ internal fun buildQuizCompletionSummary(
   val completedResults = buildQuizResults(quiz, state.settings.language)
   val correctAnswers = completedResults.count { it.countsAsCorrect }
   val distinctCountries = completedResults.map { it.question.correctCountry.code }.distinct().size
-  val scoredPlayers = scorePlayersFromResults(quiz.players, completedResults, state.settings.hintDifficulty, quiz.mode != GameMode.LocalMultiplayer)
+  val scoredPlayers = scorePlayersFromResults(quiz.players, completedResults, state.settings.hintDifficulty, quiz.sessionMode != QuizSessionMode.LocalMultiplayer)
   val releasedHints =
-    if (quiz.mode == GameMode.LocalMultiplayer) {
+    if (quiz.sessionMode == QuizSessionMode.LocalMultiplayer) {
       0
     } else {
       scoredPlayers.sumOf { it.earnedHintPoints }
     }
   val quizWithResults = quiz.copy(results = completedResults)
-  val shouldProgressLevel = quiz.mode == GameMode.WorldFlags
+  val shouldProgressLevel =
+    quiz.mode == GameMode.CreateQuiz && quiz.sessionMode == QuizSessionMode.Standard
   val eligibleQuizCompletions = if (shouldProgressLevel && completedResults.size >= 10) 1 else 0
   val progressResult =
     if (shouldProgressLevel) {
@@ -103,7 +105,8 @@ internal fun buildQuizCompletionSummary(
       previous = state.countryPracticeStats,
       results = completedResults,
       completedAtEpochMillis = completionTime,
-      mode = quiz.mode ?: GameMode.Training,
+      mode = quiz.mode ?: GameMode.CreateQuiz,
+      sessionMode = quiz.sessionMode,
     )
   val updatedMistakeReviewUnlocked =
     state.mistakeReviewUnlocked ||
@@ -112,7 +115,7 @@ internal fun buildQuizCompletionSummary(
     updateActivityCalendar(
       previous = state.activityCalendar,
       completedAtEpochMillis = completionTime,
-      mode = quiz.mode ?: GameMode.Training,
+      mode = quiz.mode ?: GameMode.CreateQuiz,
     )
   val updatedRatingsWithStreaks =
     awardStreakMedalsIfEligible(

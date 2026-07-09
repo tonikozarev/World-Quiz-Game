@@ -8,6 +8,7 @@ import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.DailyChallengeCache
 import kotlin.random.Random
 import com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 
 internal data class QuizStartResult(
@@ -52,11 +53,12 @@ internal fun buildStartedQuizState(
 
   return QuizState(
     mode = config.mode,
+    sessionMode = config.sessionMode,
     variants = config.variants,
     topic = config.topic,
     selectedContinents = setup.selectedContinents,
     instantCorrectionEnabled = setup.instantCorrectionEnabled,
-    hintsAllowed = !setup.usesCreateQuizManualHardcore,
+    hintsAllowed = !setup.usesCreateQuizManualHardcore && config.sessionMode != QuizSessionMode.LocalMultiplayer,
     questions = questions,
     questionStates = questionStates,
     players = players,

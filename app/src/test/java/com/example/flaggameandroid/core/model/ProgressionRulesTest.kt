@@ -58,7 +58,7 @@ class ProgressionRulesTest {
   fun continentAchievement_requiresSingleContinentPerfectNoHintRun() {
     assertTrue(
       ProgressionRules.qualifiesForContinentAchievement(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         selectedContinents = setOf("Europe"),
         usedHint = false,
         totalQuestions = 44,
@@ -73,7 +73,7 @@ class ProgressionRulesTest {
   fun continentAchievement_rejectsHintedOrPartialRun() {
     assertFalse(
       ProgressionRules.qualifiesForContinentAchievement(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         selectedContinents = setOf("Europe"),
         usedHint = true,
         totalQuestions = 44,
@@ -84,7 +84,7 @@ class ProgressionRulesTest {
     )
     assertFalse(
       ProgressionRules.qualifiesForContinentAchievement(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         selectedContinents = setOf("Europe"),
         usedHint = false,
         totalQuestions = 20,

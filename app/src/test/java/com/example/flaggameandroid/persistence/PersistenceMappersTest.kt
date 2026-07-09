@@ -65,7 +65,7 @@ class PersistenceMappersTest {
   fun quizHistoryEntity_usesTheExpectedFieldMapping() {
     val history =
       PersistedQuizHistory(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         totalQuestions = 44,
         correctAnswers = 44,
         skippedAnswers = 0,
@@ -75,7 +75,7 @@ class PersistenceMappersTest {
 
     val entity = history.toEntity()
 
-    assertEquals("WorldFlags", entity.mode)
+    assertEquals("CreateQuiz", entity.mode)
     assertEquals(44, entity.totalQuestions)
     assertEquals(44, entity.correctAnswers)
     assertEquals(0, entity.skippedAnswers)

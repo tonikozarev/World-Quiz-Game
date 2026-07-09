@@ -62,7 +62,7 @@ class FlagGamePersistenceTest {
     val progressStore = RecordingProgressStore()
     val viewModel = viewModel(progressStore = progressStore)
 
-    viewModel.onModeSelected(GameMode.WorldFlags)
+    viewModel.onModeSelected(GameMode.CreateQuiz)
     viewModel.uiState.value.setup.selectedContinents
       .filterNot { it == "Europe" }
       .forEach(viewModel::onContinentToggled)

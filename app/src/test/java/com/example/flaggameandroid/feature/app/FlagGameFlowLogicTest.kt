@@ -10,6 +10,7 @@ import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.RatingsProgress
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.CreateQuizPreset
@@ -29,13 +30,14 @@ class FlagGameFlowLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.Training,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
       ).copy(
         questionCountInput = "2",
         variants = setOf(QuizVariant.FlagToCountry),
+        createQuizTrainingEnabled = true,
       )
 
     val quiz =
@@ -65,7 +67,7 @@ class FlagGameFlowLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
@@ -103,7 +105,7 @@ class FlagGameFlowLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions = listOf(question),
         questionStates = listOf(QuestionDraftState()),
       )
@@ -143,7 +145,7 @@ class FlagGameFlowLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
@@ -194,7 +196,7 @@ class FlagGameFlowLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
@@ -241,7 +243,7 @@ class FlagGameFlowLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
@@ -288,7 +290,7 @@ class FlagGameFlowLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions = listOf(question, question),
         currentQuestionIndex = 0,
         questionStates =
@@ -313,7 +315,7 @@ class FlagGameFlowLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions = listOf(question),
         questionStates = listOf(QuestionDraftState()),
       )
@@ -357,9 +359,16 @@ class FlagGameFlowLogicTest {
         hintUsed = false,
       )
 
-    val afterContinents = updateCountryPracticeStats(emptyMap(), listOf(flagMiss), 1L, GameMode.WorldFlags)
-    val afterSpeedRun = updateCountryPracticeStats(afterContinents, listOf(typedMiss), 2L, GameMode.WorldFlags)
-    val afterTraining = updateCountryPracticeStats(afterSpeedRun, listOf(typedMiss), 3L, GameMode.Training)
+    val afterContinents = updateCountryPracticeStats(emptyMap(), listOf(flagMiss), 1L, GameMode.CreateQuiz)
+    val afterSpeedRun = updateCountryPracticeStats(afterContinents, listOf(typedMiss), 2L, GameMode.CreateQuiz)
+    val afterTraining =
+      updateCountryPracticeStats(
+        afterSpeedRun,
+        listOf(typedMiss),
+        3L,
+        GameMode.CreateQuiz,
+        QuizSessionMode.Training,
+      )
 
     assertEquals(2, afterSpeedRun[country.code]?.wrongCount)
     assertEquals(2, afterTraining[country.code]?.wrongCount)
@@ -370,7 +379,7 @@ class FlagGameFlowLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
@@ -475,7 +484,7 @@ class FlagGameFlowLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions = listOf(question),
         questionStates = listOf(QuestionDraftState(status = QuestionStatus.Answered, selectedCountry = country)),
         speedRunSecondsPerAnswer = 1,
@@ -567,7 +576,7 @@ class FlagGameFlowLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions = listOf(question),
         questionStates = listOf(QuestionDraftState()),
         players = listOf(com.example.flaggameandroid.core.model.PlayerProgress("Solo", hintPoints = 2.0)),

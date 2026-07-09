@@ -16,7 +16,7 @@ import com.example.flaggameandroid.feature.app.AppLanguage
 
 internal fun ProgressEntity.toPersistedAppState(hintDifficultyName: String): PersistedAppState =
   PersistedAppState(
-    hintDifficulty = enumValueOf<HintDifficulty>(hintDifficultyName),
+    hintDifficulty = hintDifficultyName.toHintDifficulty(),
     hintCount = hintCount,
     level = level,
     hintsTowardNextLevel = hintsTowardNextLevel,
@@ -35,6 +35,12 @@ internal fun ProgressEntity.toPersistedAppState(hintDifficultyName: String): Per
     language = AppLanguage.entries.firstOrNull { it.name == languageName } ?: AppLanguage.English,
     mistakeReviewUnlocked = mistakeReviewUnlocked,
   )
+
+private fun String.toHintDifficulty(): HintDifficulty =
+  when (this) {
+    "Easy" -> HintDifficulty.Easy
+    else -> enumValueOf<HintDifficulty>(this)
+  }
 
 internal fun PersistedAppState.toProgressEntity(): ProgressEntity =
   ProgressEntity(

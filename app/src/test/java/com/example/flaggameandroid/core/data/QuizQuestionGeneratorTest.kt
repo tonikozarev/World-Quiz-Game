@@ -3,6 +3,7 @@ package com.example.flaggameandroid.core.data
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizConfig
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
@@ -43,7 +44,7 @@ class QuizQuestionGeneratorTest {
         countries = repository.getCountries(),
         config =
           QuizConfig(
-            mode = GameMode.WorldFlags,
+            mode = GameMode.CreateQuiz,
             variants = variants,
             questionCount = 25,
           ),
@@ -92,8 +93,8 @@ class QuizQuestionGeneratorTest {
   }
 
   @Test
-  fun buildQuestions_usesRookieVariantWeights() {
-    val counts = weightedVariantCountsFor(HintDifficulty.Rookie)
+  fun buildQuestions_usesEasyVariantWeights() {
+    val counts = weightedVariantCountsFor(HintDifficulty.Easy)
 
     assertEquals(45, counts.getValue(QuizVariant.FlagToCountry))
     assertEquals(45, counts.getValue(QuizVariant.CountryToFlag))
@@ -135,10 +136,11 @@ class QuizQuestionGeneratorTest {
         countries = repository.getCountries(),
         config =
           QuizConfig(
-            mode = GameMode.Training,
+            mode = GameMode.CreateQuiz,
+            sessionMode = QuizSessionMode.Training,
             variants = setOf(QuizVariant.FlagToCountry, QuizVariant.CountryToFlag),
             questionCount = 100,
-            hintDifficulty = HintDifficulty.Rookie,
+            hintDifficulty = HintDifficulty.Easy,
           ),
       )
     val counts = questions.groupingBy { it.variant }.eachCount()
@@ -157,7 +159,8 @@ class QuizQuestionGeneratorTest {
         countries = repository.getCountries(),
         config =
           QuizConfig(
-            mode = GameMode.Training,
+            mode = GameMode.CreateQuiz,
+            sessionMode = QuizSessionMode.Training,
             variants = QuizVariant.entries.toSet(),
             questionCount = 300,
           ),
@@ -176,7 +179,8 @@ class QuizQuestionGeneratorTest {
         countries = repository.getCountries(),
         config =
           QuizConfig(
-            mode = GameMode.Training,
+            mode = GameMode.CreateQuiz,
+            sessionMode = QuizSessionMode.Training,
             variants = QuizVariant.entries.toSet(),
             questionCount = 195,
           ),
@@ -196,7 +200,7 @@ class QuizQuestionGeneratorTest {
           countries = repository.getCountries(),
           config =
             QuizConfig(
-              mode = GameMode.WorldFlags,
+              mode = GameMode.CreateQuiz,
               variants = QuizVariant.entries.toSet(),
               questionCount = 100,
               hintDifficulty = HintDifficulty.Impossible,
@@ -217,7 +221,7 @@ class QuizQuestionGeneratorTest {
         countries = repository.getCountries(),
         config =
           QuizConfig(
-            mode = GameMode.WorldFlags,
+            mode = GameMode.CreateQuiz,
             variants = QuizVariant.entries.toSet(),
             questionCount = 100,
             hintDifficulty = difficulty,

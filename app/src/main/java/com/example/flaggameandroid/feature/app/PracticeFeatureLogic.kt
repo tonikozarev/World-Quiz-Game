@@ -9,9 +9,10 @@ import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
-import com.example.flaggameandroid.core.model.QuizTopic
-import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.MistakeReviewRecoveryWrongCount
+import com.example.flaggameandroid.core.model.QuestionResult
+import com.example.flaggameandroid.core.model.QuizSessionMode
+import com.example.flaggameandroid.core.model.QuizTopic
 import java.time.Instant
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -61,9 +62,6 @@ internal fun resolveQuizPool(
         }
       GameMode.MistakeReview -> countries.filter { country -> practiceStats[country.code]?.isMistakeReviewEligible(setup.topic) == true }
       GameMode.CreateQuiz -> createQuizPool(setup, countries)
-      GameMode.WorldFlags,
-      GameMode.LocalMultiplayer,
-      GameMode.Training -> countryPoolFor(setup, countries)
     }
 
   val updatedCache =
@@ -163,8 +161,9 @@ internal fun updateCountryPracticeStats(
   results: List<QuestionResult>,
   completedAtEpochMillis: Long,
   mode: GameMode,
+  sessionMode: QuizSessionMode = QuizSessionMode.Standard,
 ): Map<String, CountryPracticeStats> =
-  if (mode == GameMode.Training) {
+  if (sessionMode == QuizSessionMode.Training) {
     previous
   } else {
     val updated =

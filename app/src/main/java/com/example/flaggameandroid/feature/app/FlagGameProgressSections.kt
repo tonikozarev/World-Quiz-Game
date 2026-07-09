@@ -19,11 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.AchievementSector
 import com.example.flaggameandroid.core.model.AchievementsProgress
-import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.RatingsProgress
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 internal fun RatingsSection(
@@ -151,16 +147,3 @@ internal fun AchievementsSection(
     }
   }
 }
-
-internal fun formatAchievementDate(epochMillis: Long?): String {
-  if (epochMillis == null) return "-"
-  return SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(Date(epochMillis))
-}
-
-internal fun hintDifficultyDescription(difficulty: HintDifficulty): String =
-  when (difficulty) {
-    HintDifficulty.Rookie -> "Collect 1 hint for every correct answer."
-    HintDifficulty.Medium -> "Collect 1 hint for every 5 correct answers in a row."
-    HintDifficulty.Hard -> "Collect 1 hint for every 10 correct answers in a row."
-    HintDifficulty.Impossible -> "Collect 1 hint for every 25 correct answers in a row."
-  }

@@ -14,7 +14,7 @@ class FlagGameSpeedRunLogicTest {
     val flagCountry = FlagCountry(code = "FA", name = "Flagland", emoji = "FA", continent = "Europe")
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions =
           listOf(
             FlagQuestion(
@@ -48,7 +48,7 @@ class FlagGameSpeedRunLogicTest {
     val country = FlagCountry(code = "FA", name = "Flagland", emoji = "FA", continent = "Europe")
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions =
           List(10) {
             FlagQuestion(

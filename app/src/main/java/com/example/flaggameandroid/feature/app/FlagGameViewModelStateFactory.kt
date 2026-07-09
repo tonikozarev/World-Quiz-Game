@@ -119,30 +119,15 @@ internal fun buildSetupForMode(
         GameMode.DailyChallenge -> QuizTopic.Mixed
         else -> topic
       },
-    instantCorrectionEnabled = mode == GameMode.Training,
-    selectedContinents =
-      when (mode) {
-        GameMode.WorldFlags,
-        GameMode.LocalMultiplayer ->
-          selectableContinents.toSet()
-        GameMode.CreateQuiz ->
-          emptySet()
-        GameMode.DailyChallenge,
-        GameMode.MistakeReview,
-        GameMode.Training -> emptySet()
-      },
+    instantCorrectionEnabled = false,
+    selectedContinents = emptySet(),
     questionCountInput =
       when (mode) {
         GameMode.DailyChallenge -> "10"
         GameMode.MistakeReview -> "10"
         GameMode.CreateQuiz -> if (topic == QuizTopic.Mixed) "0" else "10"
-        GameMode.WorldFlags -> "10"
-        GameMode.LocalMultiplayer -> "10"
-        else -> "10"
       },
     speedRunSecondsPerAnswerInput = "5",
-    worldFlagsHardcoreEnabled = false,
-    worldFlagsTimerEnabled = false,
     createQuizPreset =
       when (topic) {
         QuizTopic.Capitals -> CreateQuizPreset.CapitalPopulationUnderQuarterMillion

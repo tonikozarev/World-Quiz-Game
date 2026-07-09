@@ -262,7 +262,7 @@ class GameModeRegressionTest {
   }
 
   @Test
-  fun noBluffAllToughUsesFullCatalogAndSelectedVariants() {
+  fun hardcoreUsesFullCatalogAndSelectedVariants() {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)

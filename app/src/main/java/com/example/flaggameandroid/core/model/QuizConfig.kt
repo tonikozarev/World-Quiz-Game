@@ -4,6 +4,7 @@ import com.example.flaggameandroid.core.data.QuizQuestionSpec
 
 data class QuizConfig(
   val mode: GameMode,
+  val sessionMode: QuizSessionMode = QuizSessionMode.Standard,
   val variants: Set<QuizVariant>,
   val topic: QuizTopic = QuizTopic.Countries,
   val selectedContinents: Set<String> = emptySet(),
@@ -62,8 +63,8 @@ enum class HintDifficulty(
   val correctStreakRequired: Int,
   val variantWeights: Map<QuizVariant, Int>,
 ) {
-  Rookie(
-    title = "Rookie",
+  Easy(
+    title = "Easy",
     correctStreakRequired = 3,
     variantWeights =
       mapOf(

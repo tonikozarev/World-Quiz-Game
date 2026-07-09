@@ -264,6 +264,12 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
 ): FlagGameUiState {
   val continentCodes = countries.filter { it.continent == continent }.map { it.code }.toSet()
   if (continentCodes.isEmpty()) return this
+  val nextSelectedContinents =
+    if (continent in setup.selectedContinents) {
+      setup.selectedContinents - continent
+    } else {
+      setup.selectedContinents + continent
+    }
   val continentSelectedCountries = continentCodes.all { it in setup.selectedCountryCodes }
   val continentSelectedCapitals = continentCodes.all { it in setup.selectedCapitalCountryCodes }
   val nextCountrySelection =
@@ -285,6 +291,7 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
   val nextSetup =
     setup.copy(
       createQuizSource = CreateQuizSource.ManualCountriesCapitals,
+      selectedContinents = nextSelectedContinents,
       selectedCountryCodes = nextCountrySelection,
       selectedCapitalCountryCodes = nextCapitalSelection,
       createQuizSeed = 0L,
@@ -407,18 +414,6 @@ internal fun FlagGameUiState.withSurpriseMeToggled(): FlagGameUiState {
       questionCountInput = if (surpriseMe) "" else it.questionCountInput,
     )
   }
-}
-
-internal fun FlagGameUiState.withMultiplayerBaseSelected(
-  base: MultiplayerQuizBase,
-  countries: List<FlagCountry>,
-): FlagGameUiState {
-  val nextSetup = setup.copy(multiplayerBase = base)
-  return copy(
-    setup = nextSetup,
-    questionCountLimit = questionLimitFor(nextSetup, countries),
-    setupError = null,
-  )
 }
 
 internal fun FlagGameUiState.withPlayerNameUpdated(

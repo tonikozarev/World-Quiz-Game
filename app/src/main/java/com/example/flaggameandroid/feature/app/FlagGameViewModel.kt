@@ -391,10 +391,6 @@ class FlagGameViewModel(
     updateState { it.withSurpriseMeToggled() }
   }
 
-  fun onMultiplayerBaseSelected(base: MultiplayerQuizBase) {
-    updateState { it.withMultiplayerBaseSelected(base, countries) }
-  }
-
   fun onPlayerNameChanged(
     index: Int,
     name: String,
@@ -550,7 +546,7 @@ class FlagGameViewModel(
     persistProgress(progressStore, _uiState.value)
     recordCompletedQuiz(
       progressStore = progressStore,
-      mode = quiz.mode ?: GameMode.Training,
+      mode = quiz.mode ?: GameMode.CreateQuiz,
       totalQuestions = completionResult.summary.completedResults.size,
       correctAnswers = completionResult.summary.correctAnswers,
       skippedAnswers = 0,

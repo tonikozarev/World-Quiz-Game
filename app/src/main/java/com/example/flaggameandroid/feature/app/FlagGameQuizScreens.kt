@@ -133,7 +133,7 @@ fun QuizScreen(
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Text(
-        text = displayModeTitle(quiz.mode, language),
+        text = displayModeTitle(quiz.mode, language, quiz.sessionMode),
         style = MaterialTheme.typography.headlineMedium,
         color = if (darkTheme) Color.White else Color.Black,
         modifier = Modifier.weight(1f),
@@ -381,7 +381,7 @@ fun ResultsScreen(
           if (quiz.timedOut) {
             localizedSpeedRunGameOverLabel(language)
           } else {
-            cleanModeTitle(quiz.mode ?: GameMode.WorldFlags, language)
+            cleanModeTitle(quiz.mode ?: GameMode.CreateQuiz, language)
           },
       ) {
         Text(
@@ -402,7 +402,7 @@ fun ResultsScreen(
           language = language,
           totalQuestions = playerResults.size,
           correctAnswers = playerResults.count { it.countsAsCorrect },
-          showHints = quiz.mode != GameMode.LocalMultiplayer,
+          showHints = quiz.sessionMode != com.example.flaggameandroid.core.model.QuizSessionMode.LocalMultiplayer,
           netScoreText = formatPointValue(playerResults.sumOf { resultPointValue(it) }),
         )
       }
