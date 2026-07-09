@@ -228,9 +228,9 @@ private fun localizedReviewedQuestionText(
             }
           else ->
             when (language) {
-              AppLanguage.English -> "Whose flag is this: ${result.question.correctCountry.emoji}?"
-              AppLanguage.Bulgarian -> "Чий е този флаг: ${result.question.correctCountry.emoji}?"
-              AppLanguage.German -> "Wessen Flagge ist das: ${result.question.correctCountry.emoji}?"
+              AppLanguage.English -> "Which country has this flag: ${result.question.correctCountry.emoji}?"
+              AppLanguage.Bulgarian -> "Коя държава има това знаме: ${result.question.correctCountry.emoji}?"
+              AppLanguage.German -> "Welches Land hat diese Flagge: ${result.question.correctCountry.emoji}?"
             }
         }
       }
@@ -243,9 +243,9 @@ private fun localizedReviewedQuestionText(
           }
         } else {
           when (language) {
-            AppLanguage.English -> "Which country does this flag ${result.question.correctCountry.emoji} belong to?"
-            AppLanguage.Bulgarian -> "На коя държава принадлежи този флаг ${result.question.correctCountry.emoji}?"
-            AppLanguage.German -> "Zu welchem Land gehört diese Flagge ${result.question.correctCountry.emoji}?"
+            AppLanguage.English -> "What is the flag of $countryLabel?"
+            AppLanguage.Bulgarian -> "Кой е флагът на $countryLabel?"
+            AppLanguage.German -> "Was ist die Flagge von $countryLabel?"
           }
         }
       }

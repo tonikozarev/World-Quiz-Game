@@ -10,4 +10,7 @@ data class QuestionResult(
   val hintUses: Int = 0,
   val revealed: Boolean = false,
   val hintStreak: Int = 0,
-)
+) {
+  val countsAsCorrect: Boolean
+    get() = isCorrect && !revealed
+}

@@ -45,7 +45,7 @@ internal fun buildQuizCompletionSummary(
   completionTime: Long,
 ): QuizCompletionSummary {
   val completedResults = buildQuizResults(quiz, state.settings.language)
-  val correctAnswers = completedResults.count { it.isCorrect }
+  val correctAnswers = completedResults.count { it.countsAsCorrect }
   val distinctCountries = completedResults.map { it.question.correctCountry.code }.distinct().size
   val scoredPlayers = scorePlayersFromResults(quiz.players, completedResults, state.settings.hintDifficulty, quiz.mode != GameMode.LocalMultiplayer)
   val releasedHints =

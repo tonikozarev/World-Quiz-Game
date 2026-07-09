@@ -401,7 +401,7 @@ fun ResultsScreen(
           player = player,
           language = language,
           totalQuestions = playerResults.size,
-          correctAnswers = playerResults.count { it.isCorrect },
+          correctAnswers = playerResults.count { it.countsAsCorrect },
           showHints = quiz.mode != GameMode.LocalMultiplayer,
           netScoreText = formatPointValue(playerResults.sumOf { resultPointValue(it) }),
         )
