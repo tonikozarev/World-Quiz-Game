@@ -1,4 +1,4 @@
-package com.example.flaggameandroid.feature.app
+﻿package com.example.flaggameandroid.feature.app
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -208,17 +208,6 @@ internal fun localizedTypedAnswerFieldLabel(
     QuizTopic.Mixed -> tr(language, "Text", "Текст", "Text")
   }
 
-internal fun localizedTimeZoneTitle(language: AppLanguage): String =
-  tr(language, "Time zone", "Часова зона", "Zeitzone")
-
-internal fun localizedTimeZoneInfo(language: AppLanguage): String =
-  tr(
-    language,
-    "Daily Challenge, streaks, reminders, and played-today checks reset at 00:00 in the selected time zone.",
-    "Дневното предизвикателство, сериите, напомнянията и проверката дали е играно днес се нулират в 00:00 според избраната часова зона.",
-    "Daily Challenge, Serien, Erinnerungen und die Heute-gespielt-Prüfung werden um 00:00 in der gewählten Zeitzone zurückgesetzt.",
-  )
-
 internal fun localizedRevealButtonLabel(language: AppLanguage): String =
   tr(language, "Reveal", "Разкрий", "Aufdecken")
 
@@ -236,9 +225,6 @@ internal fun formatScore(score: Int): String =
 
 internal fun formatHintPoints(hintPoints: Double): String =
   if (hintPoints % 1.0 == 0.0) hintPoints.toInt().toString() else "%.2f".format(java.util.Locale.US, hintPoints)
-
-internal fun modeSelectionTitle(language: AppLanguage): String =
-  cleanModeSelectionTitle(language)
 
 internal fun quizCompleteTitle(language: AppLanguage): String =
   tr(language, "Quiz complete", "Тестът е завършен", "Quiz beendet")

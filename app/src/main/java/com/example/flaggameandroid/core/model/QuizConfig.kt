@@ -12,7 +12,6 @@ data class QuizConfig(
   val speedRunSecondsPerAnswer: Int = 3,
   val countdownEnabled: Boolean = false,
   val surpriseMe: Boolean = false,
-  val allInType: AllInType? = null,
   val hintDifficulty: HintDifficulty = HintDifficulty.Medium,
   val players: List<String> = listOf("Solo"),
   val poolSource: QuizPoolSource = QuizPoolSource.Standard,

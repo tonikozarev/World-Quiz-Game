@@ -1,6 +1,5 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.AchievementsProgress
 import com.example.flaggameandroid.core.model.ActivityDayRecord
 import com.example.flaggameandroid.core.model.FlagCountry
@@ -24,8 +23,6 @@ sealed interface AppScreen {
   data object Menu : AppScreen
 
   data object GameModes : AppScreen
-
-  data object GameModesHub : AppScreen
 
   data object Medals : AppScreen
 
@@ -67,7 +64,6 @@ enum class MultiplayerQuizBase(
 
 data class SettingsState(
   val hintDifficulty: HintDifficulty = HintDifficulty.Medium,
-  val reminderEnabled: Boolean = true,
   val testingToolsVisible: Boolean = false,
   val language: AppLanguage = AppLanguage.English,
 )
@@ -99,7 +95,6 @@ data class SetupState(
   val questionCountInput: String = "10",
   val speedRunSecondsPerAnswerInput: String = "5",
   val surpriseMe: Boolean = false,
-  val allInType: AllInType = AllInType.NoBluffAllTough,
   val multiplayerBase: MultiplayerQuizBase = MultiplayerQuizBase.Continents,
   val playerNames: List<String> = listOf("Player 1", "Player 2"),
   val dailyChallengeTheme: DailyChallengeTheme? = null,
@@ -163,7 +158,6 @@ data class QuestionDraftState(
 
 data class QuizState(
   val mode: GameMode? = null,
-  val allInType: AllInType? = null,
   val topic: QuizTopic = QuizTopic.Countries,
   val variants: Set<QuizVariant> = emptySet(),
   val selectedContinents: Set<String> = emptySet(),
@@ -290,7 +284,6 @@ data class FlagGameUiState(
   val setupError: String? = null,
   val lastOpenedAtEpochMillis: Long = 0L,
   val lastPlayedAtEpochMillis: Long = 0L,
-  val inactiveIconActive: Boolean = false,
   val countryPracticeStats: Map<String, CountryPracticeStats> = emptyMap(),
   val activityCalendar: Map<Long, ActivityDayRecord> = emptyMap(),
   val dailyChallengeCaches: Map<QuizTopic, DailyChallengeCache> = emptyMap(),

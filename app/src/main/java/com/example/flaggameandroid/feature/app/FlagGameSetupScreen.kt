@@ -53,7 +53,6 @@ import androidx.compose.ui.zIndex
 import android.widget.Toast
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.FlagCountry
@@ -86,7 +85,6 @@ fun SetupScreen(
   onQuestionCountChange: (String) -> Unit,
   onSpeedRunSecondsChange: (String) -> Unit,
   onSurpriseMe: () -> Unit,
-  onAllInTypeSelected: (AllInType) -> Unit,
   onMultiplayerBaseSelected: (MultiplayerQuizBase) -> Unit,
   onPlayerNameChanged: (Int, String) -> Unit,
   onAddPlayer: () -> Unit,
@@ -321,9 +319,9 @@ fun SetupScreen(
             )
             Text(
               when (language) {
-                AppLanguage.English -> "1-second bonus: +5 seconds only for quizzes with 10 or more questions."
-                AppLanguage.Bulgarian -> "Бонус за 1 секунда: +5 секунди само при тестове с 10 или повече въпроса."
-                AppLanguage.German -> "1-Sekunden-Bonus: +5 Sekunden nur bei Quiz mit 10 oder mehr Fragen."
+                AppLanguage.English -> "Bonus for 1-second game: +5 seconds only for quizzes with 10 or more questions."
+                AppLanguage.Bulgarian -> "Бонус за игра с 1 секунда: +5 секунди само при тестове с 10 или повече въпроса."
+                AppLanguage.German -> "Bonus fürs 1-Sekunden-Spiel: +5 Sekunden nur bei Quiz mit 10 oder mehr Fragen."
               },
             )
             if (secondsOutOfRange) {

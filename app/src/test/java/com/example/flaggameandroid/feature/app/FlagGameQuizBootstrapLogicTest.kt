@@ -2,7 +2,6 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
-import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
@@ -195,7 +194,6 @@ class FlagGameQuizBootstrapLogicTest {
         hintCount = 0.0,
         displayName = "Tony",
         nowEpochMillis = now,
-        timeZone = AppTimeZone.UtcPlus3,
       ).dailyChallengeCache!!
 
     val completedCache =
@@ -215,7 +213,6 @@ class FlagGameQuizBootstrapLogicTest {
         displayName = "Tony",
         dailyChallengeCache = completedCache,
         nowEpochMillis = now,
-        timeZone = AppTimeZone.Utc,
       )
 
     assertEquals("Daily challenge already completed for today.", resultAfterTimeZoneChange.validationError)

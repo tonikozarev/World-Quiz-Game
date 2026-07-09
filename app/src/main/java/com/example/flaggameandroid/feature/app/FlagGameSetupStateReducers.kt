@@ -1,6 +1,5 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.FlagCountry
@@ -409,12 +408,6 @@ internal fun FlagGameUiState.withSurpriseMeToggled(): FlagGameUiState {
     )
   }
 }
-
-internal fun FlagGameUiState.withAllInTypeSelected(allInType: AllInType): FlagGameUiState =
-  withUpdatedSetup {
-    val variants = it.variants.ifEmpty { QuizVariant.entries.toSet() }
-    it.copy(allInType = allInType, variants = variants)
-  }
 
 internal fun FlagGameUiState.withMultiplayerBaseSelected(
   base: MultiplayerQuizBase,

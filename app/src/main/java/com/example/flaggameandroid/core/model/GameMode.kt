@@ -13,7 +13,7 @@ enum class GameMode(
     description = "Build a custom quiz from preset flag filters or your own country selection.",
   ),
   WorldFlags(
-    title = "Country Flags",
+    title = "World flags",
     description = "Guess the correct country or flag.",
   ),
   DailyChallenge(
@@ -36,9 +36,6 @@ internal fun startQuizModes(): List<GameMode> =
     GameMode.CreateQuiz,
     GameMode.MistakeReview,
   )
-
-internal fun gameModesHubModes(): List<GameMode> =
-  emptyList()
 
 enum class QuizVariant(
   val title: String,
@@ -76,14 +73,4 @@ enum class QuizTopic(
   Countries("Countries"),
   Capitals("Capitals"),
   Mixed("Mixed"),
-}
-
-enum class AllInType(
-  val title: String,
-  val description: String,
-) {
-  NoBluffAllTough(
-    title = "No Bluff, All Tough",
-    description = "All countries with only the variants you choose.",
-  ),
 }

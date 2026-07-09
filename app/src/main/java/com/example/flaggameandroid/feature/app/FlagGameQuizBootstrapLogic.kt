@@ -1,6 +1,5 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
@@ -28,7 +27,6 @@ internal fun buildStartedQuizState(
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
   dailyChallengeCache: DailyChallengeCache? = null,
   nowEpochMillis: Long = System.currentTimeMillis(),
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): QuizState {
   val poolResolution =
     resolveQuizPool(
@@ -37,7 +35,6 @@ internal fun buildStartedQuizState(
       practiceStats = practiceStats,
       dailyChallengeCache = dailyChallengeCache,
       nowEpochMillis = nowEpochMillis,
-      timeZone = timeZone,
     )
   val pool = poolResolution.pool
   val config = configFor(setup, pool.size, hintDifficulty, random, practiceStats)
@@ -55,7 +52,6 @@ internal fun buildStartedQuizState(
 
   return QuizState(
     mode = config.mode,
-    allInType = setup.allInType,
     variants = config.variants,
     topic = config.topic,
     selectedContinents = setup.selectedContinents,
@@ -85,7 +81,6 @@ internal fun buildQuizStartResult(
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
   dailyChallengeCache: DailyChallengeCache? = null,
   nowEpochMillis: Long = System.currentTimeMillis(),
-  timeZone: AppTimeZone = AppTimeZone.Utc,
   mistakeReviewUnlocked: Boolean = false,
 ): QuizStartResult {
   val poolResolution =
@@ -95,7 +90,6 @@ internal fun buildQuizStartResult(
       practiceStats = practiceStats,
       dailyChallengeCache = dailyChallengeCache,
       nowEpochMillis = nowEpochMillis,
-      timeZone = timeZone,
     )
   if (setup.mode == GameMode.DailyChallenge && poolResolution.pool.isEmpty()) {
     return QuizStartResult(validationError = "Daily challenge already completed for today.")
@@ -127,7 +121,6 @@ internal fun buildQuizStartResult(
         practiceStats = practiceStats,
         dailyChallengeCache = poolResolution.dailyChallengeCache,
         nowEpochMillis = nowEpochMillis,
-        timeZone = timeZone,
       ),
     dailyChallengeCache = poolResolution.dailyChallengeCache,
   )

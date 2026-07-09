@@ -31,21 +31,6 @@ internal fun modeBaseDescription(
     MultiplayerQuizBase.AllIn -> tr(language, "Quiz from all countries.", "Тест от всички държави.", "Quiz mit allen Ländern.")
   }
 
-internal fun localizedModeTitle(
-  mode: GameMode,
-  language: AppLanguage,
-): String =
-  when (mode) {
-    GameMode.Training -> tr(language, "Training", "Тренировка", "Training")
-    GameMode.CreateQuiz -> tr(language, "Custom Quiz", "Персонален тест", "Benutzerdefiniertes Quiz")
-    GameMode.WorldFlags ->
-      tr(language, "Country Flags", "Държавни флагове", "Länderflaggen")
-    GameMode.DailyChallenge -> tr(language, "Daily challenge", "Дневно предизвикателство", "Tägliche Herausforderung")
-    GameMode.MistakeReview -> tr(language, "Mistake review", "Преглед на грешките", "Fehlerprüfung")
-    GameMode.LocalMultiplayer -> tr(language, "Local multiplayer", "Локална игра", "Lokaler Mehrspieler")
-    else -> mode.title
-  }
-
 internal fun localUtcMidnightResetLabel(): String {
   val offsetHours =
     java.time.ZoneId.systemDefault()
@@ -162,9 +147,6 @@ internal fun localizedMedalIntro(language: AppLanguage): String =
 internal fun cleanModeSelectionTitle(language: AppLanguage): String =
   tr(language, "Start a quiz", "Стартирай тест", "Starte ein Quiz")
 
-internal fun localizedGameModesHubTitle(language: AppLanguage): String =
-  tr(language, "Game modes", "Режими на игра", "Spielmodi")
-
 internal fun localizedQuizTopicTitle(language: AppLanguage): String =
   tr(language, "Choose type of quiz", "Избери тип тест", "Quiz-Typ auswählen")
 
@@ -208,7 +190,7 @@ internal fun cleanModeTitle(
     GameMode.Training -> tr(language, "Training", "Тренировка", "Training")
     GameMode.CreateQuiz -> tr(language, "Create own quiz", "Създай собствен тест", "Quiz selber erstellen")
     GameMode.WorldFlags ->
-      tr(language, "Country Flags", "Държавни флагове", "Länderflaggen")
+      tr(language, "World flags", "Държавни флагове", "Weltflaggen")
     GameMode.DailyChallenge -> tr(language, "Daily challenge", "Дневно предизвикателство", "Tägliche Herausforderung")
     GameMode.MistakeReview -> tr(language, "Mistake review", "Преглед на грешките", "Fehlerprüfung")
     GameMode.LocalMultiplayer -> tr(language, "Local multiplayer", "Локална игра", "Lokaler Mehrspieler")

@@ -310,7 +310,6 @@ internal fun configFor(
       (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsTimer) ||
         (setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualTimer),
     surpriseMe = setup.surpriseMe,
-    allInType = setup.allInType,
     hintDifficulty = hintDifficulty,
     players = players,
     poolSource =

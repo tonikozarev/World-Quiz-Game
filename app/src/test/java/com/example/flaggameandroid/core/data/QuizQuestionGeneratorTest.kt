@@ -2,7 +2,6 @@ package com.example.flaggameandroid.core.data
 
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.QuizConfig
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -188,7 +187,7 @@ class QuizQuestionGeneratorTest {
   }
 
   @Test
-  fun nonWeightedModes_keepThreeVariantsEvenlyDistributed() {
+  fun worldFlags_usesHintDifficultyWeightsWhenAllThreeVariantsAreSelected() {
     val generator = QuizQuestionGenerator(Random(8))
 
     val counts =
@@ -199,16 +198,16 @@ class QuizQuestionGeneratorTest {
             QuizConfig(
               mode = GameMode.WorldFlags,
               variants = QuizVariant.entries.toSet(),
-              questionCount = 99,
+              questionCount = 100,
               hintDifficulty = HintDifficulty.Impossible,
             ),
         )
         .groupingBy { it.variant }
         .eachCount()
 
-    assertEquals(33, counts.getValue(QuizVariant.FlagToCountry))
-    assertEquals(33, counts.getValue(QuizVariant.CountryToFlag))
-    assertEquals(33, counts.getValue(QuizVariant.TypeCountryName))
+    assertEquals(20, counts.getValue(QuizVariant.FlagToCountry))
+    assertEquals(20, counts.getValue(QuizVariant.CountryToFlag))
+    assertEquals(60, counts.getValue(QuizVariant.TypeCountryName))
   }
 
   private fun weightedVariantCountsFor(difficulty: HintDifficulty): Map<QuizVariant, Int> {
@@ -221,7 +220,6 @@ class QuizQuestionGeneratorTest {
             mode = GameMode.WorldFlags,
             variants = QuizVariant.entries.toSet(),
             questionCount = 100,
-            allInType = AllInType.NoBluffAllTough,
             hintDifficulty = difficulty,
           ),
       )

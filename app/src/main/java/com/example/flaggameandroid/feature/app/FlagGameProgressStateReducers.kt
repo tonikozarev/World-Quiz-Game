@@ -63,6 +63,3 @@ internal fun FlagGameUiState.withAllAchievementsLocked(): FlagGameUiState =
 
 internal fun FlagGameUiState.withMedalsReset(): FlagGameUiState =
   copy(ratings = RatingsProgress())
-
-internal fun FlagGameUiState.withInactiveIconActive(active: Boolean): FlagGameUiState =
-  copy(inactiveIconActive = active)

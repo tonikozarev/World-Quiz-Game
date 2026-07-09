@@ -22,7 +22,6 @@ class PersistenceMappersTest {
         eligibleQuizzesTowardNextLevel = 2,
         lastOpenedAtEpochMillis = 1234L,
         lastPlayedAtEpochMillis = 5678L,
-        inactiveIconActive = true,
         ratings = RatingsProgress(
           bronzeCount = 2,
           goldCount = 1,
@@ -55,7 +54,6 @@ class PersistenceMappersTest {
     assertEquals(original.eligibleQuizzesTowardNextLevel, restored.eligibleQuizzesTowardNextLevel)
     assertEquals(original.lastOpenedAtEpochMillis, restored.lastOpenedAtEpochMillis)
     assertEquals(original.lastPlayedAtEpochMillis, restored.lastPlayedAtEpochMillis)
-    assertEquals(original.inactiveIconActive, restored.inactiveIconActive)
     assertEquals(original.ratings, restored.ratings)
     assertEquals(original.achievements, restored.achievements)
     assertEquals(original.accountName, restored.accountName)

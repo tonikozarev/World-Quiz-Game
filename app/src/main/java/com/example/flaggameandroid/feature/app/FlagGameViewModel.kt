@@ -8,7 +8,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.flaggameandroid.core.data.FlagCatalogRepository
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.FlagCountry
@@ -20,7 +19,6 @@ import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.hasSameQuizConfiguration
-import com.example.flaggameandroid.engagement.AppEngagementCoordinator
 import com.example.flaggameandroid.persistence.AppGraph
 import com.example.flaggameandroid.persistence.persistProgress
 import com.example.flaggameandroid.persistence.persistSettings
@@ -43,7 +41,6 @@ class FlagGameViewModel(
   private val random: Random = Random.Default,
   private val settingsStore: SettingsStore = InMemorySettingsStore(),
   private val progressStore: ProgressStore = InMemoryProgressStore(),
-  private val engagementCoordinator: AppEngagementCoordinator? = null,
   initialPersistedState: PersistedAppState = PersistedAppState(),
 ) : ViewModel() {
   private val countries = catalogRepository.getCountries()
@@ -102,7 +99,6 @@ class FlagGameViewModel(
             setupError = null,
           )
         }
-      AppScreen.GameModesHub -> navigateTo(AppScreen.GameModes)
       AppScreen.GameModes,
       AppScreen.Medals,
       AppScreen.Achievements,
@@ -148,10 +144,6 @@ class FlagGameViewModel(
     navigateTo(AppScreen.GameModes)
   }
 
-  fun onGameModesClicked() {
-    navigateTo(AppScreen.GameModesHub)
-  }
-
   fun onSettingsClicked() {
     navigateTo(AppScreen.Settings)
   }
@@ -178,10 +170,7 @@ class FlagGameViewModel(
 
   fun onModeSelected(mode: GameMode) {
     val currentReturnTarget =
-      when (_uiState.value.screen) {
-        AppScreen.GameModesHub -> AppScreen.GameModesHub
-        else -> AppScreen.GameModes
-      }
+      AppScreen.GameModes
     val topic =
       when (mode) {
         GameMode.DailyChallenge -> QuizTopic.Mixed
@@ -254,10 +243,6 @@ class FlagGameViewModel(
     updateSettings { it.copy(hintDifficulty = difficulty) }
   }
 
-  fun onReminderEnabledChanged(enabled: Boolean) {
-    updateSettings { it.copy(reminderEnabled = enabled) }
-  }
-
   fun onLanguageSelected(language: AppLanguage) {
     updateStateAndPersistProgress { it.copy(settings = it.settings.copy(language = language)) }
   }
@@ -323,12 +308,6 @@ class FlagGameViewModel(
     }
   }
 
-  fun onToggleTestingIconClicked() {
-    val nextActiveState = !_uiState.value.inactiveIconActive
-    engagementCoordinator?.setInactiveLauncherIcon(nextActiveState)
-    updateStateAndPersistProgress { it.withInactiveIconActive(nextActiveState) }
-  }
-
   fun onToggleFavoriteCountry(countryCode: String) {
     updateStateAndPersistProgress { state ->
       val current = state.countryPracticeStats[countryCode] ?: CountryPracticeStats()
@@ -336,11 +315,6 @@ class FlagGameViewModel(
       state.copy(countryPracticeStats = state.countryPracticeStats + (countryCode to updated))
     }
   }
-
-  fun onTriggerTestingReminderClicked() {
-    engagementCoordinator?.triggerTestingReminderNotification()
-  }
-
   fun onVariantToggled(variant: QuizVariant) {
     updateState { it.withSelectedVariantsToggled(variant) }
   }
@@ -415,10 +389,6 @@ class FlagGameViewModel(
 
   fun onSurpriseMeClicked() {
     updateState { it.withSurpriseMeToggled() }
-  }
-
-  fun onAllInTypeSelected(allInType: AllInType) {
-    updateState { it.withAllInTypeSelected(allInType) }
   }
 
   fun onMultiplayerBaseSelected(base: MultiplayerQuizBase) {
@@ -786,14 +756,12 @@ class FlagGameViewModel(
             val initialPersistedState =
               runBlocking {
                 val hintDifficulty = container.settingsStore.loadHintDifficulty()
-                val reminderEnabled = container.settingsStore.loadReminderEnabled()
                 val progress = container.progressStore.loadProgress()
-                progress.copy(hintDifficulty = hintDifficulty, reminderEnabled = reminderEnabled)
+                progress.copy(hintDifficulty = hintDifficulty)
               }
             FlagGameViewModel(
               settingsStore = container.settingsStore,
               progressStore = container.progressStore,
-              engagementCoordinator = container.engagementCoordinator,
               initialPersistedState = initialPersistedState,
             )
           }.getOrElse {

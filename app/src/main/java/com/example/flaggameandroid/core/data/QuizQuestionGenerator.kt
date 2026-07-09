@@ -2,7 +2,6 @@ package com.example.flaggameandroid.core.data
 
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuizConfig
@@ -169,11 +168,7 @@ class QuizQuestionGenerator(
     targetCount: Int,
   ): List<QuizVariant> {
     val selectedVariants = config.variants.ifEmpty { QuizVariant.entries.toSet() }
-    if (
-      config.mode != GameMode.WorldFlags ||
-      config.allInType != AllInType.NoBluffAllTough ||
-      selectedVariants.size != QuizVariant.entries.size
-    ) {
+    if (selectedVariants.size != QuizVariant.entries.size) {
       return buildEvenVariants(selectedVariants, targetCount)
     }
 

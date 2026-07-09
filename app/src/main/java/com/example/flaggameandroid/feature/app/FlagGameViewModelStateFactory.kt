@@ -20,7 +20,6 @@ internal fun buildInitialUiState(
     settings =
       SettingsState(
         hintDifficulty = initialPersistedState.hintDifficulty,
-        reminderEnabled = initialPersistedState.reminderEnabled,
         language = initialPersistedState.language,
       ),
     availableContinents = allContinents,
@@ -47,7 +46,6 @@ internal fun buildInitialUiState(
       ),
     lastOpenedAtEpochMillis = initialPersistedState.lastOpenedAtEpochMillis,
     lastPlayedAtEpochMillis = initialPersistedState.lastPlayedAtEpochMillis,
-    inactiveIconActive = initialPersistedState.inactiveIconActive,
     countryPracticeStats = initialPersistedState.countryPracticeStats,
     activityCalendar = initialPersistedState.activityCalendar,
     dailyChallengeCaches =
@@ -88,7 +86,6 @@ internal fun FlagGameUiState.resetToMenu(
 internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
   PersistedAppState(
     hintDifficulty = settings.hintDifficulty,
-    reminderEnabled = settings.reminderEnabled,
     language = settings.language,
     accountName = profile.accountName,
     avatarIndex = profile.avatarIndex,
@@ -101,7 +98,6 @@ internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
     eligibleQuizzesTowardNextLevel = levelProgress.eligibleQuizzesTowardNextLevel,
     lastOpenedAtEpochMillis = lastOpenedAtEpochMillis,
     lastPlayedAtEpochMillis = lastPlayedAtEpochMillis,
-    inactiveIconActive = inactiveIconActive,
     countryPracticeStats = countryPracticeStats,
     activityCalendar = activityCalendar,
     dailyChallengeCaches = dailyChallengeCaches,

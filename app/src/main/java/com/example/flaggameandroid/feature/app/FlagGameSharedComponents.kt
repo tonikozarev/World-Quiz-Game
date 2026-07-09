@@ -85,7 +85,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flaggameandroid.core.data.QuizAnswerChecker
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.AchievementSector
 import com.example.flaggameandroid.core.model.AchievementsProgress

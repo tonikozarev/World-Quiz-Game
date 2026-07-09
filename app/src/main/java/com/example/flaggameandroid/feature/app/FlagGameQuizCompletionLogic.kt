@@ -187,7 +187,6 @@ internal fun buildQuizCompletionResult(
         achievements = summary.updatedAchievements,
         levelProgress = summary.finalProgress,
         lastPlayedAtEpochMillis = summary.completionTime,
-        inactiveIconActive = false,
         countryPracticeStats = summary.updatedCountryPracticeStats,
         mistakeReviewUnlocked = summary.updatedMistakeReviewUnlocked,
         activityCalendar = summary.updatedActivityCalendar,
@@ -203,9 +202,8 @@ internal fun awardStreakMedalsIfEligible(
   previousActivityCalendar: Map<Long, ActivityDayRecord>,
   updatedActivityCalendar: Map<Long, ActivityDayRecord>,
   completedAtEpochMillis: Long,
-  timeZone: com.example.flaggameandroid.core.model.AppTimeZone = com.example.flaggameandroid.core.model.AppTimeZone.Utc,
 ): RatingsProgress {
-  val dayKey = localDayKey(completedAtEpochMillis, timeZone)
+  val dayKey = localDayKey(completedAtEpochMillis)
   if ((previousActivityCalendar[dayKey]?.quizzesCompleted ?: 0) > 0) {
     return ratings
   }
