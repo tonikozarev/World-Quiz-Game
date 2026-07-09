@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.flaggameandroid.engagement.EngagementDebugLogger
 import com.example.flaggameandroid.persistence.AppGraph
 import com.example.flaggameandroid.theme.FlagGameAndroidTheme
 import kotlinx.coroutines.launch
@@ -51,6 +52,7 @@ open class MainActivity : ComponentActivity() {
 
     lifecycleScope.launch {
       runCatching {
+        EngagementDebugLogger.info("MainActivity engagement startup begin.")
         appContainer.engagementCoordinator.onAppOpened()
         val reminderEnabled = appContainer.settingsStore.loadReminderEnabled()
         if (reminderEnabled &&
@@ -59,6 +61,9 @@ open class MainActivity : ComponentActivity() {
         ) {
           notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+        EngagementDebugLogger.info("MainActivity engagement startup complete. reminderEnabled=$reminderEnabled")
+      }.getOrElse {
+        EngagementDebugLogger.error("MainActivity engagement startup failed.", it)
       }
     }
   }
@@ -66,7 +71,10 @@ open class MainActivity : ComponentActivity() {
   override fun onStop() {
     super.onStop()
     runCatching {
+      EngagementDebugLogger.info("MainActivity onStop syncing launcher icon.")
       appContainer.engagementCoordinator.syncLauncherIconToPersistedState()
+    }.getOrElse {
+      EngagementDebugLogger.error("MainActivity onStop launcher icon sync failed.", it)
     }
   }
 }

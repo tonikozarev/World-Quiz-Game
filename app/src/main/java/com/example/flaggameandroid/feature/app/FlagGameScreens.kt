@@ -104,6 +104,8 @@ fun FlagGameRoute(
     onResetDailyChallengeClick = resolvedViewModel::onResetDailyChallengeClicked,
     onToggleTestingIconClick = resolvedViewModel::onToggleTestingIconClicked,
     onTriggerTestingReminderClick = resolvedViewModel::onTriggerTestingReminderClicked,
+    onScheduleTestingReminderInOneMinuteClick = resolvedViewModel::onScheduleTestingReminderInOneMinuteClicked,
+    onScheduleTestingInactiveIconInOneMinuteClick = resolvedViewModel::onScheduleTestingInactiveIconInOneMinuteClicked,
     onVariantToggled = resolvedViewModel::onVariantToggled,
     onInstantCorrectionToggled = resolvedViewModel::onInstantCorrectionToggled,
     onContinentToggled = resolvedViewModel::onContinentToggled,

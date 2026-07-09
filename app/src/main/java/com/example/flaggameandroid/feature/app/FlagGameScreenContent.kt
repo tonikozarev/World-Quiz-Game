@@ -43,6 +43,8 @@ internal fun FlagGameScreenContent(
   onResetDailyChallengeClick: () -> Unit,
   onToggleTestingIconClick: () -> Unit,
   onTriggerTestingReminderClick: () -> Unit,
+  onScheduleTestingReminderInOneMinuteClick: () -> Unit,
+  onScheduleTestingInactiveIconInOneMinuteClick: () -> Unit,
   onVariantToggled: (QuizVariant) -> Unit,
   onInstantCorrectionToggled: () -> Unit,
   onContinentToggled: (String) -> Unit,
@@ -184,6 +186,15 @@ internal fun FlagGameScreenContent(
         onResetDailyChallengeClick = onResetDailyChallengeClick,
         onToggleTestingIconClick = onToggleTestingIconClick,
         onTriggerTestingReminderClick = onTriggerTestingReminderClick,
+        onScheduleTestingReminderInOneMinuteClick = {
+          if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED
+          ) {
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+          }
+          onScheduleTestingReminderInOneMinuteClick()
+        },
+        onScheduleTestingInactiveIconInOneMinuteClick = onScheduleTestingInactiveIconInOneMinuteClick,
         modifier = modifier,
       )
     }

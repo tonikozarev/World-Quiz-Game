@@ -5,16 +5,17 @@ import android.content.Context
 import android.content.Intent
 import com.example.flaggameandroid.persistence.AppGraph
 
-class DailyReminderReceiver : BroadcastReceiver() {
+class TestingInactiveIconReceiver : BroadcastReceiver() {
   override fun onReceive(
     context: Context,
     intent: Intent,
   ) {
     EngagementDebugLogger.initialize(context.applicationContext)
     EngagementDebugLogger.info(
-      "DailyReminderReceiver fired at ${EngagementDebugLogger.formatEpoch(System.currentTimeMillis())} " +
-        "with action=${intent.action}",
+      "TestingInactiveIconReceiver fired at ${EngagementDebugLogger.formatEpoch(System.currentTimeMillis())}.",
     )
-    AppGraph.from(context.applicationContext).engagementCoordinator.onDailyCheckTriggered()
+    AppGraph.from(context.applicationContext)
+      .engagementCoordinator
+      .setInactiveLauncherIcon(active = true, persist = true)
   }
 }

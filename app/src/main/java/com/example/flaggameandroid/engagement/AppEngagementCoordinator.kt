@@ -50,7 +50,24 @@ class AppEngagementCoordinator(
     reminderNotifier.postReminderNotification()
   }
 
-  fun setInactiveLauncherIcon(active: Boolean) {
+  fun scheduleTestingReminderInOneMinute() {
+    reminderScheduler.scheduleTestingReminderInOneMinute()
+  }
+
+  fun scheduleTestingInactiveIconInOneMinute() {
+    reminderScheduler.scheduleTestingInactiveIconInOneMinute()
+  }
+
+  fun setInactiveLauncherIcon(
+    active: Boolean,
+    persist: Boolean = false,
+  ) {
+    if (persist) {
+      runBlocking {
+        val progress = progressStore.loadProgress()
+        progressStore.saveProgress(progress.copy(inactiveIconActive = active))
+      }
+    }
     launcherIconController.setInactiveLauncherIcon(active)
   }
 

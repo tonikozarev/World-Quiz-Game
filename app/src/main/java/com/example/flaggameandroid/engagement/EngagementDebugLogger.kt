@@ -2,6 +2,7 @@ package com.example.flaggameandroid.engagement
 
 import android.content.Context
 import android.util.Log
+import com.example.flaggameandroid.feature.app.FlagGameDebugConfig
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -15,6 +16,7 @@ internal object EngagementDebugLogger {
   @Volatile private var logFile: File? = null
 
   fun initialize(context: Context) {
+    if (!FlagGameDebugConfig.EnableEngagementLogging) return
     if (logFile != null) return
     val root =
       context.getExternalFilesDir(null)
@@ -54,6 +56,7 @@ internal object EngagementDebugLogger {
     message: String,
     block: () -> Unit,
   ) {
+    if (!FlagGameDebugConfig.EnableEngagementLogging) return
     runCatching(block).getOrElse {
       println("$Tag: logging unavailable in this runtime")
     }

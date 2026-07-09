@@ -77,6 +77,8 @@ internal fun TestingToolsCard(
   onResetDailyChallengeClick: () -> Unit,
   onToggleTestingIconClick: () -> Unit,
   onTriggerTestingReminderClick: () -> Unit,
+  onScheduleTestingReminderInOneMinuteClick: () -> Unit,
+  onScheduleTestingInactiveIconInOneMinuteClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   SectionCard(
@@ -237,6 +239,36 @@ internal fun TestingToolsCard(
           AppLanguage.German -> "Test-Erinnerung senden"
         },
       )
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+      OutlinedButton(
+        onClick = onScheduleTestingReminderInOneMinuteClick,
+        modifier = Modifier.weight(1f),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+      ) {
+        Text(
+          when (language) {
+            AppLanguage.English -> "Reminder in 1 min"
+            AppLanguage.Bulgarian -> "Напомняне след 1 мин"
+            AppLanguage.German -> "Erinnerung in 1 Min"
+          },
+          textAlign = TextAlign.Center,
+        )
+      }
+      OutlinedButton(
+        onClick = onScheduleTestingInactiveIconInOneMinuteClick,
+        modifier = Modifier.weight(1f),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+      ) {
+        Text(
+          when (language) {
+            AppLanguage.English -> "Inactive icon in 1 min"
+            AppLanguage.Bulgarian -> "Неактивна икона след 1 мин"
+            AppLanguage.German -> "Inaktives Symbol in 1 Min"
+          },
+          textAlign = TextAlign.Center,
+        )
+      }
     }
   }
 }

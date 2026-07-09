@@ -47,6 +47,7 @@ import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.RatingsProgress
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.startQuizModes
+import com.example.flaggameandroid.engagement.EngagementTestSchedule
 import kotlinx.coroutines.delay
 
 @Composable
@@ -119,7 +120,7 @@ fun GameModesScreen(
   LaunchedEffect(Unit) {
     onRefreshDailyChallengeAvailability()
     while (true) {
-      delay(60_000L)
+      delay(EngagementTestSchedule.OneMinuteDelayMillis)
       onRefreshDailyChallengeAvailability()
     }
   }
@@ -164,7 +165,7 @@ fun GameModesHubScreen(
   LaunchedEffect(Unit) {
     onRefreshDailyChallengeAvailability()
     while (true) {
-      delay(60_000L)
+      delay(EngagementTestSchedule.OneMinuteDelayMillis)
       onRefreshDailyChallengeAvailability()
     }
   }
@@ -720,6 +721,8 @@ fun SettingsScreen(
   onResetDailyChallengeClick: () -> Unit,
   onToggleTestingIconClick: () -> Unit,
   onTriggerTestingReminderClick: () -> Unit,
+  onScheduleTestingReminderInOneMinuteClick: () -> Unit,
+  onScheduleTestingInactiveIconInOneMinuteClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   var expandedDifficulty by remember { mutableStateOf<HintDifficulty?>(null) }
@@ -816,6 +819,8 @@ fun SettingsScreen(
         onResetDailyChallengeClick = onResetDailyChallengeClick,
         onToggleTestingIconClick = onToggleTestingIconClick,
         onTriggerTestingReminderClick = onTriggerTestingReminderClick,
+        onScheduleTestingReminderInOneMinuteClick = onScheduleTestingReminderInOneMinuteClick,
+        onScheduleTestingInactiveIconInOneMinuteClick = onScheduleTestingInactiveIconInOneMinuteClick,
       )
     }
   }

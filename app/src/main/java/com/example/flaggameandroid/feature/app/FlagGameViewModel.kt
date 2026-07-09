@@ -21,6 +21,7 @@ import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.hasSameQuizConfiguration
 import com.example.flaggameandroid.engagement.AppEngagementCoordinator
+import com.example.flaggameandroid.engagement.EngagementDebugLogger
 import com.example.flaggameandroid.persistence.AppGraph
 import com.example.flaggameandroid.persistence.persistProgress
 import com.example.flaggameandroid.persistence.persistSettings
@@ -338,7 +339,18 @@ class FlagGameViewModel(
   }
 
   fun onTriggerTestingReminderClicked() {
+    EngagementDebugLogger.info("Testing action clicked: send reminder now. coordinatorPresent=${engagementCoordinator != null}")
     engagementCoordinator?.triggerTestingReminderNotification()
+  }
+
+  fun onScheduleTestingReminderInOneMinuteClicked() {
+    EngagementDebugLogger.info("Testing action clicked: schedule reminder in 1 minute. coordinatorPresent=${engagementCoordinator != null}")
+    engagementCoordinator?.scheduleTestingReminderInOneMinute()
+  }
+
+  fun onScheduleTestingInactiveIconInOneMinuteClicked() {
+    EngagementDebugLogger.info("Testing action clicked: schedule inactive icon in 1 minute. coordinatorPresent=${engagementCoordinator != null}")
+    engagementCoordinator?.scheduleTestingInactiveIconInOneMinute()
   }
 
   fun onVariantToggled(variant: QuizVariant) {
@@ -797,6 +809,7 @@ class FlagGameViewModel(
               initialPersistedState = initialPersistedState,
             )
           }.getOrElse {
+            EngagementDebugLogger.error("FlagGameViewModel factory failed. Falling back to in-memory state.", it)
             FlagGameViewModel(initialPersistedState = PersistedAppState())
           }
         }

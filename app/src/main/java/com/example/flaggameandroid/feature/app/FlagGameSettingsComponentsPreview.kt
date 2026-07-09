@@ -38,6 +38,8 @@ private fun PreviewTestingToolsCard() {
         onResetDailyChallengeClick = {},
         onToggleTestingIconClick = {},
         onTriggerTestingReminderClick = {},
+        onScheduleTestingReminderInOneMinuteClick = {},
+        onScheduleTestingInactiveIconInOneMinuteClick = {},
       )
     }
   }

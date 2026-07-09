@@ -41,6 +41,11 @@ internal fun triggerDailyEngagementNudge(
       return@runBlocking
     }
 
+    if (progress.inactiveIconActive) {
+      EngagementDebugLogger.debug("Daily nudge skipped because inactive state is already active for the current cycle.")
+      return@runBlocking
+    }
+
     val updatedProgress = progress.copy(inactiveIconActive = true)
     progressStore.saveProgress(updatedProgress)
     launcherIconController.setInactiveLauncherIcon(active = true)
