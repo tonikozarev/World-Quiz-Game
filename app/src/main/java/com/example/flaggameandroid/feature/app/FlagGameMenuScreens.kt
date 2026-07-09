@@ -798,23 +798,25 @@ fun SettingsScreen(
       onReminderEnabledChanged = onReminderEnabledChanged,
     )
 
-    TestingToolsCard(
-      language = settings.language,
-      inactiveIconActive = inactiveIconActive,
-      testingButtonEnabled = testingButtonEnabled,
-      onAddTestingHintsClick = {
-        onAddTestingHintsClick()
-        testingButtonEnabled = false
-      },
-      onResetHintsClick = onResetHintsClick,
-      onTestingLevelUpClick = onTestingLevelUpClick,
-      onTestingResetLevelClick = onTestingResetLevelClick,
-      onUnlockRandomAchievementClick = onUnlockRandomAchievementClick,
-      onLockAllAchievementsClick = onLockAllAchievementsClick,
-      onResetAchievementsAndMedalsClick = onResetAchievementsAndMedalsClick,
-      onResetDailyChallengeClick = onResetDailyChallengeClick,
-      onToggleTestingIconClick = onToggleTestingIconClick,
-      onTriggerTestingReminderClick = onTriggerTestingReminderClick,
-    )
+    if (FlagGameDebugConfig.ShowTestingTools) {
+      TestingToolsCard(
+        language = settings.language,
+        inactiveIconActive = inactiveIconActive,
+        testingButtonEnabled = testingButtonEnabled,
+        onAddTestingHintsClick = {
+          onAddTestingHintsClick()
+          testingButtonEnabled = false
+        },
+        onResetHintsClick = onResetHintsClick,
+        onTestingLevelUpClick = onTestingLevelUpClick,
+        onTestingResetLevelClick = onTestingResetLevelClick,
+        onUnlockRandomAchievementClick = onUnlockRandomAchievementClick,
+        onLockAllAchievementsClick = onLockAllAchievementsClick,
+        onResetAchievementsAndMedalsClick = onResetAchievementsAndMedalsClick,
+        onResetDailyChallengeClick = onResetDailyChallengeClick,
+        onToggleTestingIconClick = onToggleTestingIconClick,
+        onTriggerTestingReminderClick = onTriggerTestingReminderClick,
+      )
+    }
   }
 }

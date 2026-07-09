@@ -21,6 +21,7 @@ class AppContainer(
       Migration6To7,
       Migration7To8,
       Migration8To9,
+      Migration9To10,
     ).build()
 
   val settingsStore: SettingsStore = DataStoreSettingsStore(context.flagGameSettingsDataStore)
