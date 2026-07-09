@@ -368,7 +368,7 @@ private fun PreviewModeCard() {
   FlagGameAndroidTheme {
     Surface {
       ModeCard(
-        mode = GameMode.Training,
+        mode = GameMode.CreateQuiz,
         language = AppLanguage.English,
         infoExpanded = true,
         openEnabled = true,
