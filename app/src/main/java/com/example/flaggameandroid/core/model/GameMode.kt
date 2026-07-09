@@ -33,13 +33,12 @@ enum class GameMode(
 internal fun startQuizModes(): List<GameMode> =
   listOf(
     GameMode.DailyChallenge,
-  )
-
-internal fun gameModesHubModes(): List<GameMode> =
-  listOf(
     GameMode.CreateQuiz,
     GameMode.MistakeReview,
   )
+
+internal fun gameModesHubModes(): List<GameMode> =
+  emptyList()
 
 enum class QuizVariant(
   val title: String,

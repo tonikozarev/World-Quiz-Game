@@ -16,6 +16,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -102,6 +103,7 @@ fun SetupScreen(
   onStartQuiz: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val darkTheme = isSystemInDarkTheme()
   var showSaveDialog by remember { mutableStateOf(false) }
   var saveQuizName by remember { mutableStateOf("") }
   var saveFeedbackMessage by remember { mutableStateOf<String?>(null) }
@@ -195,7 +197,7 @@ fun SetupScreen(
             },
           style = MaterialTheme.typography.headlineMedium,
           fontWeight = FontWeight.Bold,
-          color = Color.White,
+          color = if (darkTheme) Color.White else Color.Black,
           modifier = Modifier.weight(1f),
         )
         Button(

@@ -11,6 +11,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
     intent: Intent,
   ) {
     if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+      EngagementDebugLogger.info("BootCompletedReceiver fired. Rescheduling daily engagement check.")
       AppGraph.from(context.applicationContext).engagementCoordinator.scheduleDailyCheck()
     }
   }

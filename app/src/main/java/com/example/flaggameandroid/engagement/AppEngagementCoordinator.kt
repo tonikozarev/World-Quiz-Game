@@ -12,6 +12,10 @@ class AppEngagementCoordinator(
   private val progressStore: ProgressStore,
   private val nowProvider: () -> Long = System::currentTimeMillis,
 ) {
+  init {
+    EngagementDebugLogger.initialize(context.applicationContext)
+  }
+
   private val reminderScheduler = DailyReminderScheduler(context, nowProvider)
   private val reminderNotifier = ReminderNotificationPoster(context)
   private val launcherIconController = LauncherIconController(context, progressStore)

@@ -2,6 +2,7 @@
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -62,6 +63,7 @@ fun QuizScreen(
   onSpeedRunTimeExpired: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val darkTheme = isSystemInDarkTheme()
   val question = quiz.currentQuestion ?: return
   val draft = quiz.currentQuestionState
   val isImmediateCorrectionEnabled = quiz.instantCorrectionEnabled
@@ -133,7 +135,7 @@ fun QuizScreen(
       Text(
         text = displayModeTitle(quiz.mode, language),
         style = MaterialTheme.typography.headlineMedium,
-        color = Color.White,
+        color = if (darkTheme) Color.White else Color.Black,
         modifier = Modifier.weight(1f),
       )
       Button(onClick = onFinishQuiz, enabled = quiz.canFinish) {
@@ -399,7 +401,7 @@ fun ResultsScreen(
           player = player,
           language = language,
           totalQuestions = playerResults.size,
-          correctAnswers = playerResults.count { it.isCorrect },
+          correctAnswers = playerResults.count { it.countsAsCorrect },
           showHints = quiz.mode != GameMode.LocalMultiplayer,
           netScoreText = formatPointValue(playerResults.sumOf { resultPointValue(it) }),
         )

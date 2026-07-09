@@ -459,7 +459,7 @@ internal fun awardMedalIfEligible(
   totalCatalogCountries: Int,
 ): RatingsProgress {
   if (quiz.isMultiplayer) return ratings
-  if (completedResults.isEmpty() || completedResults.any { !it.isCorrect }) return ratings
+  if (completedResults.isEmpty() || completedResults.any { !it.countsAsCorrect }) return ratings
 
   val awardedMedal =
     ProgressionRules.medalForPerfectQuiz(
@@ -484,7 +484,7 @@ internal fun awardAchievementsIfEligible(
   if (quiz.isMultiplayer || completedResults.isEmpty()) return achievements
 
   var updatedAchievements = achievements
-  val perfectQuiz = completedResults.all { it.isCorrect }
+  val perfectQuiz = completedResults.all { it.countsAsCorrect }
   val medalEligiblePerfectQuiz = perfectQuiz && completedResults.size >= 10
 
   if (ratings.bronzeCount >= 50) {
@@ -517,10 +517,10 @@ internal fun awardAchievementsIfEligible(
 
   if (quiz.mode == GameMode.WorldFlags && quiz.countdownEnabled && completedResults.isNotEmpty()) {
     updatedAchievements = updatedAchievements.unlock(AchievementId.SpeedRunStarter, completedAtEpochMillis)
-    if (completedResults.all { it.isCorrect } && completedResults.none { it.hintUsed }) {
+    if (completedResults.all { it.countsAsCorrect } && completedResults.none { it.hintUsed }) {
       updatedAchievements = updatedAchievements.unlock(AchievementId.SpeedRunPurist, completedAtEpochMillis)
     }
-    if (quiz.speedRunSecondsPerAnswer == 1 && completedResults.all { it.isCorrect }) {
+    if (quiz.speedRunSecondsPerAnswer == 1 && completedResults.all { it.countsAsCorrect }) {
       updatedAchievements = updatedAchievements.unlock(AchievementId.SpeedRunOneSecond, completedAtEpochMillis)
     }
   }
@@ -559,7 +559,7 @@ internal fun awardAchievementsIfEligible(
         selectedContinents = quiz.selectedContinents,
         usedHint = completedResults.any { it.hintUsed },
         totalQuestions = completedResults.size,
-        correctAnswers = completedResults.count { it.isCorrect },
+        correctAnswers = completedResults.count { it.countsAsCorrect },
         distinctCountries = distinctCountries,
         availableCountriesForSelectedContinent = availableCountriesForSelectedContinent,
       )
