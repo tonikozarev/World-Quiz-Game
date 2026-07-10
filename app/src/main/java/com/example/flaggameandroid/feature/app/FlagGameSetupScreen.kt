@@ -105,6 +105,7 @@ fun SetupScreen(
   var replaceConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.NameConflict?>(null) }
   var capacityConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.CapacityConflict?>(null) }
   var savedCreateQuizTemplateId by remember { mutableStateOf<String?>(null) }
+  var savedCreateQuizSignature by remember { mutableStateOf<String?>(null) }
   var removeSavedCreateQuizDialogVisible by remember { mutableStateOf(false) }
   var showInstantCorrectionInfo by remember { mutableStateOf(false) }
   var showCreateQuizTrainingInfo by remember { mutableStateOf(false) }
@@ -148,6 +149,25 @@ fun SetupScreen(
       else -> setup.questionCountInput.ifBlank { "10" }
     }
 
+  fun currentCreateQuizSignature(): String =
+    listOf(
+      setup.topic.name,
+      displayedCreateQuizSource.name,
+      setup.createQuizPresets.map { it.name }.sorted().joinToString(","),
+      setup.selectedCountryCodes.sorted().joinToString(","),
+      setup.selectedCapitalCountryCodes.sorted().joinToString(","),
+      setup.variants.map { it.name }.sorted().joinToString(","),
+      setup.questionCountInput,
+      setup.surpriseMe.toString(),
+      setup.createQuizTrainingEnabled.toString(),
+      setup.createQuizManualHardcoreEnabled.toString(),
+      setup.createQuizLocalMultiplayerEnabled.toString(),
+      setup.createQuizManualTimerEnabled.toString(),
+      setup.speedRunSecondsPerAnswerInput,
+      setup.instantCorrectionEnabled.toString(),
+      setup.playerNames.joinToString("|"),
+    ).joinToString("::")
+
   LaunchedEffect(saveFeedbackMessage) {
     if (saveFeedbackMessage != null) {
       Toast.makeText(context, saveFeedbackMessage!!, Toast.LENGTH_LONG).show()
@@ -160,6 +180,13 @@ fun SetupScreen(
     displayedCreateQuizSource = setup.createQuizSource
   }
 
+  LaunchedEffect(setup.savedQuizTemplateId) {
+    if (setup.savedQuizTemplateId != null) {
+      savedCreateQuizTemplateId = setup.savedQuizTemplateId
+      savedCreateQuizSignature = currentCreateQuizSignature()
+    }
+  }
+
   LaunchedEffect(
     setup.topic,
     setup.createQuizSource,
@@ -169,8 +196,18 @@ fun SetupScreen(
     setup.variants,
     setup.questionCountInput,
     setup.surpriseMe,
+    setup.createQuizTrainingEnabled,
+    setup.createQuizManualHardcoreEnabled,
+    setup.createQuizLocalMultiplayerEnabled,
+    setup.createQuizManualTimerEnabled,
+    setup.speedRunSecondsPerAnswerInput,
+    setup.instantCorrectionEnabled,
+    setup.playerNames,
   ) {
-    savedCreateQuizTemplateId = null
+    val currentSignature = currentCreateQuizSignature()
+    if (savedCreateQuizSignature != null && currentSignature != savedCreateQuizSignature) {
+      savedCreateQuizTemplateId = null
+    }
   }
 
   fun closeSetupInfoPanels() {
@@ -960,6 +997,7 @@ fun SetupScreen(
                 is FlagGameViewModel.SaveQuizResult.Saved -> {
                   showSaveFeedback(result.message)
                   savedCreateQuizTemplateId = result.templateId
+                  savedCreateQuizSignature = currentCreateQuizSignature()
                   showSaveDialog = false
                 }
 
@@ -972,6 +1010,7 @@ fun SetupScreen(
                     }
                   )
                   savedCreateQuizTemplateId = result.existingTemplateId
+                  savedCreateQuizSignature = currentCreateQuizSignature()
                   showSaveDialog = false
                 }
                 is FlagGameViewModel.SaveQuizResult.NameConflict -> {
@@ -1038,6 +1077,7 @@ fun SetupScreen(
               savedCreateQuizTemplateId?.let { templateId ->
                 onRemoveSavedQuizTemplate(templateId)
                 savedCreateQuizTemplateId = null
+                savedCreateQuizSignature = null
                 Toast
                   .makeText(
                     context,
@@ -1104,6 +1144,7 @@ fun SetupScreen(
                 is FlagGameViewModel.SaveQuizResult.Saved -> {
                   showSaveFeedback(result.message)
                   savedCreateQuizTemplateId = result.templateId
+                  savedCreateQuizSignature = currentCreateQuizSignature()
                 }
                 is FlagGameViewModel.SaveQuizResult.DuplicateConfiguration ->
                   showSaveFeedback(
@@ -1112,8 +1153,10 @@ fun SetupScreen(
                       AppLanguage.Bulgarian -> "Същият тест вече е записан като \"${result.existingName}\"."
                       AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert."
                     }
-                  )
-                    .also { savedCreateQuizTemplateId = result.existingTemplateId }
+                  ).also {
+                    savedCreateQuizTemplateId = result.existingTemplateId
+                    savedCreateQuizSignature = currentCreateQuizSignature()
+                  }
                 is FlagGameViewModel.SaveQuizResult.NameConflict,
                 is FlagGameViewModel.SaveQuizResult.CapacityConflict,
                 FlagGameViewModel.SaveQuizResult.NoOp -> Unit
@@ -1172,6 +1215,7 @@ fun SetupScreen(
                 is FlagGameViewModel.SaveQuizResult.Saved -> {
                   showSaveFeedback(result.message)
                   savedCreateQuizTemplateId = result.templateId
+                  savedCreateQuizSignature = currentCreateQuizSignature()
                 }
                 is FlagGameViewModel.SaveQuizResult.DuplicateConfiguration ->
                   showSaveFeedback(
@@ -1180,8 +1224,10 @@ fun SetupScreen(
                       AppLanguage.Bulgarian -> "Същият тест вече е записан като \"${result.existingName}\"."
                       AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert."
                     }
-                  )
-                    .also { savedCreateQuizTemplateId = result.existingTemplateId }
+                  ).also {
+                    savedCreateQuizTemplateId = result.existingTemplateId
+                    savedCreateQuizSignature = currentCreateQuizSignature()
+                  }
                 is FlagGameViewModel.SaveQuizResult.NameConflict -> replaceConflict = result
                 is FlagGameViewModel.SaveQuizResult.CapacityConflict,
                 FlagGameViewModel.SaveQuizResult.NoOp -> Unit
