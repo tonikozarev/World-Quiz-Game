@@ -114,6 +114,7 @@ fun SetupScreen(
   var questionVariantsExpanded by remember { mutableStateOf(false) }
   var createQuizPlayersExpanded by remember { mutableStateOf(false) }
   var displayedCreateQuizSource by remember(setup.mode) { mutableStateOf(setup.createQuizSource) }
+  var lastSetupErrorToast by remember { mutableStateOf<String?>(null) }
   val manualCountryContinentExpanded = remember { mutableStateMapOf<String, Boolean>() }
   fun showSaveFeedback(message: String) {
     if (saveFeedbackMessage == null) {
@@ -179,6 +180,16 @@ fun SetupScreen(
       Toast.makeText(context, saveFeedbackMessage!!, Toast.LENGTH_LONG).show()
       delay(5_000)
       saveFeedbackMessage = null
+    }
+  }
+
+  LaunchedEffect(setupError) {
+    val currentError = setupError
+    if (currentError != null && currentError != lastSetupErrorToast) {
+      Toast.makeText(context, currentError, Toast.LENGTH_LONG).show()
+      lastSetupErrorToast = currentError
+    } else if (currentError == null) {
+      lastSetupErrorToast = null
     }
   }
 
@@ -249,6 +260,7 @@ fun SetupScreen(
           CreateQuizPinnedHeader(
             language = language,
             darkTheme = darkTheme,
+            topic = setup.topic,
             questionCountLabel = headerQuestionCountLabel,
             timerLabel = headerTimerLabel,
             saveEnabled = !setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore,
@@ -447,7 +459,11 @@ fun SetupScreen(
                 onClick = { manualCountryContinentExpanded[continent] = !continentExpanded },
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
               ) {
-                Text(if (continentExpanded) "▾" else "▸")
+                Text(
+                  text = if (continentExpanded) "▾" else "▸",
+                  fontSize = 20.sp,
+                  fontWeight = FontWeight.Bold,
+                )
               }
             }
           }
@@ -935,10 +951,6 @@ fun SetupScreen(
           onVariantToggle = onVariantToggle,
         )
       }
-    }
-
-    if (setupError != null) {
-      Text(text = setupError, color = AccentRed, style = MaterialTheme.typography.bodyMedium)
     }
 
     if (setup.mode != GameMode.CreateQuiz) {
@@ -1576,14 +1588,23 @@ private fun QuestionVariantsSection(
   }
 }
 
+private fun tr(language: AppLanguage, english: String, bulgarian: String, german: String): String =
+  when (language) {
+    AppLanguage.English -> english
+    AppLanguage.Bulgarian -> bulgarian
+    AppLanguage.German -> german
+  }
+
 private fun localizedCreateQuizHeaderTitle(
   language: AppLanguage,
-): String =
-  when (language) {
-    AppLanguage.English -> "Custom quiz"
-    AppLanguage.Bulgarian -> "Персонален тест"
-    AppLanguage.German -> "Benutzerdefiniertes Quiz"
+  topic: QuizTopic,
+): String {
+  return when (topic) {
+    QuizTopic.Countries -> tr(language, "Countries quiz", "Тест за държави", "Länder-Quiz")
+    QuizTopic.Capitals -> tr(language, "Capitals quiz", "Тест за столици", "Hauptstädte-Quiz")
+    QuizTopic.Mixed -> tr(language, "Mixed quiz", "Смесен тест", "Gemischtes Quiz")
   }
+}
 
 private fun localizedCreateQuizQuestionCountLine(
   language: AppLanguage,
@@ -1615,6 +1636,7 @@ private fun localizedCreateQuizQuestionCountLine(
 private fun CreateQuizPinnedHeader(
   language: AppLanguage,
   darkTheme: Boolean,
+  topic: QuizTopic,
   questionCountLabel: String,
   timerLabel: String?,
   saveEnabled: Boolean,
@@ -1661,7 +1683,10 @@ private fun CreateQuizPinnedHeader(
         verticalArrangement = Arrangement.spacedBy(0.dp),
       ) {
         Text(
-          text = localizedCreateQuizHeaderTitle(language),
+          text = localizedCreateQuizHeaderTitle(
+            language = language,
+            topic = topic,
+          ),
           style = MaterialTheme.typography.titleMedium,
           fontWeight = FontWeight.Bold,
           color = if (darkTheme) Color.White else MaterialTheme.colorScheme.onSurface,

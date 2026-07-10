@@ -390,7 +390,7 @@ class FlagGameFlowLogicTest {
       )
     val limit = questionLimitFor(setup, countries)
 
-    val validationError = validateSetup(setup) { countryPoolFor(it, countries) }
+    val validationError = validateSetup(setup, { countryPoolFor(it, countries) }, AppLanguage.English)
 
     assertEquals("Question count must be between 1 and $limit.", validationError)
   }

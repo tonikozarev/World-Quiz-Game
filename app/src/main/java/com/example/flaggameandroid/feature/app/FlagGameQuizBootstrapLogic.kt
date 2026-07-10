@@ -77,6 +77,7 @@ internal fun buildQuizStartResult(
   countries: List<FlagCountry>,
   questionGenerator: QuizQuestionGenerator,
   hintDifficulty: HintDifficulty,
+  language: AppLanguage,
   random: Random,
   hintCount: Double,
   displayName: String,
@@ -105,7 +106,7 @@ internal fun buildQuizStartResult(
   if (setup.mode == GameMode.MistakeReview && poolResolution.pool.isEmpty()) {
     return QuizStartResult(validationError = "No missed countries to review yet.")
   }
-  val validationError = validateSetup(setup) { poolResolution.pool }
+  val validationError = validateSetup(setup, { poolResolution.pool }, language)
   if (validationError != null) {
     return QuizStartResult(validationError = validationError)
   }

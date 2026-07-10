@@ -21,6 +21,13 @@ import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
 import kotlin.random.Random
 
+private fun tr(language: AppLanguage, english: String, bulgarian: String, german: String): String =
+  when (language) {
+    AppLanguage.English -> english
+    AppLanguage.Bulgarian -> bulgarian
+    AppLanguage.German -> german
+  }
+
 internal fun QuizState.loadQuestionDraft(index: Int): QuizState {
   if (questions.isEmpty()) return this
   val clampedIndex = index.coerceIn(0, questions.lastIndex)
@@ -173,8 +180,16 @@ internal fun <T> List<T>.replaceAt(
 internal fun validateSetup(
   setup: SetupState,
   countryPoolFor: (SetupState) -> List<FlagCountry>,
+  language: AppLanguage,
 ): String? {
-  if (setup.variants.isEmpty()) return "Choose at least one question variant."
+  if (setup.variants.isEmpty()) {
+    return tr(
+      language,
+      "Choose at least one question variant.",
+      "Избери поне един вид въпрос.",
+      "Wähle mindestens einen Fragetyp.",
+    )
+  }
   if (
     setup.mode == GameMode.CreateQuiz &&
     !setup.usesCreateQuizTraining &&
@@ -183,13 +198,41 @@ internal fun validateSetup(
     setup.selectedCountryCodes.isEmpty() &&
     setup.selectedCapitalCountryCodes.isEmpty()
   ) {
-    return if (setup.topic == QuizTopic.Mixed) "Choose at least one country or capital." else "Choose at least one country."
+    return if (setup.topic == QuizTopic.Mixed) {
+      tr(
+        language,
+        "Choose at least one country or capital.",
+        "Избери поне една държава или столица.",
+        "Wähle mindestens ein Land oder eine Hauptstadt.",
+      )
+    } else {
+      tr(
+        language,
+        "Choose at least one country.",
+        "Избери поне една държава.",
+        "Wähle mindestens ein Land.",
+      )
+    }
   }
   val needsTimer =
     setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualTimer
   if (needsTimer) {
-    val secondsPerAnswer = setup.speedRunSecondsPerAnswer ?: return "Write how many seconds each answer should get."
-    if (secondsPerAnswer !in 1..60) return "Seconds per answer must be between 1 and 60."
+    val secondsPerAnswer =
+      setup.speedRunSecondsPerAnswer
+        ?: return tr(
+          language,
+          "Write how many seconds each answer should get.",
+          "Напиши колко секунди да има всеки отговор.",
+          "Gib an, wie viele Sekunden jede Antwort haben soll.",
+        )
+    if (secondsPerAnswer !in 1..60) {
+      return tr(
+        language,
+        "Seconds per answer must be between 1 and 60.",
+        "Секундите за отговор трябва да са между 1 и 60.",
+        "Sekunden pro Antwort müssen zwischen 1 und 60 liegen.",
+      )
+    }
   }
   if (!setup.surpriseMe) {
     val maxQuestions = countryPoolFor(setup).size
@@ -202,8 +245,22 @@ internal fun validateSetup(
       setup.topic == QuizTopic.Mixed
     ) return null
     if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals) return null
-    val questionCount = setup.questionCount ?: return "Write how many questions you want."
-    if (questionCount <= 0) return "Question count must be at least 1."
+    val questionCount =
+      setup.questionCount
+        ?: return tr(
+          language,
+          "Write how many questions you want.",
+          "Напиши колко въпроса искаш.",
+          "Gib an, wie viele Fragen du möchtest.",
+        )
+    if (questionCount <= 0) {
+      return tr(
+        language,
+        "Question count must be at least 1.",
+        "Броят въпроси трябва да е поне 1.",
+        "Die Anzahl der Fragen muss mindestens 1 sein.",
+      )
+    }
     val limit =
       when {
         setup.usesCreateQuizTraining -> 999
@@ -214,13 +271,34 @@ internal fun validateSetup(
           setup.derivedCreateQuizQuestionCount()
         else -> maxQuestions
       }
-    if (questionCount > limit) return "Question count must be between 1 and $limit."
+    if (questionCount > limit) {
+      return tr(
+        language,
+        "Question count must be between 1 and $limit.",
+        "Броят въпроси трябва да е между 1 и $limit.",
+        "Die Anzahl der Fragen muss zwischen 1 und $limit liegen.",
+      )
+    }
   }
 
   if (setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizLocalMultiplayer) {
     val names = setup.playerNames.map { it.trim() }.filter { it.isNotEmpty() }
-    if (names.size !in 2..5) return "Local multiplayer needs 2 to 5 named players."
-    if (names.distinctBy { it.lowercase() }.size != names.size) return "Player names must be unique."
+    if (names.size !in 2..5) {
+      return tr(
+        language,
+        "Local multiplayer needs 2 to 5 named players.",
+        "Локалният мултиплейър изисква 2 до 5 именувани играча.",
+        "Lokaler Mehrspieler braucht 2 bis 5 benannte Spieler.",
+      )
+    }
+    if (names.distinctBy { it.lowercase() }.size != names.size) {
+      return tr(
+        language,
+        "Player names must be unique.",
+        "Имената на играчите трябва да са уникални.",
+        "Spielernamen müssen eindeutig sein.",
+      )
+    }
   }
   return null
 }
@@ -606,5 +684,4 @@ internal fun buildQuestionAdvanceOutcome(
     shouldComplete = false,
   )
 }
-
 
