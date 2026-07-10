@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -39,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -61,7 +59,6 @@ import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.theme.AccentRed
 import kotlinx.coroutines.delay
-import kotlin.math.abs
 
 @OptIn(ExperimentalLayoutApi::class)
 @androidx.compose.runtime.Composable
@@ -85,7 +82,6 @@ fun SetupScreen(
   onQuestionCountChange: (String) -> Unit,
   onSpeedRunSecondsChange: (String) -> Unit,
   onSurpriseMe: () -> Unit,
-  onMultiplayerBaseSelected: (MultiplayerQuizBase) -> Unit,
   onPlayerNameChanged: (Int, String) -> Unit,
   onAddPlayer: () -> Unit,
   onRemovePlayer: () -> Unit,
@@ -98,6 +94,7 @@ fun SetupScreen(
   onCreateQuizCapitalBulkToggled: (Set<String>) -> Unit,
   onCreateQuizAllCountriesToggled: () -> Unit,
   onSaveCreateQuizClicked: (String, String?) -> FlagGameViewModel.SaveQuizResult,
+  onRemoveSavedQuizTemplate: (String) -> Unit,
   onStartQuiz: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -107,6 +104,8 @@ fun SetupScreen(
   var saveFeedbackMessage by remember { mutableStateOf<String?>(null) }
   var replaceConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.NameConflict?>(null) }
   var capacityConflict by remember { mutableStateOf<FlagGameViewModel.SaveQuizResult.CapacityConflict?>(null) }
+  var savedCreateQuizTemplateId by remember { mutableStateOf<String?>(null) }
+  var removeSavedCreateQuizDialogVisible by remember { mutableStateOf(false) }
   var showInstantCorrectionInfo by remember { mutableStateOf(false) }
   var showCreateQuizTrainingInfo by remember { mutableStateOf(false) }
   var showCreateQuizLocalMultiplayerInfo by remember { mutableStateOf(false) }
@@ -133,15 +132,21 @@ fun SetupScreen(
     }
   val activeCreateQuizSource =
     if (setup.mode == GameMode.CreateQuiz) displayedCreateQuizSource else setup.createQuizSource
-  val stickyQuestionCount = setup.questionCount
   val scrollState = rememberScrollState()
   val density = LocalDensity.current
-  val stickyQuestionCountThresholdPx = remember(density) { with(density) { 20.dp.toPx() } }
-  var questionCountCardContentTop by remember { mutableStateOf(Float.NaN) }
-  val stickyQuestionCountEligible =
-    setup.mode == GameMode.CreateQuiz &&
-      !setup.usesCreateQuizManualHardcore &&
-      (activeCreateQuizSource == CreateQuizSource.ManualCountriesCapitals || activeCreateQuizSource == CreateQuizSource.PresetFilter)
+  var createQuizHeaderHeightPx by remember { mutableStateOf(0f) }
+  val headerQuestionCountLabel =
+    when {
+      setup.surpriseMe -> "***"
+      setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualHardcore && setup.topic == QuizTopic.Mixed -> "390"
+      setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualHardcore -> "195"
+      setup.mode == GameMode.CreateQuiz &&
+        activeCreateQuizSource == CreateQuizSource.ManualCountriesCapitals &&
+        setup.topic == QuizTopic.Mixed -> setup.createQuizMixedSelectionCount.toString()
+      setup.mode == GameMode.CreateQuiz &&
+        activeCreateQuizSource == CreateQuizSource.ManualCountriesCapitals -> setup.selectedCountryCodes.size.toString()
+      else -> setup.questionCountInput.ifBlank { "10" }
+    }
 
   LaunchedEffect(saveFeedbackMessage) {
     if (saveFeedbackMessage != null) {
@@ -155,6 +160,19 @@ fun SetupScreen(
     displayedCreateQuizSource = setup.createQuizSource
   }
 
+  LaunchedEffect(
+    setup.topic,
+    setup.createQuizSource,
+    setup.createQuizPresets,
+    setup.selectedCountryCodes,
+    setup.selectedCapitalCountryCodes,
+    setup.variants,
+    setup.questionCountInput,
+    setup.surpriseMe,
+  ) {
+    savedCreateQuizTemplateId = null
+  }
+
   fun closeSetupInfoPanels() {
     showInstantCorrectionInfo = false
     showCreateQuizTrainingInfo = false
@@ -162,57 +180,65 @@ fun SetupScreen(
     showCreateQuizHardcoreInfo = false
   }
 
+  fun openSaveCreateQuizDialog() {
+    saveQuizName =
+      if (setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals) {
+        when (language) {
+          AppLanguage.English -> "My quiz"
+          AppLanguage.Bulgarian -> "Моят тест"
+          AppLanguage.German -> "Mein Quiz"
+        }
+      } else {
+        when (language) {
+          AppLanguage.English -> "Saved quiz"
+          AppLanguage.Bulgarian -> "Запазен тест"
+          AppLanguage.German -> "Gespeichertes Quiz"
+        }
+      }
+    showSaveDialog = true
+  }
+
   ScreenShell(
     modifier = modifier,
     scrollState = scrollState,
     overlay = {
-      QuestionCountStickyOverlay(
-        enabled = stickyQuestionCountEligible,
-        scrollState = scrollState,
-        questionCountCardContentTop = questionCountCardContentTop,
-        thresholdPx = stickyQuestionCountThresholdPx,
-        setup = setup,
-        language = language,
-        questionCountLimit = questionCountLimit,
-        stickyQuestionCount = stickyQuestionCount,
-        onSurpriseMe = onSurpriseMe,
-        onQuestionCountChange = onQuestionCountChange,
-      )
-    },
-  ) {
-    if (setup.mode == GameMode.CreateQuiz) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(
-          text =
-            when (language) {
-              AppLanguage.English -> "Custom Quiz"
-              AppLanguage.Bulgarian -> "Персонален тест"
-              AppLanguage.German -> "Benutzerdefiniertes Quiz"
-            },
-          style = MaterialTheme.typography.headlineMedium,
-          fontWeight = FontWeight.Bold,
-          color = if (darkTheme) Color.White else Color.Black,
-          modifier = Modifier.weight(1f),
-        )
-        Button(
-          onClick = onStartQuiz,
-          contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+      if (setup.mode == GameMode.CreateQuiz) {
+        Column(
+          modifier =
+            Modifier
+              .fillMaxWidth()
+              .align(Alignment.TopStart)
+              .zIndex(2f),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-          Text(
-            when (language) {
-              AppLanguage.English -> "Start"
-              AppLanguage.Bulgarian -> "Старт"
-              AppLanguage.German -> "Start"
-            },
+          CreateQuizPinnedHeader(
+            language = language,
+            darkTheme = darkTheme,
+            questionCountLabel = headerQuestionCountLabel,
+            saveEnabled = !setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore,
+            saved = savedCreateQuizTemplateId != null,
+            onSaveClick = ::openSaveCreateQuizDialog,
+            onRemoveSavedClick = { removeSavedCreateQuizDialogVisible = true },
+            onStartQuiz = onStartQuiz,
+            onHeightMeasured = { createQuizHeaderHeightPx = it },
           )
         }
       }
-    } else {
+    },
+  ) {
+    if (setup.mode != GameMode.CreateQuiz) {
       HeaderRow(title = cleanModeTitle(setup.mode, language))
+    }
+
+    if (setup.mode == GameMode.CreateQuiz) {
+      Spacer(
+        modifier =
+          Modifier.height(
+            with(density) {
+              createQuizHeaderHeightPx.toDp() + 8.dp
+            },
+          ),
+      )
     }
 
     CompactToggleInfoCard(
@@ -247,31 +273,6 @@ fun SetupScreen(
         selectedTopic = setup.topic,
         onTopicSelected = onQuizTopicSelected,
       )
-    }
-
-    if (setup.mode == GameMode.LocalMultiplayer) {
-      PlayersSection(
-        language = language,
-        playerNames = setup.playerNames,
-        onPlayerNameChanged = onPlayerNameChanged,
-        onAddPlayer = onAddPlayer,
-        onRemovePlayer = onRemovePlayer,
-      )
-
-      SectionCard(title = when (language) {
-        AppLanguage.English -> "Quiz base"
-        AppLanguage.Bulgarian -> "База за теста"
-        AppLanguage.German -> "Quiz-Basis"
-      }) {
-        MultiplayerQuizBase.entries.forEach { base ->
-          SelectableRow(
-            title = modeBaseTitle(base, language),
-            selected = setup.multiplayerBase == base,
-            onClick = { onMultiplayerBaseSelected(base) },
-            description = modeBaseDescription(base, language),
-          )
-        }
-      }
     }
 
     val isMistakeReview = setup.mode == GameMode.MistakeReview
@@ -720,56 +721,47 @@ fun SetupScreen(
             setup.selectedCountryCodes.size.toString()
           else -> setup.questionCountInput
         }
-      Box(
-        modifier = Modifier.onGloballyPositioned { coordinates ->
-          val nextTop = coordinates.boundsInRoot().top + scrollState.value
-          if (!questionCountCardContentTop.isFinite() || abs(questionCountCardContentTop - nextTop) > 1f) {
-            questionCountCardContentTop = nextTop
-          }
+      renderQuestionCountCard(
+        displayedQuestionCount,
+        !setup.surpriseMe && !isCreateQuizManual,
+        !setup.usesCreateQuizTraining && activeCreateQuizSource == CreateQuizSource.PresetFilter,
+        when (language) {
+          AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+          AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+          AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
         },
-      ) {
-        renderQuestionCountCard(
-          displayedQuestionCount,
-          !setup.surpriseMe && !isCreateQuizManual,
-          !setup.usesCreateQuizTraining && activeCreateQuizSource == CreateQuizSource.PresetFilter,
+        onSurpriseMe,
+        questionCountChangeHandler,
+        if (activeCreateQuizSource == CreateQuizSource.PresetFilter) {
           when (language) {
-            AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-            AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-            AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-          },
-          onSurpriseMe,
-          questionCountChangeHandler,
-          if (activeCreateQuizSource == CreateQuizSource.PresetFilter) {
-            when (language) {
-              AppLanguage.English -> if (setup.usesCreateQuizTraining) "Range: 1-999" else "Range: 1-$questionCountLimit"
-              AppLanguage.Bulgarian -> if (setup.usesCreateQuizTraining) "Диапазон: 1-999" else "Диапазон: 1-$questionCountLimit"
-              AppLanguage.German -> if (setup.usesCreateQuizTraining) "Bereich: 1-999" else "Bereich: 1-$questionCountLimit"
-            }
-          } else {
-            null
-          },
-          if (activeCreateQuizSource == CreateQuizSource.PresetFilter) {
-            when {
-              questionCountOverLimit ->
-                when (language) {
-                  AppLanguage.English -> "Selected question count is over the allowed limit."
-                  AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
-                  AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
-                }
-              ProgressionRules.shouldWarnNoMedal(setup.questionCount) ->
-                when (language) {
-                  AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
-                  AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
-                  AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
-                }
-              else -> null
-            }
-          } else {
-            null
-          },
-          questionCountOverLimit,
-        )
-      }
+            AppLanguage.English -> if (setup.usesCreateQuizTraining) "Range: 1-999" else "Range: 1-$questionCountLimit"
+            AppLanguage.Bulgarian -> if (setup.usesCreateQuizTraining) "Диапазон: 1-999" else "Диапазон: 1-$questionCountLimit"
+            AppLanguage.German -> if (setup.usesCreateQuizTraining) "Bereich: 1-999" else "Bereich: 1-$questionCountLimit"
+          }
+        } else {
+          null
+        },
+        if (activeCreateQuizSource == CreateQuizSource.PresetFilter) {
+          when {
+            questionCountOverLimit ->
+              when (language) {
+                AppLanguage.English -> "Selected question count is over the allowed limit."
+                AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
+                AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
+              }
+            ProgressionRules.shouldWarnNoMedal(setup.questionCount) ->
+              when (language) {
+                AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
+                AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
+                AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
+              }
+            else -> null
+          }
+        } else {
+          null
+        },
+        questionCountOverLimit,
+      )
 
       QuestionVariantsSection(
         language = language,
@@ -859,73 +851,42 @@ fun SetupScreen(
     }
 
     if (setup.mode != GameMode.CreateQuiz) {
-      if (setup.multiplayerBase == MultiplayerQuizBase.Continents && setup.mode == GameMode.LocalMultiplayer) {
-        SectionCard(title = cleanText(language, UiText.Continents)) {
-          FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            availableContinents.forEach { continent ->
-              val isSelectable = continent != "Antarctica"
-              FilterChip(
-                selected = continent in setup.selectedContinents,
-                onClick = { if (isSelectable) onContinentToggle(continent) },
-                enabled = isSelectable,
-                label = {
-                  Text(
-                    text = localizedContinentName(continent, language),
-                    textDecoration = if (isSelectable) TextDecoration.None else TextDecoration.LineThrough,
-                  )
-                },
-              )
-            }
-          }
-        }
-      }
-
-      else {
-        Box(
-          modifier = Modifier.onGloballyPositioned { coordinates ->
-            val nextTop = coordinates.boundsInRoot().top + scrollState.value
-            if (!questionCountCardContentTop.isFinite() || abs(questionCountCardContentTop - nextTop) > 1f) {
-              questionCountCardContentTop = nextTop
-            }
+      renderQuestionCountCard(
+        when {
+          isMistakeReview -> questionCountLimit.toString()
+          else -> setup.questionCountInput
+        },
+        !setup.surpriseMe && !isMistakeReview,
+        !isMistakeReview,
+        when (language) {
+          AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+          AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+          AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
+        },
+        onSurpriseMe,
+        questionCountChangeHandler,
+        if (isMistakeReview) null else when (language) {
+            AppLanguage.English -> "Allowed range: 1-$questionCountLimit"
+            AppLanguage.Bulgarian -> "Допустим диапазон: 1-$questionCountLimit"
+            AppLanguage.German -> "Erlaubter Bereich: 1-$questionCountLimit"
           },
-        ) {
-          renderQuestionCountCard(
-            when {
-              isMistakeReview -> questionCountLimit.toString()
-              else -> setup.questionCountInput
-            },
-            !setup.surpriseMe && !isMistakeReview,
-            !isMistakeReview,
-            when (language) {
-              AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-              AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-              AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-            },
-            onSurpriseMe,
-            questionCountChangeHandler,
-            if (isMistakeReview) null else when (language) {
-              AppLanguage.English -> "Allowed range: 1-$questionCountLimit"
-              AppLanguage.Bulgarian -> "Допустим диапазон: 1-$questionCountLimit"
-              AppLanguage.German -> "Erlaubter Bereich: 1-$questionCountLimit"
-            },
-            if (isMistakeReview) null else when {
-              questionCountOverLimit ->
-                when (language) {
-                  AppLanguage.English -> "Selected question count is over the allowed limit."
-                  AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
-                  AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
-                }
-              ProgressionRules.shouldWarnNoMedal(setup.questionCount) ->
-                when (language) {
-                  AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
-                  AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
-                  AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
-                }
-              else -> null
-            },
-            questionCountOverLimit,
-          )
-        }
+          if (isMistakeReview) null else when {
+            questionCountOverLimit ->
+              when (language) {
+                AppLanguage.English -> "Selected question count is over the allowed limit."
+                AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
+                AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
+              }
+            ProgressionRules.shouldWarnNoMedal(setup.questionCount) ->
+              when (language) {
+                AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
+                AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
+                AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
+              }
+            else -> null
+          },
+          questionCountOverLimit,
+        )
 
         QuestionVariantsSection(
           language = language,
@@ -949,38 +910,6 @@ fun SetupScreen(
             AppLanguage.English -> "Start quiz"
             AppLanguage.Bulgarian -> "Започни теста"
             AppLanguage.German -> "Quiz starten"
-          },
-        )
-      }
-    }
-
-    if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore) {
-      Button(
-        onClick = {
-          saveQuizName =
-            if (setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals) {
-              when (language) {
-                AppLanguage.English -> "My quiz"
-                AppLanguage.Bulgarian -> "Моят тест"
-                AppLanguage.German -> "Mein Quiz"
-              }
-            } else {
-              when (language) {
-                AppLanguage.English -> "Saved quiz"
-                AppLanguage.Bulgarian -> "Запазен тест"
-                AppLanguage.German -> "Gespeichertes Quiz"
-              }
-            }
-          showSaveDialog = true
-        },
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(18.dp),
-      ) {
-        Text(
-          when (language) {
-            AppLanguage.English -> "Save to favorites"
-            AppLanguage.Bulgarian -> "Запази в любими"
-            AppLanguage.German -> "In Favoriten speichern"
           },
         )
       }
@@ -1030,6 +959,7 @@ fun SetupScreen(
               when (val result = onSaveCreateQuizClicked(saveQuizName, null)) {
                 is FlagGameViewModel.SaveQuizResult.Saved -> {
                   showSaveFeedback(result.message)
+                  savedCreateQuizTemplateId = result.templateId
                   showSaveDialog = false
                 }
 
@@ -1041,6 +971,7 @@ fun SetupScreen(
                       AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert. Der Test war nicht gespeichert."
                     }
                   )
+                  savedCreateQuizTemplateId = result.existingTemplateId
                   showSaveDialog = false
                 }
                 is FlagGameViewModel.SaveQuizResult.NameConflict -> {
@@ -1080,6 +1011,71 @@ fun SetupScreen(
       )
     }
 
+    if (removeSavedCreateQuizDialogVisible) {
+      AlertDialog(
+        onDismissRequest = { removeSavedCreateQuizDialogVisible = false },
+        title = {
+          Text(
+            when (language) {
+              AppLanguage.English -> "Delete saved quiz?"
+              AppLanguage.Bulgarian -> "Да изтрия ли запазения тест?"
+              AppLanguage.German -> "Gespeichertes Quiz löschen?"
+            },
+          )
+        },
+        text = {
+          Text(
+            when (language) {
+              AppLanguage.English -> "Do you really want to delete this saved quiz?"
+              AppLanguage.Bulgarian -> "Наистина ли искаш да изтриеш този запазен тест?"
+              AppLanguage.German -> "Möchtest du dieses gespeicherte Quiz wirklich löschen?"
+            },
+          )
+        },
+        confirmButton = {
+          TextButton(
+            onClick = {
+              savedCreateQuizTemplateId?.let { templateId ->
+                onRemoveSavedQuizTemplate(templateId)
+                savedCreateQuizTemplateId = null
+                Toast
+                  .makeText(
+                    context,
+                    when (language) {
+                      AppLanguage.English -> "Saved quiz deleted."
+                      AppLanguage.Bulgarian -> "Запазеният тест е изтрит."
+                      AppLanguage.German -> "Gespeichertes Quiz gelöscht."
+                    },
+                    Toast.LENGTH_LONG,
+                  )
+                  .show()
+              }
+              removeSavedCreateQuizDialogVisible = false
+            },
+          ) {
+            Text(
+              when (language) {
+                AppLanguage.English -> "Yes"
+                AppLanguage.Bulgarian -> "Да"
+                AppLanguage.German -> "Ja"
+              },
+            )
+          }
+        },
+        dismissButton = {
+          TextButton(onClick = { removeSavedCreateQuizDialogVisible = false }) {
+            Text(
+              when (language) {
+                AppLanguage.English -> "No"
+                AppLanguage.Bulgarian -> "Не"
+                AppLanguage.German -> "Nein"
+              },
+            )
+          }
+        },
+      )
+    }
+
     replaceConflict?.let { conflict ->
       AlertDialog(
         onDismissRequest = { replaceConflict = null },
@@ -1105,7 +1101,10 @@ fun SetupScreen(
           TextButton(
             onClick = {
               when (val result = onSaveCreateQuizClicked(saveQuizName, conflict.existingTemplateId)) {
-                is FlagGameViewModel.SaveQuizResult.Saved -> showSaveFeedback(result.message)
+                is FlagGameViewModel.SaveQuizResult.Saved -> {
+                  showSaveFeedback(result.message)
+                  savedCreateQuizTemplateId = result.templateId
+                }
                 is FlagGameViewModel.SaveQuizResult.DuplicateConfiguration ->
                   showSaveFeedback(
                     when (language) {
@@ -1114,6 +1113,7 @@ fun SetupScreen(
                       AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert."
                     }
                   )
+                    .also { savedCreateQuizTemplateId = result.existingTemplateId }
                 is FlagGameViewModel.SaveQuizResult.NameConflict,
                 is FlagGameViewModel.SaveQuizResult.CapacityConflict,
                 FlagGameViewModel.SaveQuizResult.NoOp -> Unit
@@ -1169,7 +1169,10 @@ fun SetupScreen(
           TextButton(
             onClick = {
               when (val result = onSaveCreateQuizClicked(saveQuizName, conflict.replaceTemplateId)) {
-                is FlagGameViewModel.SaveQuizResult.Saved -> showSaveFeedback(result.message)
+                is FlagGameViewModel.SaveQuizResult.Saved -> {
+                  showSaveFeedback(result.message)
+                  savedCreateQuizTemplateId = result.templateId
+                }
                 is FlagGameViewModel.SaveQuizResult.DuplicateConfiguration ->
                   showSaveFeedback(
                     when (language) {
@@ -1178,6 +1181,7 @@ fun SetupScreen(
                       AppLanguage.German -> "Dasselbe Quiz ist bereits als \"${result.existingName}\" gespeichert."
                     }
                   )
+                    .also { savedCreateQuizTemplateId = result.existingTemplateId }
                 is FlagGameViewModel.SaveQuizResult.NameConflict -> replaceConflict = result
                 is FlagGameViewModel.SaveQuizResult.CapacityConflict,
                 FlagGameViewModel.SaveQuizResult.NoOp -> Unit
@@ -1209,7 +1213,6 @@ fun SetupScreen(
     }
 
   }
-}
 
 @Composable
 private fun PlayersSection(
@@ -1342,11 +1345,11 @@ private fun PlayerFieldsContent(
           AppLanguage.English -> "Add player"
           AppLanguage.Bulgarian -> "Добави играч"
           AppLanguage.German -> "Spieler hinzufügen"
-        },
-      )
+          },
+        )
+      }
     }
   }
-}
 
 @Composable
 private fun CompactToggleCard(
@@ -1526,194 +1529,103 @@ private fun QuestionVariantsSection(
   }
 }
 
-@Composable
-private fun QuestionCountStickyOverlay(
-  enabled: Boolean,
-  scrollState: ScrollState,
-  questionCountCardContentTop: Float,
-  thresholdPx: Float,
-  setup: SetupState,
+private fun localizedCreateQuizHeaderTitle(
   language: AppLanguage,
-  questionCountLimit: Int,
-  stickyQuestionCount: Int?,
-  onSurpriseMe: () -> Unit,
-  onQuestionCountChange: (String) -> Unit,
-) {
-  val showSticky by remember(enabled, questionCountCardContentTop, thresholdPx, scrollState) {
-    derivedStateOf {
-      enabled &&
-        questionCountCardContentTop.isFinite() &&
-        questionCountCardContentTop - scrollState.value <= thresholdPx
-    }
+): String =
+  when (language) {
+    AppLanguage.English -> "Custom quiz"
+    AppLanguage.Bulgarian -> "Персонален тест"
+    AppLanguage.German -> "Benutzerdefiniertes Quiz"
   }
-  if (!showSticky) return
 
-  QuestionCountStickyCard(
-    title =
-      when (language) {
-        AppLanguage.English -> "Question count"
-        AppLanguage.Bulgarian -> "Брой въпроси"
-        AppLanguage.German -> "Fragenanzahl"
-      },
-    questionCountValue =
-      when {
-        setup.mode == GameMode.CreateQuiz &&
-          setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
-          setup.topic == QuizTopic.Mixed ->
-          setup.createQuizMixedSelectionCount.toString()
+private fun localizedCreateQuizQuestionCountLine(
+  language: AppLanguage,
+  questionCountLabel: String,
+): String =
+  when (language) {
+    AppLanguage.English -> "($questionCountLabel questions)"
+    AppLanguage.Bulgarian -> "($questionCountLabel въпроса)"
+    AppLanguage.German -> "($questionCountLabel Fragen)"
+  }
 
-        setup.mode == GameMode.CreateQuiz &&
-          setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals ->
-          setup.selectedCountryCodes.size.toString()
-
-        else -> setup.questionCountInput
-      },
-    editable =
-      when {
-        setup.mode == GameMode.CreateQuiz &&
-          setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals -> false
-        setup.mode == GameMode.MistakeReview -> false
-        else -> true
-      },
-    showRandomButton = setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.PresetFilter,
-    randomButtonText =
-      when (language) {
-        AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-        AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-        AppLanguage.German -> if (setup.surpriseMe) "Manual count" else "Randomizer"
-      },
-    onRandomButtonClick = onSurpriseMe,
-    onValueChange =
-      if (
-        setup.mode == GameMode.MistakeReview ||
-        (
-          setup.mode == GameMode.CreateQuiz &&
-            setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
-            !setup.usesCreateQuizTraining
-          )
-      ) {
-        { _: String -> }
-      } else {
-        onQuestionCountChange
-      },
-    rangeText =
-      if (setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.PresetFilter) {
-        when (language) {
-          AppLanguage.English -> if (setup.usesCreateQuizTraining) "Range: 1-999" else "Range: 1-$questionCountLimit"
-          AppLanguage.Bulgarian -> if (setup.usesCreateQuizTraining) "Диапазон: 1-999" else "Диапазон: 1-$questionCountLimit"
-          AppLanguage.German -> if (setup.usesCreateQuizTraining) "Bereich: 1-999" else "Bereich: 1-$questionCountLimit"
-        }
-      } else {
-        null
-      },
-    warningText =
-      if (setup.mode == GameMode.CreateQuiz && setup.createQuizSource == CreateQuizSource.PresetFilter) {
-        when {
-          !setup.surpriseMe &&
-            stickyQuestionCount != null &&
-            stickyQuestionCount > questionCountLimit ->
-            when (language) {
-              AppLanguage.English -> "Selected question count is over the allowed limit."
-              AppLanguage.Bulgarian -> "Избраният брой въпроси е над позволения лимит."
-              AppLanguage.German -> "Die gewählte Fragenzahl liegt über dem erlaubten Limit."
-            }
-
-          ProgressionRules.shouldWarnNoMedal(setup.questionCount) ->
-            when (language) {
-              AppLanguage.English -> "Perfect runs under 10 questions do not earn a medal."
-              AppLanguage.Bulgarian -> "Перфектен тест под 10 въпроса не носи медал."
-              AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
-            }
-
-          else -> null
-        }
-      } else {
-        null
-      },
-    warningIsError =
-      !setup.surpriseMe &&
-        stickyQuestionCount != null &&
-        stickyQuestionCount > questionCountLimit,
-    placeholderText = surpriseMePlaceholderText(language, setup.surpriseMe),
+@Composable
+private fun CreateQuizPinnedHeader(
+  language: AppLanguage,
+  darkTheme: Boolean,
+  questionCountLabel: String,
+  saveEnabled: Boolean,
+  saved: Boolean,
+  onSaveClick: () -> Unit,
+  onRemoveSavedClick: () -> Unit,
+  onStartQuiz: () -> Unit,
+  onHeightMeasured: (Float) -> Unit,
+) {
+  Card(
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    shape = androidx.compose.ui.graphics.RectangleShape,
     modifier =
       Modifier
         .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.background)
-        .padding(bottom = 8.dp)
-        .zIndex(1f),
-  )
-}
-
-@Composable
-private fun QuestionCountStickyCard(
-  title: String,
-  questionCountValue: String,
-  editable: Boolean,
-  showRandomButton: Boolean,
-  randomButtonText: String,
-  onRandomButtonClick: () -> Unit,
-  onValueChange: (String) -> Unit,
-  rangeText: String?,
-  warningText: String?,
-  warningIsError: Boolean,
-  placeholderText: String,
-  modifier: Modifier = Modifier,
-) {
-  Card(modifier = modifier.fillMaxWidth()) {
-    Column(
-      modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-      verticalArrangement = Arrangement.spacedBy(6.dp),
+        .onGloballyPositioned { coordinates -> onHeightMeasured(coordinates.size.height.toFloat()) },
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp),
+      horizontalArrangement = Arrangement.spacedBy(4.dp),
+      verticalAlignment = Alignment.CenterVertically,
     ) {
-      Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+      Box(
+        modifier = Modifier.weight(0.18f),
+        contentAlignment = Alignment.CenterEnd,
       ) {
-        val fieldModifier =
-          if (showRandomButton) {
-            Modifier.weight(3f)
-          } else {
-            Modifier.fillMaxWidth()
-          }
-        OutlinedTextField(
-          value = questionCountValue,
-          onValueChange = onValueChange,
-          placeholder = {
-            Text(placeholderText)
-          },
-          label =
-            if (rangeText != null) {
-              { Text(rangeText) }
-            } else {
-              null
-            },
-          supportingText =
-            if (warningText != null) {
-              {
-                Text(
-                  text = warningText,
-                  style = MaterialTheme.typography.bodySmall,
-                  color = if (warningIsError) AccentRed else MaterialTheme.colorScheme.onSurface,
-                )
-              }
-            } else {
-              null
-            },
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-          singleLine = true,
-          enabled = editable,
-          isError = warningIsError,
-          modifier = fieldModifier,
-        )
-        if (showRandomButton) {
-          OutlinedButton(
-            onClick = onRandomButtonClick,
-            modifier = Modifier.weight(2f),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        if (saveEnabled) {
+          TextButton(
+            onClick = if (saved) onRemoveSavedClick else onSaveClick,
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
           ) {
-            Text(randomButtonText, maxLines = 1)
+            Text(
+            text = if (saved) "★" else "☆",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+          )
           }
+        }
+      }
+      Column(
+        modifier = Modifier.weight(1f),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+      ) {
+        Text(
+          text = localizedCreateQuizHeaderTitle(language),
+          style = MaterialTheme.typography.titleMedium,
+          fontWeight = FontWeight.Bold,
+          color = if (darkTheme) Color.White else MaterialTheme.colorScheme.onSurface,
+          maxLines = 1,
+        )
+        Text(
+          text = localizedCreateQuizQuestionCountLine(language, questionCountLabel),
+          style = MaterialTheme.typography.labelMedium,
+          color = if (darkTheme) Color.White else MaterialTheme.colorScheme.onSurface,
+          maxLines = 1,
+        )
+      }
+      Box(
+        modifier = Modifier.weight(0.24f),
+        contentAlignment = Alignment.CenterStart,
+      ) {
+        Button(
+          onClick = onStartQuiz,
+          contentPadding = PaddingValues(horizontal = 6.dp, vertical = 3.dp),
+        ) {
+          Text(
+            when (language) {
+              AppLanguage.English -> "Start"
+              AppLanguage.Bulgarian -> "Старт"
+              AppLanguage.German -> "Start"
+            },
+            maxLines = 1,
+          )
         }
       }
     }

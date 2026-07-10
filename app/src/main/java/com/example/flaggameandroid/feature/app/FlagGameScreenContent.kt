@@ -182,6 +182,7 @@ internal fun FlagGameScreenContent(
         onCreateQuizCapitalBulkToggled = onCreateQuizCapitalBulkToggled,
         onCreateQuizAllCountriesToggled = onCreateQuizAllCountriesToggled,
         onSaveCreateQuizClicked = onSaveCreateQuizClicked,
+        onRemoveSavedQuizTemplate = onRemoveSavedQuizTemplate,
         modifier = modifier,
       )
     AppScreen.Quiz ->

@@ -627,7 +627,10 @@ class FlagGameViewModel(
     val sameConfigurationTemplate =
       state.savedQuizTemplates.firstOrNull { it.hasSameQuizConfiguration(template) }
     if (sameConfigurationTemplate != null && sameConfigurationTemplate.id != replaceTemplateId) {
-      return SaveQuizResult.DuplicateConfiguration(existingName = sameConfigurationTemplate.title)
+      return SaveQuizResult.DuplicateConfiguration(
+        existingTemplateId = sameConfigurationTemplate.id,
+        existingName = sameConfigurationTemplate.title,
+      )
     }
 
     val replacingExisting = replaceTemplateId != null
@@ -654,11 +657,13 @@ class FlagGameViewModel(
     }
 
     return SaveQuizResult.Saved(
-      when (state.settings.language) {
-        AppLanguage.English -> "Saved \"${template.title}\"."
-        AppLanguage.Bulgarian -> "Р—Р°РїР°Р·РµРЅ Рµ \"${template.title}\"."
-        AppLanguage.German -> "\"${template.title}\" wurde gespeichert."
-      },
+      templateId = template.id,
+      message =
+        when (state.settings.language) {
+          AppLanguage.English -> "Saved \"${template.title}\"."
+          AppLanguage.Bulgarian -> "Запазен е \"${template.title}\"."
+          AppLanguage.German -> "\"${template.title}\" wurde gespeichert."
+        },
     )
   }
 
@@ -725,10 +730,12 @@ class FlagGameViewModel(
     data object NoOp : SaveQuizResult
 
     data class Saved(
+      val templateId: String,
       val message: String,
     ) : SaveQuizResult
 
     data class DuplicateConfiguration(
+      val existingTemplateId: String,
       val existingName: String,
     ) : SaveQuizResult
 
