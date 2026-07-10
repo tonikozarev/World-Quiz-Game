@@ -333,9 +333,12 @@ internal fun AnswerButton(
         disabledContentColor = buttonContentColor(color),
       ),
     border = border,
-    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 11.dp),
+    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
     shape = RoundedCornerShape(10.dp),
-    modifier = Modifier.fillMaxWidth(),
+    modifier =
+      Modifier
+        .fillMaxWidth()
+        .height(72.dp),
   ) {
     val isCapitalFlagAnswer = question.variant == QuizVariant.TextToFlag && question.topic == com.example.flaggameandroid.core.model.QuizTopic.Capitals
     val hasHintAnswerText = question.variant == QuizVariant.TextToFlag && hintUses > 0
@@ -343,9 +346,9 @@ internal fun AnswerButton(
       text = answerOptionLabel(question, option, language, hintUses),
       fontSize =
         when {
-          isCapitalFlagAnswer || hasHintAnswerText -> 16.sp
-          question.variant == QuizVariant.TextToFlag -> 32.sp
-          else -> 16.sp
+          isCapitalFlagAnswer || hasHintAnswerText -> 24.sp
+          question.variant == QuizVariant.TextToFlag -> 36.sp
+          else -> 24.sp
         },
       maxLines = if (isCapitalFlagAnswer || hasHintAnswerText) 2 else 1,
       textAlign = TextAlign.Center,
