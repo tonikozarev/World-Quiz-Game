@@ -200,12 +200,16 @@ private fun List<SavedQuizTemplate>.serializeSavedQuizTemplates(): String =
       template.topic.name,
       template.source.name,
       template.preset?.name.orEmpty(),
+      template.createQuizPresets.joinToString(separator = ".") { it.name },
       template.selectedCountryCodes.joinToString(separator = "."),
       template.selectedCapitalCountryCodes.joinToString(separator = "."),
       template.questionCountryCodes.joinToString(separator = "."),
       template.variants.joinToString(separator = ".") { it.name },
       template.questionCount.toString(),
       template.seed.toString(),
+      if (template.instantCorrectionEnabled) "1" else "0",
+      if (template.createQuizManualTimerEnabled) "1" else "0",
+      template.speedRunSecondsPerAnswer.toString(),
       if (template.createQuizLocalMultiplayerEnabled) "1" else "0",
       template.playerNames.joinToString(separator = "."),
       template.completionCount.toString(),
@@ -220,7 +224,7 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
       .mapNotNull { row ->
         val parts = row.split(",")
         if (parts.size < 11) return@mapNotNull null
-        val hasTopic = parts.size >= 15
+        val hasTopic = parts.size >= 19
         val topic =
           if (hasTopic) {
             QuizTopic.entries.firstOrNull { it.name == parts[3] } ?: QuizTopic.Countries
@@ -229,17 +233,29 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           }
         val sourceIndex = if (hasTopic) 4 else 3
         val presetIndex = if (hasTopic) 5 else 4
-        val selectedCodesIndex = if (hasTopic) 6 else 5
-        val selectedCapitalCodesIndex = if (hasTopic) 7 else -1
-        val questionCodesIndex = if (hasTopic) 8 else 6
-        val variantsIndex = if (hasTopic) 9 else 7
-        val questionCountIndex = if (hasTopic) 10 else 8
-        val seedIndex = if (hasTopic) 11 else 9
-        val multiplayerIndex = if (hasTopic) 12 else 10
-        val playersIndex = if (hasTopic) 13 else 11
-        val completionIndex = if (hasTopic) 14 else 12
+        val presetsIndex = if (hasTopic) 6 else -1
+        val selectedCodesIndex = if (hasTopic) 7 else 5
+        val selectedCapitalCodesIndex = if (hasTopic) 8 else -1
+        val questionCodesIndex = if (hasTopic) 9 else 6
+        val variantsIndex = if (hasTopic) 10 else 7
+        val questionCountIndex = if (hasTopic) 11 else 8
+        val seedIndex = if (hasTopic) 12 else 9
+        val instantCorrectionIndex = if (hasTopic) 13 else -1
+        val manualTimerIndex = if (hasTopic) 14 else -1
+        val secondsIndex = if (hasTopic) 15 else -1
+        val multiplayerIndex = if (hasTopic) 16 else 10
+        val playersIndex = if (hasTopic) 17 else 11
+        val completionIndex = if (hasTopic) 18 else 12
         val source = CreateQuizSource.entries.firstOrNull { it.name == parts[sourceIndex] } ?: CreateQuizSource.PresetFilter
         val preset = parts[presetIndex].takeIf { it.isNotBlank() }?.let { name -> CreateQuizPreset.entries.firstOrNull { it.name == name } }
+        val createQuizPresets =
+          if (hasTopic) {
+            parts[presetsIndex].takeIf { it.isNotBlank() }?.split(".")?.mapNotNull { presetName ->
+              CreateQuizPreset.entries.firstOrNull { it.name == presetName }
+            }?.toSet().orEmpty()
+          } else {
+            emptySet()
+          }
         val selectedCountryCodes = parts[selectedCodesIndex].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
         val selectedCapitalCountryCodes =
           if (selectedCapitalCodesIndex >= 0) {
@@ -247,7 +263,7 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           } else {
             emptySet()
           }
-        val modernFormat = parts.size >= (if (hasTopic) 15 else 14)
+        val modernFormat = parts.size >= (if (hasTopic) 19 else 13)
         val questionCountryCodes =
           if (parts.size >= (if (hasTopic) 13 else 12)) {
             parts[questionCodesIndex].takeIf { it.isNotBlank() }?.split(".")?.toSet().orEmpty()
@@ -267,6 +283,24 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           } else {
             false
           }
+        val instantCorrectionEnabled =
+          if (modernFormat && instantCorrectionIndex >= 0) {
+            parts[instantCorrectionIndex] == "1"
+          } else {
+            true
+          }
+        val createQuizManualTimerEnabled =
+          if (modernFormat && manualTimerIndex >= 0) {
+            parts[manualTimerIndex] == "1"
+          } else {
+            false
+          }
+        val speedRunSecondsPerAnswer =
+          if (modernFormat && secondsIndex >= 0) {
+            parts[secondsIndex].toIntOrNull() ?: 5
+          } else {
+            5
+          }
         val playerNames =
           if (modernFormat) {
             parts[playersIndex].takeIf { it.isNotBlank() }?.split(".")?.filter { it.isNotBlank() }.orEmpty()
@@ -280,12 +314,16 @@ private fun String.toSavedQuizTemplates(): List<SavedQuizTemplate> =
           topic = topic,
           source = source,
           preset = preset,
+          createQuizPresets = createQuizPresets,
           selectedCountryCodes = selectedCountryCodes,
           selectedCapitalCountryCodes = selectedCapitalCountryCodes,
           questionCountryCodes = questionCountryCodes,
           variants = variants,
           questionCount = parts[questionCountIndex].toIntOrNull() ?: 10,
           seed = parts[seedIndex].toLongOrNull() ?: 0L,
+          instantCorrectionEnabled = instantCorrectionEnabled,
+          createQuizManualTimerEnabled = createQuizManualTimerEnabled,
+          speedRunSecondsPerAnswer = speedRunSecondsPerAnswer,
           createQuizLocalMultiplayerEnabled = createQuizLocalMultiplayerEnabled,
           playerNames = playerNames,
           completionCount = parts[if (modernFormat) completionIndex else if (parts.size >= (if (hasTopic) 13 else 12)) seedIndex + 1 else seedIndex].toIntOrNull() ?: 0,

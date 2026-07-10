@@ -140,7 +140,7 @@ internal fun buildSetupForMode(
         else -> CreateQuizSource.PresetFilter
       },
     createQuizPresets = createQuizDefaultPresetsForTopic(topic),
-    playerNames = listOf(displayName, "Player 2"),
+    playerNames = listOf(displayName.ifBlank { "Player" }, "Player 2"),
   )
 
 internal fun buildSetupForMode(

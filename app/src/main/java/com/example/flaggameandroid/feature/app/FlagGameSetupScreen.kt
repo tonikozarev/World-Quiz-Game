@@ -148,6 +148,12 @@ fun SetupScreen(
         activeCreateQuizSource == CreateQuizSource.ManualCountriesCapitals -> setup.selectedCountryCodes.size.toString()
       else -> setup.questionCountInput.ifBlank { "10" }
     }
+  val headerTimerLabel =
+    if (setup.createQuizManualTimerEnabled) {
+      setup.speedRunSecondsPerAnswer?.coerceIn(1, 60)?.toString() ?: "5"
+    } else {
+      null
+    }
 
   fun currentCreateQuizSignature(): String =
     listOf(
@@ -219,18 +225,10 @@ fun SetupScreen(
 
   fun openSaveCreateQuizDialog() {
     saveQuizName =
-      if (setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals) {
-        when (language) {
-          AppLanguage.English -> "My quiz"
-          AppLanguage.Bulgarian -> "Моят тест"
-          AppLanguage.German -> "Mein Quiz"
-        }
-      } else {
-        when (language) {
-          AppLanguage.English -> "Saved quiz"
-          AppLanguage.Bulgarian -> "Запазен тест"
-          AppLanguage.German -> "Gespeichertes Quiz"
-        }
+      when (language) {
+        AppLanguage.English -> "Saved quiz"
+        AppLanguage.Bulgarian -> "Запазен тест"
+        AppLanguage.German -> "Gespeichertes Quiz"
       }
     showSaveDialog = true
   }
@@ -252,6 +250,7 @@ fun SetupScreen(
             language = language,
             darkTheme = darkTheme,
             questionCountLabel = headerQuestionCountLabel,
+            timerLabel = headerTimerLabel,
             saveEnabled = !setup.usesCreateQuizTraining && !setup.usesCreateQuizManualHardcore,
             saved = savedCreateQuizTemplateId != null,
             onSaveClick = ::openSaveCreateQuizDialog,
@@ -332,11 +331,13 @@ fun SetupScreen(
         questionCount > questionCountLimit
     val surpriseMePlaceholderText = surpriseMePlaceholderText(language, setup.surpriseMe)
     val renderTimerInput: @Composable ColumnScope.() -> Unit = {
-      val secondsPerAnswer = setup.speedRunSecondsPerAnswer
-      val secondsOutOfRange = secondsPerAnswer != null && secondsPerAnswer !in 1..60
+      val timerNeedsMinimumHint =
+        setup.createQuizManualTimerEnabled &&
+          (setup.speedRunSecondsPerAnswerInput.isBlank() ||
+            setup.speedRunSecondsPerAnswerInput.toIntOrNull()?.let { it < 1 } == true)
       OutlinedTextField(
-        value = setup.speedRunSecondsPerAnswerInput,
-        onValueChange = onSpeedRunSecondsChange,
+            value = setup.speedRunSecondsPerAnswerInput,
+            onValueChange = onSpeedRunSecondsChange,
         label = {
           Text(
             when (language) {
@@ -355,6 +356,16 @@ fun SetupScreen(
                 AppLanguage.German -> "Erlaubter Bereich: 1-60"
               },
             )
+            if (timerNeedsMinimumHint) {
+              Text(
+                when (language) {
+                  AppLanguage.English -> "Timer must be at least 1 second."
+                  AppLanguage.Bulgarian -> "Таймерът трябва да е поне 1 секунда."
+                  AppLanguage.German -> "Der Timer muss mindestens 1 Sekunde betragen."
+                },
+                color = AccentRed,
+              )
+            }
             Text(
               when (language) {
                 AppLanguage.English -> "Bonus for 1-second game: +5 seconds only for quizzes with 10 or more questions."
@@ -362,16 +373,6 @@ fun SetupScreen(
                 AppLanguage.German -> "Bonus fürs 1-Sekunden-Spiel: +5 Sekunden nur bei Quiz mit 10 oder mehr Fragen."
               },
             )
-            if (secondsOutOfRange) {
-              Text(
-                when (language) {
-                  AppLanguage.English -> "Enter a value between 1 and 60 to start."
-                  AppLanguage.Bulgarian -> "Въведи стойност между 1 и 60, за да стартираш."
-                  AppLanguage.German -> "Gib einen Wert zwischen 1 und 60 ein, um zu starten."
-                },
-                color = AccentRed,
-              )
-            }
           }
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -965,9 +966,9 @@ fun SetupScreen(
           )
         },
         text = {
-          OutlinedTextField(
+            OutlinedTextField(
             value = saveQuizName,
-            onValueChange = { saveQuizName = it.take(30) },
+            onValueChange = { saveQuizName = it.take(15) },
             singleLine = true,
             label = {
               Text(
@@ -981,9 +982,9 @@ fun SetupScreen(
             supportingText = {
               Text(
                 when (language) {
-                  AppLanguage.English -> "Up to 30 characters."
-                  AppLanguage.Bulgarian -> "До 30 знака."
-                  AppLanguage.German -> "Bis zu 30 Zeichen."
+                  AppLanguage.English -> "Up to 15 characters."
+                  AppLanguage.Bulgarian -> "До 15 знака."
+                  AppLanguage.German -> "Bis zu 15 Zeichen."
                 },
               )
             },
@@ -1352,7 +1353,7 @@ private fun PlayerFieldsContent(
   playerNames.forEachIndexed { index, name ->
     OutlinedTextField(
       value = name,
-      onValueChange = { onPlayerNameChanged(index, it) },
+      onValueChange = { onPlayerNameChanged(index, it.take(15)) },
       label = {
         Text(
           when (language) {
@@ -1587,11 +1588,27 @@ private fun localizedCreateQuizHeaderTitle(
 private fun localizedCreateQuizQuestionCountLine(
   language: AppLanguage,
   questionCountLabel: String,
+  timerLabel: String? = null,
 ): String =
   when (language) {
-    AppLanguage.English -> "($questionCountLabel questions)"
-    AppLanguage.Bulgarian -> "($questionCountLabel въпроса)"
-    AppLanguage.German -> "($questionCountLabel Fragen)"
+    AppLanguage.English ->
+      if (timerLabel == null) {
+        "($questionCountLabel questions)"
+      } else {
+        "($questionCountLabel questions, $timerLabel seconds)"
+      }
+    AppLanguage.Bulgarian ->
+      if (timerLabel == null) {
+        "($questionCountLabel въпроса)"
+      } else {
+        "($questionCountLabel въпроса, $timerLabel секунди)"
+      }
+    AppLanguage.German ->
+      if (timerLabel == null) {
+        "($questionCountLabel Fragen)"
+      } else {
+        "($questionCountLabel Fragen, $timerLabel Sekunden)"
+      }
   }
 
 @Composable
@@ -1599,6 +1616,7 @@ private fun CreateQuizPinnedHeader(
   language: AppLanguage,
   darkTheme: Boolean,
   questionCountLabel: String,
+  timerLabel: String?,
   saveEnabled: Boolean,
   saved: Boolean,
   onSaveClick: () -> Unit,
@@ -1650,7 +1668,7 @@ private fun CreateQuizPinnedHeader(
           maxLines = 1,
         )
         Text(
-          text = localizedCreateQuizQuestionCountLine(language, questionCountLabel),
+          text = localizedCreateQuizQuestionCountLine(language, questionCountLabel, timerLabel),
           style = MaterialTheme.typography.labelMedium,
           color = if (darkTheme) Color.White else MaterialTheme.colorScheme.onSurface,
           maxLines = 1,

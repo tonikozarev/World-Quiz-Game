@@ -307,7 +307,12 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
 
 internal fun FlagGameUiState.withSpeedRunSecondsPerAnswerInput(speedRunSeconds: String): FlagGameUiState =
   withUpdatedSetup {
-    it.copy(speedRunSecondsPerAnswerInput = speedRunSeconds.filter { char -> char.isDigit() })
+    val digits = speedRunSeconds.filter { char -> char.isDigit() }.take(2)
+    val parsed = digits.toIntOrNull()
+    val clampedSeconds = parsed?.coerceAtMost(60)
+    it.copy(
+      speedRunSecondsPerAnswerInput = clampedSeconds?.toString().orEmpty(),
+    )
   }
 
 internal fun FlagGameUiState.withCreateQuizManualHardcoreToggled(countries: List<FlagCountry>): FlagGameUiState {
@@ -330,7 +335,9 @@ internal fun FlagGameUiState.withCreateQuizManualHardcoreToggled(countries: List
 
 internal fun FlagGameUiState.withCreateQuizManualTimerEnabledToggled(): FlagGameUiState =
   withUpdatedSetup {
-    it.copy(createQuizManualTimerEnabled = !it.createQuizManualTimerEnabled)
+    it.copy(
+      createQuizManualTimerEnabled = !it.createQuizManualTimerEnabled,
+    )
   }
 
 internal fun FlagGameUiState.withCreateQuizTrainingToggled(countries: List<FlagCountry>): FlagGameUiState {
@@ -351,7 +358,10 @@ internal fun FlagGameUiState.withCreateQuizTrainingToggled(countries: List<FlagC
   )
 }
 
-internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(countries: List<FlagCountry>): FlagGameUiState {
+internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(
+  countries: List<FlagCountry>,
+  displayName: String,
+): FlagGameUiState {
   val enabled = !setup.createQuizLocalMultiplayerEnabled
   val nextSetup =
     setup.copy(
@@ -359,6 +369,12 @@ internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(countries: Li
       createQuizTrainingEnabled = false,
       createQuizManualHardcoreEnabled = false,
       createQuizSeed = 0L,
+      playerNames =
+        if (enabled) {
+          listOf(displayName.ifBlank { "Player" }, "Player 2")
+        } else {
+          setup.playerNames
+        },
     )
   return copy(
     setup = nextSetup,
@@ -421,7 +437,7 @@ internal fun FlagGameUiState.withPlayerNameUpdated(
   name: String,
 ): FlagGameUiState {
   val names = setup.playerNames.toMutableList()
-  if (index in names.indices) names[index] = name
+  if (index in names.indices) names[index] = name.take(15)
   return withUpdatedSetup { it.copy(playerNames = names) }
 }
 

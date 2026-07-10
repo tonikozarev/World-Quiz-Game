@@ -87,7 +87,7 @@ data class SetupState(
   val questionCountInput: String = "10",
   val speedRunSecondsPerAnswerInput: String = "5",
   val surpriseMe: Boolean = false,
-  val playerNames: List<String> = listOf("Player 1", "Player 2"),
+  val playerNames: List<String> = listOf("Player", "Player 2"),
   val dailyChallengeTheme: DailyChallengeTheme? = null,
 ) {
   val questionCount: Int?

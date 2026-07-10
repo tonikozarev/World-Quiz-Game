@@ -384,7 +384,8 @@ class FlagGameViewModel(
   }
 
   fun onCreateQuizLocalMultiplayerToggled() {
-    updateState { it.withCreateQuizLocalMultiplayerToggled(countries) }
+    val displayName = _uiState.value.profile.displayName
+    updateState { it.withCreateQuizLocalMultiplayerToggled(countries, displayName) }
   }
 
   fun onSurpriseMeClicked() {
@@ -395,7 +396,7 @@ class FlagGameViewModel(
     index: Int,
     name: String,
   ) {
-    updateState { it.withPlayerNameUpdated(index, name) }
+    updateState { it.withPlayerNameUpdated(index, name.take(15)) }
   }
 
   fun onAddPlayer() {
@@ -580,37 +581,29 @@ class FlagGameViewModel(
         CreateQuizSource.PresetFilter -> setup.questionCount ?: state.questionCountLimit
       }
     val templateTitle =
-      when (setup.createQuizSource) {
-        CreateQuizSource.PresetFilter -> {
-          val presetTitle =
-            localizedCreateQuizPresetTitle(setup.createQuizPreset, state.settings.language, setup.topic)
-          when (state.settings.language) {
-            AppLanguage.English -> "$presetTitle quiz"
-            AppLanguage.Bulgarian -> "Тест с $presetTitle"
-            AppLanguage.German -> "Quiz mit $presetTitle"
-          }
-        }
-        CreateQuizSource.ManualCountriesCapitals ->
-          when (state.settings.language) {
-            AppLanguage.English -> "Manual quiz"
-            AppLanguage.Bulgarian -> "Ръчен тест"
-            AppLanguage.German -> "Manuelles Quiz"
-          }
+      when (state.settings.language) {
+        AppLanguage.English -> "Saved quiz"
+        AppLanguage.Bulgarian -> "Запазен тест"
+        AppLanguage.German -> "Gespeichertes Quiz"
       }
     val template =
       SavedQuizTemplate(
         id = "saved-${seed}-${setup.createQuizSource.name.lowercase()}",
         createdAtEpochMillis = System.currentTimeMillis(),
-        title = templateName.trim().take(30).ifBlank { templateTitle },
+        title = templateName.trim().take(15).ifBlank { templateTitle },
         topic = setup.topic,
         source = setup.createQuizSource,
         preset = if (setup.createQuizSource == CreateQuizSource.PresetFilter) setup.createQuizPreset else null,
+        createQuizPresets = setup.createQuizPresets.ifEmpty { setOf(setup.createQuizPreset) },
         selectedCountryCodes = setup.selectedCountryCodes,
         selectedCapitalCountryCodes = setup.selectedCapitalCountryCodes,
         questionCountryCodes = resolvedQuestionCountryCodes,
         variants = setup.variants,
         questionCount = exactQuestionCount.coerceAtLeast(1),
         seed = seed,
+        instantCorrectionEnabled = setup.instantCorrectionEnabled,
+        createQuizManualTimerEnabled = setup.createQuizManualTimerEnabled,
+        speedRunSecondsPerAnswer = setup.speedRunSecondsPerAnswer?.coerceIn(1, 60) ?: 5,
         createQuizLocalMultiplayerEnabled = setup.usesCreateQuizLocalMultiplayer,
         playerNames = if (setup.usesCreateQuizLocalMultiplayer) setup.playerNames else emptyList(),
       )
@@ -698,15 +691,24 @@ class FlagGameViewModel(
         mode = GameMode.CreateQuiz,
         topic = template.topic,
         variants = template.variants,
+        instantCorrectionEnabled = template.instantCorrectionEnabled,
         createQuizSource = template.source,
-        createQuizPreset = template.preset ?: createQuizDefaultPresetsForTopic(template.topic).first(),
-        createQuizPresets = template.preset?.let { setOf(it) } ?: createQuizDefaultPresetsForTopic(template.topic),
+        createQuizPreset =
+          template.createQuizPresets.firstOrNull()
+            ?: template.preset
+            ?: createQuizDefaultPresetsForTopic(template.topic).first(),
+        createQuizPresets =
+          template.createQuizPresets.ifEmpty {
+            template.preset?.let { setOf(it) } ?: createQuizDefaultPresetsForTopic(template.topic)
+          },
         selectedCountryCodes = template.selectedCountryCodes,
         selectedCapitalCountryCodes = template.selectedCapitalCountryCodes,
         createQuizSeed = template.seed,
         savedQuizTemplateId = template.id,
+        createQuizManualTimerEnabled = template.createQuizManualTimerEnabled,
+        speedRunSecondsPerAnswerInput = template.speedRunSecondsPerAnswer.coerceIn(1, 60).toString(),
         createQuizLocalMultiplayerEnabled = template.createQuizLocalMultiplayerEnabled,
-        playerNames = template.playerNames.ifEmpty { listOf("Player 1", "Player 2") },
+        playerNames = template.playerNames.ifEmpty { listOf("Player", "Player 2") },
         questionCountInput =
           if (template.topic == QuizTopic.Mixed) {
             (template.selectedCountryCodes.size + template.selectedCapitalCountryCodes.size).toString()
