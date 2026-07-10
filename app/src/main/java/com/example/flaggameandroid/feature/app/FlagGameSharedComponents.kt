@@ -252,6 +252,7 @@ internal fun SelectableRow(
   onClick: () -> Unit,
   enabled: Boolean = true,
   description: String? = null,
+  titleFontWeight: FontWeight? = null,
 ) {
   val colors =
     if (selected) {
@@ -266,7 +267,11 @@ internal fun SelectableRow(
     modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.55f),
   ) {
     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text(title, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+      Text(
+        title,
+        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+        fontWeight = titleFontWeight,
+      )
       if (description != null) {
         Text(description, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
       }
@@ -289,6 +294,13 @@ internal fun CheckRow(
     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(text = title, style = MaterialTheme.typography.titleSmall)
       Text(text = description, style = MaterialTheme.typography.bodySmall)
+      Box(
+        modifier =
+          Modifier
+            .fillMaxWidth(0.64f)
+            .height(1.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f)),
+      )
     }
     Checkbox(checked = checked, onCheckedChange = { onClick() })
   }

@@ -27,11 +27,12 @@ internal fun TestingToolsCard(
   modifier: Modifier = Modifier,
 ) {
   SectionCard(
-    title = when (language) {
-      AppLanguage.English -> "Testing"
-      AppLanguage.Bulgarian -> "РўРµСЃС‚РІР°РЅРµ"
-      AppLanguage.German -> "Testen"
-    },
+    title =
+      when (language) {
+        AppLanguage.English -> "Testing"
+        AppLanguage.Bulgarian -> "Тестване"
+        AppLanguage.German -> "Testen"
+      },
   ) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
       Button(
@@ -43,8 +44,8 @@ internal fun TestingToolsCard(
         Text(
           when (language) {
             AppLanguage.English -> "Add 10 hints"
-            AppLanguage.Bulgarian -> "Р”РѕР±Р°РІРё 10 Р¶РѕРєРµСЂР°"
-            AppLanguage.German -> "10 Hinweise hinzufГјgen"
+            AppLanguage.Bulgarian -> "Добави 10 жокера"
+            AppLanguage.German -> "10 Hinweise hinzufügen"
           },
         )
       }
@@ -56,8 +57,8 @@ internal fun TestingToolsCard(
         Text(
           when (language) {
             AppLanguage.English -> "Reset hints"
-            AppLanguage.Bulgarian -> "РќСѓР»РёСЂР°Р№ Р¶РѕРєРµСЂРёС‚Рµ"
-            AppLanguage.German -> "Hinweise zurГјcksetzen"
+            AppLanguage.Bulgarian -> "Нулирай жокерите"
+            AppLanguage.German -> "Hinweise zurücksetzen"
           },
         )
       }
@@ -71,7 +72,7 @@ internal fun TestingToolsCard(
         Text(
           when (language) {
             AppLanguage.English -> "Level +1"
-            AppLanguage.Bulgarian -> "РќРёРІРѕ +1"
+            AppLanguage.Bulgarian -> "Ниво +1"
             AppLanguage.German -> "Level +1"
           },
         )
@@ -84,8 +85,8 @@ internal fun TestingToolsCard(
         Text(
           when (language) {
             AppLanguage.English -> "Reset level"
-            AppLanguage.Bulgarian -> "РќСѓР»РёСЂР°Р№ РЅРёРІРѕС‚Рѕ"
-            AppLanguage.German -> "Level zurГјcksetzen"
+            AppLanguage.Bulgarian -> "Нулирай нивото"
+            AppLanguage.German -> "Level zurücksetzen"
           },
         )
       }
@@ -99,8 +100,8 @@ internal fun TestingToolsCard(
         Text(
           when (language) {
             AppLanguage.English -> "Open random achievement"
-            AppLanguage.Bulgarian -> "РЎР»СѓС‡Р°Р№РЅРѕ РїРѕСЃС‚РёР¶РµРЅРёРµ"
-            AppLanguage.German -> "ZufГ¤lliges Achievement Г¶ffnen"
+            AppLanguage.Bulgarian -> "Отключи произволно постижение"
+            AppLanguage.German -> "Zufälligen Erfolg öffnen"
           },
           textAlign = TextAlign.Center,
         )
@@ -113,7 +114,7 @@ internal fun TestingToolsCard(
         Text(
           when (language) {
             AppLanguage.English -> "Lock achievements"
-            AppLanguage.Bulgarian -> "Р—Р°РєР»СЋС‡Рё РїРѕСЃС‚РёР¶РµРЅРёСЏС‚Р°"
+            AppLanguage.Bulgarian -> "Заключи постиженията"
             AppLanguage.German -> "Erfolge sperren"
           },
           textAlign = TextAlign.Center,
@@ -128,8 +129,8 @@ internal fun TestingToolsCard(
       Text(
         when (language) {
           AppLanguage.English -> "Reset medals"
-          AppLanguage.Bulgarian -> "РќСѓР»РёСЂР°Р№ РјРµРґР°Р»РёС‚Рµ"
-          AppLanguage.German -> "Medaillen zurГјcksetzen"
+          AppLanguage.Bulgarian -> "Нулирай медалите"
+          AppLanguage.German -> "Medaillen zurücksetzen"
         },
         textAlign = TextAlign.Center,
       )
@@ -142,8 +143,8 @@ internal fun TestingToolsCard(
       Text(
         when (language) {
           AppLanguage.English -> "Reset daily challenge"
-          AppLanguage.Bulgarian -> "РќСѓР»РёСЂР°Р№ РґРЅРµРІРЅРѕС‚Рѕ РїСЂРµРґРёР·РІРёРєР°С‚РµР»СЃС‚РІРѕ"
-          AppLanguage.German -> "TГ¤gliche Herausforderung zurГјcksetzen"
+          AppLanguage.Bulgarian -> "Нулирай дневното предизвикателство"
+          AppLanguage.German -> "Tägliche Herausforderung zurücksetzen"
         },
         textAlign = TextAlign.Center,
       )

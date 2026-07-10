@@ -58,21 +58,21 @@ internal fun localizedVariantDescription(
   when (variant) {
     QuizVariant.FlagToText ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "Pick the country.", "Избери държавата.", "Wähle das Land.")
-        QuizTopic.Capitals -> tr(language, "Pick the capital.", "Избери столицата.", "Wähle die Hauptstadt.")
-        QuizTopic.Mixed -> tr(language, "Pick the answer.", "Избери отговор.", "Wähle die Antwort.")
+        QuizTopic.Countries -> tr(language, "Pick the correct country.", "Избери вярната държава.", "Wähle das richtige Land.")
+        QuizTopic.Capitals -> tr(language, "Pick the correct capital.", "Избери вярната столица.", "Wähle die richtige Hauptstadt.")
+        QuizTopic.Mixed -> tr(language, "Pick the correct answer.", "Избери верния отговор.", "Wähle die richtige Antwort.")
       }
     QuizVariant.TextToFlag ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "Pick the flag.", "Избери флага.", "Wähle die Flagge.")
-        QuizTopic.Capitals -> tr(language, "Pick the flag.", "Избери флага.", "Wähle die Flagge.")
-        QuizTopic.Mixed -> tr(language, "Pick the flag.", "Избери флага.", "Wähle die Flagge.")
+        QuizTopic.Countries -> tr(language, "Pick the correct flag.", "Избери верния флаг.", "Wähle die richtige Flagge.")
+        QuizTopic.Capitals -> tr(language, "Pick the correct flag.", "Избери верния флаг.", "Wähle die richtige Flagge.")
+        QuizTopic.Mixed -> tr(language, "Pick the correct flag.", "Избери верния флаг.", "Wähle die richtige Flagge.")
       }
     QuizVariant.TypeText ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "Type the country.", "Напиши държавата.", "Land eingeben.")
-        QuizTopic.Capitals -> tr(language, "Type the capital.", "Напиши столицата.", "Hauptstadt eingeben.")
-        QuizTopic.Mixed -> tr(language, "Type the answer.", "Напиши отговора.", "Antwort eingeben.")
+        QuizTopic.Countries -> tr(language, "Type the country.", "Напиши вярната държавата.", "Richtiges Land eingeben.")
+        QuizTopic.Capitals -> tr(language, "Type the capital.", "Напиши вярната столицата.", "Richtige Hauptstadt eingeben.")
+        QuizTopic.Mixed -> tr(language, "Type the correct answer.", "Напиши верния отговор.", "Richtige Antwort eingeben.")
       }
   }
 

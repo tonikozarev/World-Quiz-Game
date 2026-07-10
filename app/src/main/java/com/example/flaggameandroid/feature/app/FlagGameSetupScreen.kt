@@ -836,10 +836,11 @@ fun SetupScreen(
             SelectableRow(
               title = when (language) {
                 AppLanguage.English -> "Preset filter"
-                AppLanguage.Bulgarian -> "Готов филтър"
+                AppLanguage.Bulgarian -> "Готови шаблони"
                 AppLanguage.German -> "Vorlagenfilter"
               },
               selected = activeCreateQuizSource == CreateQuizSource.PresetFilter,
+              titleFontWeight = FontWeight.Bold,
               enabled = setup.topic != QuizTopic.Mixed,
               onClick = {
                 displayedCreateQuizSource = CreateQuizSource.PresetFilter
@@ -847,25 +848,26 @@ fun SetupScreen(
               },
               description = when (language) {
                 AppLanguage.English -> "Use predefined flag rules."
-                AppLanguage.Bulgarian -> "Ползвай готови правила за флагове."
-                AppLanguage.German -> "Nutze vordefinierte Flaggenregeln."
+                AppLanguage.Bulgarian -> "Готови шаблони с флагове"
+                AppLanguage.German -> "Nutze vordefinierte Flaggenregeln"
               },
             )
             SelectableRow(
               title = when (language) {
                 AppLanguage.English -> "Manual countries/capitals"
-                AppLanguage.Bulgarian -> "Ръчно избрани държави/градове"
-                AppLanguage.German -> "Manuelle Länder/Städte"
+                AppLanguage.Bulgarian -> "Ръчно избрани държави/столици"
+                AppLanguage.German -> "Manuelle Länder/Hauptstädte"
               },
               selected = activeCreateQuizSource == CreateQuizSource.ManualCountriesCapitals,
+              titleFontWeight = FontWeight.Bold,
               onClick = {
                 displayedCreateQuizSource = CreateQuizSource.ManualCountriesCapitals
                 onCreateQuizSourceSelected(CreateQuizSource.ManualCountriesCapitals)
               },
               description = when (language) {
-                AppLanguage.English -> "Pick the exact ones yourself."
-                AppLanguage.Bulgarian -> "Избери точните сам."
-                AppLanguage.German -> "Wähle selbst aus."
+                AppLanguage.English -> "Pick the exact ones yourself"
+                AppLanguage.Bulgarian -> "Избери си ги сам"
+                AppLanguage.German -> "Wähle selbst aus"
               },
             )
           }
@@ -1337,7 +1339,11 @@ private fun CollapsiblePlayersSection(
           onClick = onExpandedChange,
           contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
         ) {
-          Text(if (expanded) "▼" else "▶")
+          Text(
+            text = if (expanded) "▼" else "▶",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+          )
         }
       }
 
@@ -1388,9 +1394,9 @@ private fun PlayerFieldsContent(
     ) {
       Text(
         when (language) {
-          AppLanguage.English -> "Remove"
-          AppLanguage.Bulgarian -> "Премахни"
-          AppLanguage.German -> "Entfernen"
+          AppLanguage.English -> "-1 player"
+          AppLanguage.Bulgarian -> "-1 играч"
+          AppLanguage.German -> "-1 Spieler"
         },
       )
     }
@@ -1401,9 +1407,9 @@ private fun PlayerFieldsContent(
     ) {
       Text(
         when (language) {
-          AppLanguage.English -> "Add player"
-          AppLanguage.Bulgarian -> "Добави играч"
-          AppLanguage.German -> "Spieler hinzufügen"
+          AppLanguage.English -> "+1 player"
+          AppLanguage.Bulgarian -> "+1 играч"
+          AppLanguage.German -> "+1 Spieler"
           },
         )
       }
