@@ -272,15 +272,17 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
     }
   val continentSelectedCountries = continentCodes.all { it in setup.selectedCountryCodes }
   val continentSelectedCapitals = continentCodes.all { it in setup.selectedCapitalCountryCodes }
+  val toggleBothColumns = setup.topic == QuizTopic.Mixed
+  val allColumnsSelected = continentSelectedCountries && (!toggleBothColumns || continentSelectedCapitals)
   val nextCountrySelection =
-    if (continentSelectedCountries) {
+    if (allColumnsSelected) {
       setup.selectedCountryCodes - continentCodes
     } else {
       setup.selectedCountryCodes + continentCodes
     }
   val nextCapitalSelection =
-    if (setup.topic == QuizTopic.Mixed) {
-      if (continentSelectedCapitals) {
+    if (toggleBothColumns) {
+      if (allColumnsSelected) {
         setup.selectedCapitalCountryCodes - continentCodes
       } else {
         setup.selectedCapitalCountryCodes + continentCodes
@@ -385,8 +387,16 @@ internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(
 
 internal fun FlagGameUiState.withCreateQuizAllCountriesToggled(countries: List<FlagCountry>): FlagGameUiState {
   val allCodes = countries.map { it.code }.toSet()
-  val nextSelection = if (setup.selectedCountryCodes.size == allCodes.size) emptySet() else allCodes
-  val nextCapitalSelection = if (setup.topic == QuizTopic.Mixed && setup.selectedCapitalCountryCodes.size == allCodes.size) emptySet() else if (setup.topic == QuizTopic.Mixed) allCodes else emptySet()
+  val allCountriesSelected = setup.selectedCountryCodes.size == allCodes.size
+  val allCapitalsSelected = setup.selectedCapitalCountryCodes.size == allCodes.size
+  val allColumnsSelected = if (setup.topic == QuizTopic.Mixed) allCountriesSelected && allCapitalsSelected else allCountriesSelected
+  val nextSelection = if (allColumnsSelected) emptySet() else allCodes
+  val nextCapitalSelection =
+    if (setup.topic == QuizTopic.Mixed) {
+      if (allColumnsSelected) emptySet() else allCodes
+    } else {
+      emptySet()
+    }
   val nextSetup =
     setup.copy(
       createQuizSource = CreateQuizSource.ManualCountriesCapitals,

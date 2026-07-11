@@ -179,7 +179,7 @@ internal fun cleanModeTitle(
   language: AppLanguage,
 ): String =
   when (mode) {
-    GameMode.CreateQuiz -> tr(language, "Create own quiz", "Създай собствен тест", "Quiz selber erstellen")
+    GameMode.CreateQuiz -> tr(language, "Custom quiz", "Създай собствен тест", "Eigenes Quiz erstellen")
     GameMode.DailyChallenge -> tr(language, "Daily challenge", "Дневно предизвикателство", "Tägliche Herausforderung")
     GameMode.MistakeReview -> tr(language, "Mistake review", "Преглед на грешките", "Fehlerprüfung")
   }

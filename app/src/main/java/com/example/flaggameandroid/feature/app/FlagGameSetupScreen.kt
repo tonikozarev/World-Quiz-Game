@@ -393,11 +393,12 @@ fun SetupScreen(
       )
     }
     val renderChooseCountriesSection: @Composable () -> Unit = {
+      val manualSelectAllTargetCount = if (setup.topic == QuizTopic.Mixed) countries.size * 2 else countries.size
       val manualSelectAllLabel =
         when (language) {
-          AppLanguage.English -> if (setup.createQuizMixedSelectionCount == countries.size * 2) "Deselect all" else "Select all"
-          AppLanguage.Bulgarian -> if (setup.createQuizMixedSelectionCount == countries.size * 2) "Махни всички" else "Избери всички"
-          AppLanguage.German -> if (setup.createQuizMixedSelectionCount == countries.size * 2) "Alle abwählen" else "Alle wählen"
+          AppLanguage.English -> if (setup.createQuizManualSelectionCount == manualSelectAllTargetCount) "Deselect all" else "Select all"
+          AppLanguage.Bulgarian -> if (setup.createQuizManualSelectionCount == manualSelectAllTargetCount) "Махни всички" else "Избери всички"
+          AppLanguage.German -> if (setup.createQuizManualSelectionCount == manualSelectAllTargetCount) "Alle abwählen" else "Alle wählen"
         }
       SectionCard(
         title =
@@ -563,17 +564,19 @@ fun SetupScreen(
       }
     }
 
-    val renderQuestionCountCard: @Composable (
+    @Composable
+    fun renderQuestionCountCard(
       questionCountValue: String,
       editable: Boolean,
       showRandomButton: Boolean,
+      randomButtonEnabled: Boolean,
       randomButtonText: String,
       onRandomButtonClick: () -> Unit,
       onValueChange: (String) -> Unit,
       rangeText: String?,
       warningText: String?,
       warningIsError: Boolean,
-    ) -> Unit = { questionCountValue, editable, showRandomButton, randomButtonText, onRandomButtonClick, onValueChange, rangeText, warningText, warningIsError ->
+    ) {
       Card(modifier = Modifier.fillMaxWidth()) {
         Column(
           modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -639,6 +642,7 @@ fun SetupScreen(
               keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
               singleLine = true,
               enabled = editable,
+              readOnly = !editable,
               isError = warningIsError,
               modifier = fieldModifier,
             )
@@ -651,6 +655,7 @@ fun SetupScreen(
                 }
               OutlinedButton(
                 onClick = onRandomButtonClick,
+                enabled = randomButtonEnabled,
                 modifier = buttonModifier,
                 contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
               ) {
@@ -767,18 +772,23 @@ fun SetupScreen(
         onCheckedChange = { onCreateQuizManualTimerToggled() },
       ) { if (setup.createQuizManualTimerEnabled) renderTimerInput() }
 
+      val hardcoreQuestionCount =
+        when (setup.topic) {
+          QuizTopic.Mixed -> (countries.size * 2).toString()
+          else -> countries.size.toString()
+        }
       val displayedQuestionCount =
         when {
-          isCreateQuizManual && isCreateQuizMixed ->
-            setup.createQuizMixedSelectionCount.toString()
-          isCreateQuizManual ->
-            setup.selectedCountryCodes.size.toString()
+          isCreateQuizManualHardcore -> hardcoreQuestionCount
+          isCreateQuizManual && isCreateQuizMixed -> setup.createQuizMixedSelectionCount.toString()
+          isCreateQuizManual -> setup.selectedCountryCodes.size.toString()
           else -> setup.questionCountInput
         }
       renderQuestionCountCard(
         displayedQuestionCount,
-        !setup.surpriseMe && !isCreateQuizManual,
+        !setup.surpriseMe && !isCreateQuizManual && !setup.usesCreateQuizManualHardcore,
         !setup.usesCreateQuizTraining && activeCreateQuizSource == CreateQuizSource.PresetFilter,
+        !setup.usesCreateQuizManualHardcore && !setup.surpriseMe,
         when (language) {
           AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
           AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
@@ -914,6 +924,7 @@ fun SetupScreen(
         },
         !setup.surpriseMe && !isMistakeReview,
         !isMistakeReview,
+        !isMistakeReview,
         when (language) {
           AppLanguage.English -> if (setup.surpriseMe) "Manual count" else "Randomizer"
           AppLanguage.Bulgarian -> if (setup.surpriseMe) "Manual count" else "Randomizer"
@@ -940,9 +951,9 @@ fun SetupScreen(
                 AppLanguage.German -> "Perfekte Läufe unter 10 Fragen geben keine Medaille."
               }
             else -> null
-          },
-          questionCountOverLimit,
-        )
+        },
+        questionCountOverLimit,
+      )
 
         QuestionVariantsSection(
           language = language,

@@ -116,6 +116,14 @@ data class SetupState(
 
   val createQuizMixedSelectionCount: Int
     get() = selectedCountryCodes.size + selectedCapitalCountryCodes.size
+
+  val createQuizManualSelectionCount: Int
+    get() =
+      if (topic == QuizTopic.Mixed) {
+        createQuizMixedSelectionCount
+      } else {
+        selectedCountryCodes.size
+      }
 }
 
 enum class QuestionStatus {
