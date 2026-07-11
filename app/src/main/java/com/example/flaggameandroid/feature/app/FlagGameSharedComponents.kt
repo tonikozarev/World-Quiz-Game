@@ -85,7 +85,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flaggameandroid.core.data.QuizAnswerChecker
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.AchievementSector
 import com.example.flaggameandroid.core.model.AchievementsProgress
@@ -253,6 +252,7 @@ internal fun SelectableRow(
   onClick: () -> Unit,
   enabled: Boolean = true,
   description: String? = null,
+  titleFontWeight: FontWeight? = null,
 ) {
   val colors =
     if (selected) {
@@ -267,7 +267,11 @@ internal fun SelectableRow(
     modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.55f),
   ) {
     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text(title, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+      Text(
+        title,
+        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+        fontWeight = titleFontWeight,
+      )
       if (description != null) {
         Text(description, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
       }
@@ -290,6 +294,13 @@ internal fun CheckRow(
     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(text = title, style = MaterialTheme.typography.titleSmall)
       Text(text = description, style = MaterialTheme.typography.bodySmall)
+      Box(
+        modifier =
+          Modifier
+            .fillMaxWidth(0.64f)
+            .height(1.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f)),
+      )
     }
     Checkbox(checked = checked, onCheckedChange = { onClick() })
   }
@@ -334,9 +345,12 @@ internal fun AnswerButton(
         disabledContentColor = buttonContentColor(color),
       ),
     border = border,
-    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 11.dp),
+    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
     shape = RoundedCornerShape(10.dp),
-    modifier = Modifier.fillMaxWidth(),
+    modifier =
+      Modifier
+        .fillMaxWidth()
+        .height(72.dp),
   ) {
     val isCapitalFlagAnswer = question.variant == QuizVariant.TextToFlag && question.topic == com.example.flaggameandroid.core.model.QuizTopic.Capitals
     val hasHintAnswerText = question.variant == QuizVariant.TextToFlag && hintUses > 0
@@ -344,9 +358,9 @@ internal fun AnswerButton(
       text = answerOptionLabel(question, option, language, hintUses),
       fontSize =
         when {
-          isCapitalFlagAnswer || hasHintAnswerText -> 16.sp
-          question.variant == QuizVariant.TextToFlag -> 32.sp
-          else -> 16.sp
+          isCapitalFlagAnswer || hasHintAnswerText -> 24.sp
+          question.variant == QuizVariant.TextToFlag -> 36.sp
+          else -> 24.sp
         },
       maxLines = if (isCapitalFlagAnswer || hasHintAnswerText) 2 else 1,
       textAlign = TextAlign.Center,
@@ -369,7 +383,7 @@ private fun PreviewModeCard() {
   FlagGameAndroidTheme {
     Surface {
       ModeCard(
-        mode = GameMode.Training,
+        mode = GameMode.CreateQuiz,
         language = AppLanguage.English,
         infoExpanded = true,
         openEnabled = true,

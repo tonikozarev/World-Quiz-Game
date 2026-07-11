@@ -42,7 +42,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.flaggameandroid.core.model.ActivityDayRecord
-import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.ProgressionRules
 import com.example.flaggameandroid.theme.FlagGameAndroidTheme
 import java.time.LocalDate
@@ -670,63 +669,6 @@ internal fun LanguageSelector(
           },
           onClick = {
             onLanguageSelected(language)
-            onExpandedChange(false)
-          },
-        )
-      }
-    }
-  }
-}
-
-@Composable
-internal fun TimeZoneSelector(
-  selectedTimeZone: AppTimeZone,
-  expanded: Boolean,
-  onExpandedChange: (Boolean) -> Unit,
-  onTimeZoneSelected: (AppTimeZone) -> Unit,
-) {
-  Box(modifier = Modifier.widthIn(min = 104.dp, max = 118.dp)) {
-    OutlinedButton(
-      onClick = { onExpandedChange(!expanded) },
-      modifier = Modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(18.dp),
-      contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-    ) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(
-          selectedTimeZone.label,
-          style = MaterialTheme.typography.bodyMedium,
-          fontWeight = FontWeight.Bold,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-          text = "\u25BE",
-          style = MaterialTheme.typography.bodyMedium,
-          fontWeight = FontWeight.Bold,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      }
-    }
-    DropdownMenu(
-      expanded = expanded,
-      onDismissRequest = { onExpandedChange(false) },
-      modifier = Modifier.widthIn(min = 120.dp, max = 150.dp),
-    ) {
-      AppTimeZone.entries.forEach { timeZone ->
-        DropdownMenuItem(
-          text = {
-            Text(
-              text = timeZone.label,
-              fontWeight = if (timeZone == selectedTimeZone) FontWeight.Bold else FontWeight.Normal,
-            )
-          },
-          onClick = {
-            onTimeZoneSelected(timeZone)
             onExpandedChange(false)
           },
         )

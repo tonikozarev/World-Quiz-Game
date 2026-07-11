@@ -13,7 +13,6 @@ import com.example.flaggameandroid.feature.app.AppLanguage
 
 data class PersistedAppState(
   val hintDifficulty: HintDifficulty = HintDifficulty.Medium,
-  val reminderEnabled: Boolean = true,
   val hintCount: Double = 0.0,
   val level: Int = 1,
   val hintsTowardNextLevel: Int = 0,
@@ -21,7 +20,6 @@ data class PersistedAppState(
   val eligibleQuizzesTowardNextLevel: Int = 0,
   val lastOpenedAtEpochMillis: Long = 0L,
   val lastPlayedAtEpochMillis: Long = 0L,
-  val inactiveIconActive: Boolean = false,
   val ratings: RatingsProgress = RatingsProgress(),
   val achievements: AchievementsProgress = AchievementsProgress(),
   val countryPracticeStats: Map<String, CountryPracticeStats> = emptyMap(),

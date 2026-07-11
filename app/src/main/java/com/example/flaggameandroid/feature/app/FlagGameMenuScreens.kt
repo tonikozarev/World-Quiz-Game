@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.flaggameandroid.core.model.ActivityDayRecord
 import com.example.flaggameandroid.core.model.AchievementsProgress
-import com.example.flaggameandroid.core.model.gameModesHubModes
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.DailyChallengeCache
 import com.example.flaggameandroid.core.model.CreateQuizSource
@@ -110,7 +109,6 @@ fun GameModesScreen(
   language: AppLanguage,
   dailyChallengeCache: DailyChallengeCache?,
   mistakeReviewEligibleCount: Int,
-  onGameModesClick: () -> Unit,
   onModeSelected: (GameMode) -> Unit,
   onRefreshDailyChallengeAvailability: () -> Unit,
   modifier: Modifier = Modifier,
@@ -142,47 +140,6 @@ fun GameModesScreen(
             GameMode.DailyChallenge -> cleanText(language, UiText.Start)
             else -> cleanText(language, UiText.Open)
           },
-        onInfoClick = {
-          expandedInfoMode = if (expandedInfoMode == mode) null else mode
-        },
-        onClick = { onModeSelected(mode) },
-      )
-    }
-  }
-}
-
-@Composable
-fun GameModesHubScreen(
-  language: AppLanguage,
-  dailyChallengeCache: DailyChallengeCache?,
-  mistakeReviewEligibleCount: Int,
-  onModeSelected: (GameMode) -> Unit,
-  onRefreshDailyChallengeAvailability: () -> Unit,
-  modifier: Modifier = Modifier,
-) {
-  var expandedInfoMode by remember { mutableStateOf<GameMode?>(null) }
-  LaunchedEffect(Unit) {
-    onRefreshDailyChallengeAvailability()
-    while (true) {
-      delay(60_000L)
-      onRefreshDailyChallengeAvailability()
-    }
-  }
-  ScreenShell(modifier = modifier) {
-    HeaderRow(title = localizedGameModesHubTitle(language))
-
-    gameModesHubModes().forEach { mode ->
-      ModeCard(
-        mode = mode,
-        language = language,
-        infoExpanded = expandedInfoMode == mode,
-        openEnabled =
-          when (mode) {
-            GameMode.DailyChallenge -> dailyChallengeCache?.completed != true
-            GameMode.MistakeReview -> mistakeReviewEligibleCount >= com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount
-            else -> true
-          },
-        openLabel = if (mode == GameMode.CreateQuiz) cleanText(language, UiText.Start) else cleanText(language, UiText.Open),
         onInfoClick = {
           expandedInfoMode = if (expandedInfoMode == mode) null else mode
         },
@@ -705,11 +662,9 @@ private fun FavoriteCountryRow(
 fun SettingsScreen(
   settings: SettingsState,
   hintCount: Double,
-  inactiveIconActive: Boolean,
   onBack: () -> Unit,
   onHintDifficultySelected: (HintDifficulty) -> Unit,
   onLanguageSelected: (AppLanguage) -> Unit,
-  onReminderEnabledChanged: (Boolean) -> Unit,
   onResetHintsClick: () -> Unit,
   onAddTestingHintsClick: () -> Unit,
   onTestingLevelUpClick: () -> Unit,
@@ -718,8 +673,6 @@ fun SettingsScreen(
   onLockAllAchievementsClick: () -> Unit,
   onResetAchievementsAndMedalsClick: () -> Unit,
   onResetDailyChallengeClick: () -> Unit,
-  onToggleTestingIconClick: () -> Unit,
-  onTriggerTestingReminderClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   var expandedDifficulty by remember { mutableStateOf<HintDifficulty?>(null) }
@@ -792,16 +745,9 @@ fun SettingsScreen(
       }
     }
 
-    ReminderSettingsCard(
-      language = settings.language,
-      reminderEnabled = settings.reminderEnabled,
-      onReminderEnabledChanged = onReminderEnabledChanged,
-    )
-
     if (FlagGameDebugConfig.ShowTestingTools) {
       TestingToolsCard(
         language = settings.language,
-        inactiveIconActive = inactiveIconActive,
         testingButtonEnabled = testingButtonEnabled,
         onAddTestingHintsClick = {
           onAddTestingHintsClick()
@@ -814,8 +760,6 @@ fun SettingsScreen(
         onLockAllAchievementsClick = onLockAllAchievementsClick,
         onResetAchievementsAndMedalsClick = onResetAchievementsAndMedalsClick,
         onResetDailyChallengeClick = onResetDailyChallengeClick,
-        onToggleTestingIconClick = onToggleTestingIconClick,
-        onTriggerTestingReminderClick = onTriggerTestingReminderClick,
       )
     }
   }

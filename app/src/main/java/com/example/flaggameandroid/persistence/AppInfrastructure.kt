@@ -12,7 +12,6 @@ internal val Migration1To2 =
     override fun migrate(db: SupportSQLiteDatabase) {
       db.execSQL("ALTER TABLE progress ADD COLUMN lastOpenedAtEpochMillis INTEGER NOT NULL DEFAULT 0")
       db.execSQL("ALTER TABLE progress ADD COLUMN lastPlayedAtEpochMillis INTEGER NOT NULL DEFAULT 0")
-      db.execSQL("ALTER TABLE progress ADD COLUMN inactiveIconActive INTEGER NOT NULL DEFAULT 0")
     }
   }
 

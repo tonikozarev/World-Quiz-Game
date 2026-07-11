@@ -21,14 +21,14 @@ class FlagGameHintLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
       ).copy(
         questionCountInput = "1",
         variants = setOf(QuizVariant.FlagToCountry),
-        worldFlagsTimerEnabled = true,
+        createQuizManualTimerEnabled = true,
       )
 
     val quiz =
@@ -80,7 +80,7 @@ class FlagGameHintLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions = listOf(question),
         questionStates = listOf(QuestionDraftState()),
         players = listOf(PlayerProgress(name = "Solo", hintPoints = 2.0)),
@@ -139,7 +139,7 @@ class FlagGameHintLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         questions = listOf(question),
         questionStates = listOf(QuestionDraftState()),
         players = listOf(PlayerProgress(name = "Solo", hintPoints = 2.0)),
@@ -195,7 +195,7 @@ class FlagGameHintLogicTest {
       )
     val quiz =
       QuizState(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         instantCorrectionEnabled = true,
         questions = listOf(question),
         questionStates =

@@ -33,18 +33,8 @@ internal fun createQuizDefaultPresetsForTopic(topic: QuizTopic): Set<CreateQuizP
 internal fun localizedCreateQuizPresetTitle(
   preset: CreateQuizPreset,
   language: AppLanguage,
-  topic: QuizTopic,
-): String =
-  when (topic) {
-    QuizTopic.Capitals -> localizedCapitalCreateQuizPresetTitle(preset, language)
-    QuizTopic.Countries,
-    QuizTopic.Mixed -> localizedCountryCreateQuizPresetTitle(preset, language)
-  }
-
-private fun localizedCapitalCreateQuizPresetTitle(
-  preset: CreateQuizPreset,
-  language: AppLanguage,
-): String = localizedCountryCreateQuizPresetTitle(preset, language)
+  @Suppress("UNUSED_PARAMETER") topic: QuizTopic,
+): String = localizedSharedCreateQuizPresetTitle(preset, language)
 
 internal fun matchesCreateQuizPreset(
   country: FlagCountry,
@@ -88,7 +78,7 @@ private val capitalCreateQuizPresetOrder =
     CreateQuizPreset.CapitalNotCoastal,
   )
 
-private fun localizedCountryCreateQuizPresetTitle(
+private fun localizedSharedCreateQuizPresetTitle(
   preset: CreateQuizPreset,
   language: AppLanguage,
 ): String =

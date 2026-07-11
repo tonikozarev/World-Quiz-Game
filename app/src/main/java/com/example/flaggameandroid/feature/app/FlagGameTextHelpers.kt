@@ -1,4 +1,4 @@
-package com.example.flaggameandroid.feature.app
+﻿package com.example.flaggameandroid.feature.app
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.luminance
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
 import com.example.flaggameandroid.core.model.GameMode
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
@@ -208,17 +209,6 @@ internal fun localizedTypedAnswerFieldLabel(
     QuizTopic.Mixed -> tr(language, "Text", "Текст", "Text")
   }
 
-internal fun localizedTimeZoneTitle(language: AppLanguage): String =
-  tr(language, "Time zone", "Часова зона", "Zeitzone")
-
-internal fun localizedTimeZoneInfo(language: AppLanguage): String =
-  tr(
-    language,
-    "Daily Challenge, streaks, reminders, and played-today checks reset at 00:00 in the selected time zone.",
-    "Дневното предизвикателство, сериите, напомнянията и проверката дали е играно днес се нулират в 00:00 според избраната часова зона.",
-    "Daily Challenge, Serien, Erinnerungen und die Heute-gespielt-Prüfung werden um 00:00 in der gewählten Zeitzone zurückgesetzt.",
-  )
-
 internal fun localizedRevealButtonLabel(language: AppLanguage): String =
   tr(language, "Reveal", "Разкрий", "Aufdecken")
 
@@ -236,9 +226,6 @@ internal fun formatScore(score: Int): String =
 
 internal fun formatHintPoints(hintPoints: Double): String =
   if (hintPoints % 1.0 == 0.0) hintPoints.toInt().toString() else "%.2f".format(java.util.Locale.US, hintPoints)
-
-internal fun modeSelectionTitle(language: AppLanguage): String =
-  cleanModeSelectionTitle(language)
 
 internal fun quizCompleteTitle(language: AppLanguage): String =
   tr(language, "Quiz complete", "Тестът е завършен", "Quiz beendet")
@@ -320,15 +307,18 @@ internal fun worldFlagsRewardInfo(
 internal fun displayModeTitle(
   mode: GameMode?,
   language: AppLanguage,
+  sessionMode: QuizSessionMode = QuizSessionMode.Standard,
 ): String =
-  when (mode) {
-    GameMode.Training -> cleanModeTitle(GameMode.Training, language)
-    GameMode.CreateQuiz -> cleanModeTitle(GameMode.CreateQuiz, language)
-    GameMode.WorldFlags -> cleanModeTitle(GameMode.WorldFlags, language)
-    GameMode.DailyChallenge -> cleanModeTitle(GameMode.DailyChallenge, language)
-    GameMode.MistakeReview -> cleanModeTitle(GameMode.MistakeReview, language)
-    GameMode.LocalMultiplayer -> cleanModeTitle(GameMode.LocalMultiplayer, language)
-    null -> tr(language, "Quiz", "Тест", "Quiz")
+  when (sessionMode) {
+    QuizSessionMode.Training -> localizedSessionModeTitle(QuizSessionMode.Training, language)
+    QuizSessionMode.LocalMultiplayer -> localizedSessionModeTitle(QuizSessionMode.LocalMultiplayer, language)
+    QuizSessionMode.Standard ->
+      when (mode) {
+        GameMode.CreateQuiz -> cleanModeTitle(GameMode.CreateQuiz, language)
+        GameMode.DailyChallenge -> cleanModeTitle(GameMode.DailyChallenge, language)
+        GameMode.MistakeReview -> cleanModeTitle(GameMode.MistakeReview, language)
+        null -> localizedSessionModeTitle(QuizSessionMode.Standard, language)
+      }
   }
 
 @Composable

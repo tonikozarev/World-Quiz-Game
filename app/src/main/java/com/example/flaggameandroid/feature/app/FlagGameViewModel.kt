@@ -8,7 +8,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.flaggameandroid.core.data.FlagCatalogRepository
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.FlagCountry
@@ -20,7 +19,6 @@ import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.hasSameQuizConfiguration
-import com.example.flaggameandroid.engagement.AppEngagementCoordinator
 import com.example.flaggameandroid.persistence.AppGraph
 import com.example.flaggameandroid.persistence.persistProgress
 import com.example.flaggameandroid.persistence.persistSettings
@@ -43,7 +41,6 @@ class FlagGameViewModel(
   private val random: Random = Random.Default,
   private val settingsStore: SettingsStore = InMemorySettingsStore(),
   private val progressStore: ProgressStore = InMemoryProgressStore(),
-  private val engagementCoordinator: AppEngagementCoordinator? = null,
   initialPersistedState: PersistedAppState = PersistedAppState(),
 ) : ViewModel() {
   private val countries = catalogRepository.getCountries()
@@ -102,7 +99,6 @@ class FlagGameViewModel(
             setupError = null,
           )
         }
-      AppScreen.GameModesHub -> navigateTo(AppScreen.GameModes)
       AppScreen.GameModes,
       AppScreen.Medals,
       AppScreen.Achievements,
@@ -148,10 +144,6 @@ class FlagGameViewModel(
     navigateTo(AppScreen.GameModes)
   }
 
-  fun onGameModesClicked() {
-    navigateTo(AppScreen.GameModesHub)
-  }
-
   fun onSettingsClicked() {
     navigateTo(AppScreen.Settings)
   }
@@ -178,10 +170,7 @@ class FlagGameViewModel(
 
   fun onModeSelected(mode: GameMode) {
     val currentReturnTarget =
-      when (_uiState.value.screen) {
-        AppScreen.GameModesHub -> AppScreen.GameModesHub
-        else -> AppScreen.GameModes
-      }
+      AppScreen.GameModes
     val topic =
       when (mode) {
         GameMode.DailyChallenge -> QuizTopic.Mixed
@@ -208,6 +197,7 @@ class FlagGameViewModel(
           countries = countries,
           questionGenerator = questionGenerator,
           hintDifficulty = state.settings.hintDifficulty,
+          language = state.settings.language,
           random = random,
           hintCount = state.hintCount,
           displayName = state.profile.displayName,
@@ -252,10 +242,6 @@ class FlagGameViewModel(
 
   fun onHintDifficultySelected(difficulty: HintDifficulty) {
     updateSettings { it.copy(hintDifficulty = difficulty) }
-  }
-
-  fun onReminderEnabledChanged(enabled: Boolean) {
-    updateSettings { it.copy(reminderEnabled = enabled) }
   }
 
   fun onLanguageSelected(language: AppLanguage) {
@@ -323,12 +309,6 @@ class FlagGameViewModel(
     }
   }
 
-  fun onToggleTestingIconClicked() {
-    val nextActiveState = !_uiState.value.inactiveIconActive
-    engagementCoordinator?.setInactiveLauncherIcon(nextActiveState)
-    updateStateAndPersistProgress { it.withInactiveIconActive(nextActiveState) }
-  }
-
   fun onToggleFavoriteCountry(countryCode: String) {
     updateStateAndPersistProgress { state ->
       val current = state.countryPracticeStats[countryCode] ?: CountryPracticeStats()
@@ -336,11 +316,6 @@ class FlagGameViewModel(
       state.copy(countryPracticeStats = state.countryPracticeStats + (countryCode to updated))
     }
   }
-
-  fun onTriggerTestingReminderClicked() {
-    engagementCoordinator?.triggerTestingReminderNotification()
-  }
-
   fun onVariantToggled(variant: QuizVariant) {
     updateState { it.withSelectedVariantsToggled(variant) }
   }
@@ -410,26 +385,19 @@ class FlagGameViewModel(
   }
 
   fun onCreateQuizLocalMultiplayerToggled() {
-    updateState { it.withCreateQuizLocalMultiplayerToggled(countries) }
+    val displayName = _uiState.value.profile.displayName
+    updateState { it.withCreateQuizLocalMultiplayerToggled(countries, displayName) }
   }
 
   fun onSurpriseMeClicked() {
     updateState { it.withSurpriseMeToggled() }
   }
 
-  fun onAllInTypeSelected(allInType: AllInType) {
-    updateState { it.withAllInTypeSelected(allInType) }
-  }
-
-  fun onMultiplayerBaseSelected(base: MultiplayerQuizBase) {
-    updateState { it.withMultiplayerBaseSelected(base, countries) }
-  }
-
   fun onPlayerNameChanged(
     index: Int,
     name: String,
   ) {
-    updateState { it.withPlayerNameUpdated(index, name) }
+    updateState { it.withPlayerNameUpdated(index, name.take(15)) }
   }
 
   fun onAddPlayer() {
@@ -448,6 +416,7 @@ class FlagGameViewModel(
         countries = countries,
         questionGenerator = questionGenerator,
         hintDifficulty = state.settings.hintDifficulty,
+        language = state.settings.language,
         random = random,
         hintCount = state.hintCount,
         displayName = state.profile.displayName,
@@ -580,7 +549,7 @@ class FlagGameViewModel(
     persistProgress(progressStore, _uiState.value)
     recordCompletedQuiz(
       progressStore = progressStore,
-      mode = quiz.mode ?: GameMode.Training,
+      mode = quiz.mode ?: GameMode.CreateQuiz,
       totalQuestions = completionResult.summary.completedResults.size,
       correctAnswers = completionResult.summary.correctAnswers,
       skippedAnswers = 0,
@@ -614,37 +583,29 @@ class FlagGameViewModel(
         CreateQuizSource.PresetFilter -> setup.questionCount ?: state.questionCountLimit
       }
     val templateTitle =
-      when (setup.createQuizSource) {
-        CreateQuizSource.PresetFilter -> {
-          val presetTitle =
-            localizedCreateQuizPresetTitle(setup.createQuizPreset, state.settings.language, setup.topic)
-          when (state.settings.language) {
-            AppLanguage.English -> "$presetTitle quiz"
-            AppLanguage.Bulgarian -> "Тест с $presetTitle"
-            AppLanguage.German -> "Quiz mit $presetTitle"
-          }
-        }
-        CreateQuizSource.ManualCountriesCapitals ->
-          when (state.settings.language) {
-            AppLanguage.English -> "Manual quiz"
-            AppLanguage.Bulgarian -> "Ръчен тест"
-            AppLanguage.German -> "Manuelles Quiz"
-          }
+      when (state.settings.language) {
+        AppLanguage.English -> "Saved quiz"
+        AppLanguage.Bulgarian -> "Запазен тест"
+        AppLanguage.German -> "Gespeichertes Quiz"
       }
     val template =
       SavedQuizTemplate(
         id = "saved-${seed}-${setup.createQuizSource.name.lowercase()}",
         createdAtEpochMillis = System.currentTimeMillis(),
-        title = templateName.trim().take(30).ifBlank { templateTitle },
+        title = templateName.trim().take(15).ifBlank { templateTitle },
         topic = setup.topic,
         source = setup.createQuizSource,
         preset = if (setup.createQuizSource == CreateQuizSource.PresetFilter) setup.createQuizPreset else null,
+        createQuizPresets = setup.createQuizPresets.ifEmpty { setOf(setup.createQuizPreset) },
         selectedCountryCodes = setup.selectedCountryCodes,
         selectedCapitalCountryCodes = setup.selectedCapitalCountryCodes,
         questionCountryCodes = resolvedQuestionCountryCodes,
         variants = setup.variants,
         questionCount = exactQuestionCount.coerceAtLeast(1),
         seed = seed,
+        instantCorrectionEnabled = setup.instantCorrectionEnabled,
+        createQuizManualTimerEnabled = setup.createQuizManualTimerEnabled,
+        speedRunSecondsPerAnswer = setup.speedRunSecondsPerAnswer?.coerceIn(1, 60) ?: 5,
         createQuizLocalMultiplayerEnabled = setup.usesCreateQuizLocalMultiplayer,
         playerNames = if (setup.usesCreateQuizLocalMultiplayer) setup.playerNames else emptyList(),
       )
@@ -661,7 +622,10 @@ class FlagGameViewModel(
     val sameConfigurationTemplate =
       state.savedQuizTemplates.firstOrNull { it.hasSameQuizConfiguration(template) }
     if (sameConfigurationTemplate != null && sameConfigurationTemplate.id != replaceTemplateId) {
-      return SaveQuizResult.DuplicateConfiguration(existingName = sameConfigurationTemplate.title)
+      return SaveQuizResult.DuplicateConfiguration(
+        existingTemplateId = sameConfigurationTemplate.id,
+        existingName = sameConfigurationTemplate.title,
+      )
     }
 
     val replacingExisting = replaceTemplateId != null
@@ -688,11 +652,13 @@ class FlagGameViewModel(
     }
 
     return SaveQuizResult.Saved(
-      when (state.settings.language) {
-        AppLanguage.English -> "Saved \"${template.title}\"."
-        AppLanguage.Bulgarian -> "Р—Р°РїР°Р·РµРЅ Рµ \"${template.title}\"."
-        AppLanguage.German -> "\"${template.title}\" wurde gespeichert."
-      },
+      templateId = template.id,
+      message =
+        when (state.settings.language) {
+          AppLanguage.English -> "Saved \"${template.title}\"."
+          AppLanguage.Bulgarian -> "Запазен е \"${template.title}\"."
+          AppLanguage.German -> "\"${template.title}\" wurde gespeichert."
+        },
     )
   }
 
@@ -727,15 +693,24 @@ class FlagGameViewModel(
         mode = GameMode.CreateQuiz,
         topic = template.topic,
         variants = template.variants,
+        instantCorrectionEnabled = template.instantCorrectionEnabled,
         createQuizSource = template.source,
-        createQuizPreset = template.preset ?: createQuizDefaultPresetsForTopic(template.topic).first(),
-        createQuizPresets = template.preset?.let { setOf(it) } ?: createQuizDefaultPresetsForTopic(template.topic),
+        createQuizPreset =
+          template.createQuizPresets.firstOrNull()
+            ?: template.preset
+            ?: createQuizDefaultPresetsForTopic(template.topic).first(),
+        createQuizPresets =
+          template.createQuizPresets.ifEmpty {
+            template.preset?.let { setOf(it) } ?: createQuizDefaultPresetsForTopic(template.topic)
+          },
         selectedCountryCodes = template.selectedCountryCodes,
         selectedCapitalCountryCodes = template.selectedCapitalCountryCodes,
         createQuizSeed = template.seed,
         savedQuizTemplateId = template.id,
+        createQuizManualTimerEnabled = template.createQuizManualTimerEnabled,
+        speedRunSecondsPerAnswerInput = template.speedRunSecondsPerAnswer.coerceIn(1, 60).toString(),
         createQuizLocalMultiplayerEnabled = template.createQuizLocalMultiplayerEnabled,
-        playerNames = template.playerNames.ifEmpty { listOf("Player 1", "Player 2") },
+        playerNames = template.playerNames.ifEmpty { listOf("Player", "Player 2") },
         questionCountInput =
           if (template.topic == QuizTopic.Mixed) {
             (template.selectedCountryCodes.size + template.selectedCapitalCountryCodes.size).toString()
@@ -759,10 +734,12 @@ class FlagGameViewModel(
     data object NoOp : SaveQuizResult
 
     data class Saved(
+      val templateId: String,
       val message: String,
     ) : SaveQuizResult
 
     data class DuplicateConfiguration(
+      val existingTemplateId: String,
       val existingName: String,
     ) : SaveQuizResult
 
@@ -786,14 +763,12 @@ class FlagGameViewModel(
             val initialPersistedState =
               runBlocking {
                 val hintDifficulty = container.settingsStore.loadHintDifficulty()
-                val reminderEnabled = container.settingsStore.loadReminderEnabled()
                 val progress = container.progressStore.loadProgress()
-                progress.copy(hintDifficulty = hintDifficulty, reminderEnabled = reminderEnabled)
+                progress.copy(hintDifficulty = hintDifficulty)
               }
             FlagGameViewModel(
               settingsStore = container.settingsStore,
               progressStore = container.progressStore,
-              engagementCoordinator = container.engagementCoordinator,
               initialPersistedState = initialPersistedState,
             )
           }.getOrElse {

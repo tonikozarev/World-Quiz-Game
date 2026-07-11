@@ -1,6 +1,5 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
@@ -9,6 +8,7 @@ import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.DailyChallengeCache
 import kotlin.random.Random
 import com.example.flaggameandroid.core.model.MistakeReviewUnlockCountryCount
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 
 internal data class QuizStartResult(
@@ -28,7 +28,6 @@ internal fun buildStartedQuizState(
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
   dailyChallengeCache: DailyChallengeCache? = null,
   nowEpochMillis: Long = System.currentTimeMillis(),
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): QuizState {
   val poolResolution =
     resolveQuizPool(
@@ -37,7 +36,6 @@ internal fun buildStartedQuizState(
       practiceStats = practiceStats,
       dailyChallengeCache = dailyChallengeCache,
       nowEpochMillis = nowEpochMillis,
-      timeZone = timeZone,
     )
   val pool = poolResolution.pool
   val config = configFor(setup, pool.size, hintDifficulty, random, practiceStats)
@@ -55,12 +53,12 @@ internal fun buildStartedQuizState(
 
   return QuizState(
     mode = config.mode,
-    allInType = setup.allInType,
+    sessionMode = config.sessionMode,
     variants = config.variants,
     topic = config.topic,
     selectedContinents = setup.selectedContinents,
     instantCorrectionEnabled = setup.instantCorrectionEnabled,
-    hintsAllowed = !setup.usesCreateQuizManualHardcore,
+    hintsAllowed = !setup.usesCreateQuizManualHardcore && config.sessionMode != QuizSessionMode.LocalMultiplayer,
     questions = questions,
     questionStates = questionStates,
     players = players,
@@ -79,13 +77,13 @@ internal fun buildQuizStartResult(
   countries: List<FlagCountry>,
   questionGenerator: QuizQuestionGenerator,
   hintDifficulty: HintDifficulty,
+  language: AppLanguage,
   random: Random,
   hintCount: Double,
   displayName: String,
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
   dailyChallengeCache: DailyChallengeCache? = null,
   nowEpochMillis: Long = System.currentTimeMillis(),
-  timeZone: AppTimeZone = AppTimeZone.Utc,
   mistakeReviewUnlocked: Boolean = false,
 ): QuizStartResult {
   val poolResolution =
@@ -95,7 +93,6 @@ internal fun buildQuizStartResult(
       practiceStats = practiceStats,
       dailyChallengeCache = dailyChallengeCache,
       nowEpochMillis = nowEpochMillis,
-      timeZone = timeZone,
     )
   if (setup.mode == GameMode.DailyChallenge && poolResolution.pool.isEmpty()) {
     return QuizStartResult(validationError = "Daily challenge already completed for today.")
@@ -109,7 +106,7 @@ internal fun buildQuizStartResult(
   if (setup.mode == GameMode.MistakeReview && poolResolution.pool.isEmpty()) {
     return QuizStartResult(validationError = "No missed countries to review yet.")
   }
-  val validationError = validateSetup(setup) { poolResolution.pool }
+  val validationError = validateSetup(setup, { poolResolution.pool }, language)
   if (validationError != null) {
     return QuizStartResult(validationError = validationError)
   }
@@ -127,7 +124,6 @@ internal fun buildQuizStartResult(
         practiceStats = practiceStats,
         dailyChallengeCache = poolResolution.dailyChallengeCache,
         nowEpochMillis = nowEpochMillis,
-        timeZone = timeZone,
       ),
     dailyChallengeCache = poolResolution.dailyChallengeCache,
   )

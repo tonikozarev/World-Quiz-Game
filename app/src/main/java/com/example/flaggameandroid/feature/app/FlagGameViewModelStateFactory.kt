@@ -20,7 +20,6 @@ internal fun buildInitialUiState(
     settings =
       SettingsState(
         hintDifficulty = initialPersistedState.hintDifficulty,
-        reminderEnabled = initialPersistedState.reminderEnabled,
         language = initialPersistedState.language,
       ),
     availableContinents = allContinents,
@@ -47,7 +46,6 @@ internal fun buildInitialUiState(
       ),
     lastOpenedAtEpochMillis = initialPersistedState.lastOpenedAtEpochMillis,
     lastPlayedAtEpochMillis = initialPersistedState.lastPlayedAtEpochMillis,
-    inactiveIconActive = initialPersistedState.inactiveIconActive,
     countryPracticeStats = initialPersistedState.countryPracticeStats,
     activityCalendar = initialPersistedState.activityCalendar,
     dailyChallengeCaches =
@@ -88,7 +86,6 @@ internal fun FlagGameUiState.resetToMenu(
 internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
   PersistedAppState(
     hintDifficulty = settings.hintDifficulty,
-    reminderEnabled = settings.reminderEnabled,
     language = settings.language,
     accountName = profile.accountName,
     avatarIndex = profile.avatarIndex,
@@ -101,7 +98,6 @@ internal fun FlagGameUiState.toPersistedAppState(): PersistedAppState =
     eligibleQuizzesTowardNextLevel = levelProgress.eligibleQuizzesTowardNextLevel,
     lastOpenedAtEpochMillis = lastOpenedAtEpochMillis,
     lastPlayedAtEpochMillis = lastPlayedAtEpochMillis,
-    inactiveIconActive = inactiveIconActive,
     countryPracticeStats = countryPracticeStats,
     activityCalendar = activityCalendar,
     dailyChallengeCaches = dailyChallengeCaches,
@@ -123,30 +119,15 @@ internal fun buildSetupForMode(
         GameMode.DailyChallenge -> QuizTopic.Mixed
         else -> topic
       },
-    instantCorrectionEnabled = mode == GameMode.Training,
-    selectedContinents =
-      when (mode) {
-        GameMode.WorldFlags,
-        GameMode.LocalMultiplayer ->
-          selectableContinents.toSet()
-        GameMode.CreateQuiz ->
-          emptySet()
-        GameMode.DailyChallenge,
-        GameMode.MistakeReview,
-        GameMode.Training -> emptySet()
-      },
+    instantCorrectionEnabled = false,
+    selectedContinents = emptySet(),
     questionCountInput =
       when (mode) {
         GameMode.DailyChallenge -> "10"
         GameMode.MistakeReview -> "10"
         GameMode.CreateQuiz -> if (topic == QuizTopic.Mixed) "0" else "10"
-        GameMode.WorldFlags -> "10"
-        GameMode.LocalMultiplayer -> "10"
-        else -> "10"
       },
     speedRunSecondsPerAnswerInput = "5",
-    worldFlagsHardcoreEnabled = false,
-    worldFlagsTimerEnabled = false,
     createQuizPreset =
       when (topic) {
         QuizTopic.Capitals -> CreateQuizPreset.CapitalPopulationUnderQuarterMillion
@@ -159,7 +140,7 @@ internal fun buildSetupForMode(
         else -> CreateQuizSource.PresetFilter
       },
     createQuizPresets = createQuizDefaultPresetsForTopic(topic),
-    playerNames = listOf(displayName, "Player 2"),
+    playerNames = listOf(displayName.ifBlank { "Player" }, "Player 2"),
   )
 
 internal fun buildSetupForMode(

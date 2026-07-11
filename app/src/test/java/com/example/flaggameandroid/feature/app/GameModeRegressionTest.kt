@@ -10,7 +10,6 @@ import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.capitalQuizMetadata
-import com.example.flaggameandroid.core.model.gameModesHubModes
 import com.example.flaggameandroid.core.model.startQuizModes
 import com.example.flaggameandroid.persistence.PersistedAppState
 import junit.framework.TestCase.assertEquals
@@ -64,7 +63,6 @@ class GameModeRegressionTest {
       ),
       startQuizModes(),
     )
-    assertEquals(emptyList<GameMode>(), gameModesHubModes())
   }
 
   @Test
@@ -264,7 +262,7 @@ class GameModeRegressionTest {
   }
 
   @Test
-  fun noBluffAllToughUsesFullCatalogAndSelectedVariants() {
+  fun hardcoreUsesFullCatalogAndSelectedVariants() {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)

@@ -2,10 +2,10 @@ package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.data.QuizQuestionGenerator
 import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
-import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import junit.framework.TestCase.assertEquals
@@ -21,7 +21,13 @@ class FlagGameQuizBootstrapLogicTest {
   @Test
   fun buildStartedQuizState_usesSetupAndInitialHintCount() {
     val countries = StaticFlagCatalogRepository().getCountries()
-    val setup = buildSetupForMode(GameMode.Training, listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"), countries, "Tony")
+    val setup =
+      buildSetupForMode(
+        GameMode.CreateQuiz,
+        listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
+        countries,
+        "Tony",
+      ).copy(createQuizTrainingEnabled = true)
     val quiz =
       buildStartedQuizState(
         setup = setup.copy(questionCountInput = "12", variants = setOf(QuizVariant.FlagToCountry)),
@@ -33,7 +39,8 @@ class FlagGameQuizBootstrapLogicTest {
         displayName = "Tony",
       )
 
-    assertEquals(GameMode.Training, quiz.mode)
+    assertEquals(GameMode.CreateQuiz, quiz.mode)
+    assertEquals(QuizSessionMode.Training, quiz.sessionMode)
     assertEquals(12, quiz.totalQuestions)
     assertEquals(7.0, quiz.currentPlayer.hintPoints)
     assertEquals(12, quiz.questionStates.size)
@@ -107,11 +114,11 @@ class FlagGameQuizBootstrapLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
-      ).copy(selectedContinents = emptySet())
+      ).copy(createQuizSource = com.example.flaggameandroid.core.model.CreateQuizSource.ManualCountriesCapitals)
 
     val result =
       buildQuizStartResult(
@@ -119,12 +126,13 @@ class FlagGameQuizBootstrapLogicTest {
         countries = countries,
         questionGenerator = QuizQuestionGenerator(Random(21)),
         hintDifficulty = HintDifficulty.Medium,
+        language = AppLanguage.English,
         random = Random(22),
         hintCount = 7.0,
         displayName = "Tony",
       )
 
-    assertEquals("Choose at least one continent.", result.validationError)
+    assertEquals("Choose at least one country.", result.validationError)
     assertNull(result.quiz)
   }
 
@@ -155,6 +163,7 @@ class FlagGameQuizBootstrapLogicTest {
         countries = countries,
         questionGenerator = QuizQuestionGenerator(Random(1)),
         hintDifficulty = HintDifficulty.Medium,
+        language = AppLanguage.English,
         random = Random(2),
         hintCount = 0.0,
         displayName = "Tony",
@@ -166,6 +175,7 @@ class FlagGameQuizBootstrapLogicTest {
         countries = countries,
         questionGenerator = QuizQuestionGenerator(Random(9)),
         hintDifficulty = HintDifficulty.Medium,
+        language = AppLanguage.English,
         random = Random(10),
         hintCount = 0.0,
         displayName = "Tony",
@@ -191,11 +201,11 @@ class FlagGameQuizBootstrapLogicTest {
         countries = countries,
         questionGenerator = QuizQuestionGenerator(Random(1)),
         hintDifficulty = HintDifficulty.Medium,
+        language = AppLanguage.English,
         random = Random(2),
         hintCount = 0.0,
         displayName = "Tony",
         nowEpochMillis = now,
-        timeZone = AppTimeZone.UtcPlus3,
       ).dailyChallengeCache!!
 
     val completedCache =
@@ -210,12 +220,12 @@ class FlagGameQuizBootstrapLogicTest {
         countries = countries,
         questionGenerator = QuizQuestionGenerator(Random(3)),
         hintDifficulty = HintDifficulty.Medium,
+        language = AppLanguage.English,
         random = Random(4),
         hintCount = 0.0,
         displayName = "Tony",
         dailyChallengeCache = completedCache,
         nowEpochMillis = now,
-        timeZone = AppTimeZone.Utc,
       )
 
     assertEquals("Daily challenge already completed for today.", resultAfterTimeZoneChange.validationError)
@@ -242,6 +252,7 @@ class FlagGameQuizBootstrapLogicTest {
         countries = countries,
         questionGenerator = QuizQuestionGenerator(Random(31)),
         hintDifficulty = HintDifficulty.Medium,
+        language = AppLanguage.English,
         random = Random(32),
         hintCount = 0.0,
         displayName = "Tony",
@@ -273,6 +284,7 @@ class FlagGameQuizBootstrapLogicTest {
         countries = countries,
         questionGenerator = QuizQuestionGenerator(Random(33)),
         hintDifficulty = HintDifficulty.Medium,
+        language = AppLanguage.English,
         random = Random(34),
         hintCount = 0.0,
         displayName = "Tony",
@@ -289,7 +301,7 @@ class FlagGameQuizBootstrapLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
@@ -312,7 +324,7 @@ class FlagGameQuizBootstrapLogicTest {
         displayName = "Tony",
       )
 
-    assertEquals(GameMode.WorldFlags, quiz.mode)
+    assertEquals(GameMode.CreateQuiz, quiz.mode)
     assertTrue(quiz.startedAtEpochMillis > 0L)
     assertEquals(10, quiz.totalQuestions)
     assertEquals(4.0, quiz.currentPlayer.hintPoints)
@@ -323,13 +335,13 @@ class FlagGameQuizBootstrapLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
       ).copy(
-        worldFlagsHardcoreEnabled = true,
-        worldFlagsTimerEnabled = false,
+        createQuizManualHardcoreEnabled = true,
+        createQuizManualTimerEnabled = false,
         variants = setOf(QuizVariant.FlagToCountry, QuizVariant.CountryToFlag),
       )
 
@@ -344,7 +356,7 @@ class FlagGameQuizBootstrapLogicTest {
         displayName = "Tony",
       )
 
-    assertEquals(GameMode.WorldFlags, quiz.mode)
+    assertEquals(GameMode.CreateQuiz, quiz.mode)
     assertEquals(countries.size, quiz.totalQuestions)
     assertEquals(0, quiz.speedRunSecondsPerAnswer)
     assertFalse(quiz.countdownEnabled)
@@ -355,13 +367,13 @@ class FlagGameQuizBootstrapLogicTest {
     val countries = StaticFlagCatalogRepository().getCountries()
     val setup =
       buildSetupForMode(
-        GameMode.WorldFlags,
+        GameMode.CreateQuiz,
         listOf("Africa", "Asia", "Europe", "North America", "Oceania", "South America"),
         countries,
         "Tony",
       ).copy(
         selectedContinents = setOf("Europe"),
-        worldFlagsTimerEnabled = true,
+        createQuizManualTimerEnabled = true,
         speedRunSecondsPerAnswerInput = "7",
         variants = setOf(QuizVariant.FlagToCountry),
       )
@@ -377,7 +389,7 @@ class FlagGameQuizBootstrapLogicTest {
         displayName = "Tony",
       )
 
-    assertEquals(GameMode.WorldFlags, quiz.mode)
+    assertEquals(GameMode.CreateQuiz, quiz.mode)
     assertTrue(quiz.countdownEnabled)
     assertEquals(7, quiz.speedRunSecondsPerAnswer)
     assertTrue(quiz.totalQuestions > 0)

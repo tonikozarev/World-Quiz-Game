@@ -15,10 +15,18 @@ import com.example.flaggameandroid.core.model.ProgressionRules
 import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.QuizConfig
 import com.example.flaggameandroid.core.model.QuizPoolSource
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.core.model.RatingsProgress
 import kotlin.random.Random
+
+private fun tr(language: AppLanguage, english: String, bulgarian: String, german: String): String =
+  when (language) {
+    AppLanguage.English -> english
+    AppLanguage.Bulgarian -> bulgarian
+    AppLanguage.German -> german
+  }
 
 internal fun QuizState.loadQuestionDraft(index: Int): QuizState {
   if (questions.isEmpty()) return this
@@ -172,8 +180,16 @@ internal fun <T> List<T>.replaceAt(
 internal fun validateSetup(
   setup: SetupState,
   countryPoolFor: (SetupState) -> List<FlagCountry>,
+  language: AppLanguage,
 ): String? {
-  if (setup.variants.isEmpty()) return "Choose at least one question variant."
+  if (setup.variants.isEmpty()) {
+    return tr(
+      language,
+      "Choose at least one question variant.",
+      "Избери поне един вид въпрос.",
+      "Wähle mindestens einen Fragetyp.",
+    )
+  }
   if (
     setup.mode == GameMode.CreateQuiz &&
     !setup.usesCreateQuizTraining &&
@@ -182,28 +198,45 @@ internal fun validateSetup(
     setup.selectedCountryCodes.isEmpty() &&
     setup.selectedCapitalCountryCodes.isEmpty()
   ) {
-    return if (setup.topic == QuizTopic.Mixed) "Choose at least one country or capital." else "Choose at least one country."
-  }
-  val needsContinents =
-    setup.mode == GameMode.WorldFlags ||
-      (setup.mode == GameMode.LocalMultiplayer && setup.multiplayerBase == MultiplayerQuizBase.Continents)
-  if (needsContinents && setup.selectedContinents.isEmpty()) {
-    return "Choose at least one continent."
-  }
-  if (needsContinents && countryPoolFor(setup).size < 4) {
-    return "Choose continents with at least 4 countries."
+    return if (setup.topic == QuizTopic.Mixed) {
+      tr(
+        language,
+        "Choose at least one country or capital.",
+        "Избери поне една държава или столица.",
+        "Wähle mindestens ein Land oder eine Hauptstadt.",
+      )
+    } else {
+      tr(
+        language,
+        "Choose at least one country.",
+        "Избери поне една държава.",
+        "Wähle mindestens ein Land.",
+      )
+    }
   }
   val needsTimer =
-    (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsTimer) ||
-      (setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualTimer)
+    setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualTimer
   if (needsTimer) {
-    val secondsPerAnswer = setup.speedRunSecondsPerAnswer ?: return "Write how many seconds each answer should get."
-    if (secondsPerAnswer !in 1..60) return "Seconds per answer must be between 1 and 60."
+    val secondsPerAnswer =
+      setup.speedRunSecondsPerAnswer
+        ?: return tr(
+          language,
+          "Write how many seconds each answer should get.",
+          "Напиши колко секунди да има всеки отговор.",
+          "Gib an, wie viele Sekunden jede Antwort haben soll.",
+        )
+    if (secondsPerAnswer !in 1..60) {
+      return tr(
+        language,
+        "Seconds per answer must be between 1 and 60.",
+        "Секундите за отговор трябва да са между 1 и 60.",
+        "Sekunden pro Antwort müssen zwischen 1 und 60 liegen.",
+      )
+    }
   }
   if (!setup.surpriseMe) {
     val maxQuestions = countryPoolFor(setup).size
     if (setup.mode == GameMode.MistakeReview) return null
-    if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) return null
     if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.usesCreateQuizManualHardcore) return null
     if (
       setup.mode == GameMode.CreateQuiz &&
@@ -212,13 +245,25 @@ internal fun validateSetup(
       setup.topic == QuizTopic.Mixed
     ) return null
     if (setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals) return null
-    val questionCount = setup.questionCount ?: return "Write how many questions you want."
-    if (questionCount <= 0) return "Question count must be at least 1."
+    val questionCount =
+      setup.questionCount
+        ?: return tr(
+          language,
+          "Write how many questions you want.",
+          "Напиши колко въпроса искаш.",
+          "Gib an, wie viele Fragen du möchtest.",
+        )
+    if (questionCount <= 0) {
+      return tr(
+        language,
+        "Question count must be at least 1.",
+        "Броят въпроси трябва да е поне 1.",
+        "Die Anzahl der Fragen muss mindestens 1 sein.",
+      )
+    }
     val limit =
       when {
-        setup.mode == GameMode.Training -> 999
         setup.usesCreateQuizTraining -> 999
-        setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore -> 195
         setup.mode == GameMode.CreateQuiz &&
           !setup.usesCreateQuizTraining &&
           setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
@@ -226,18 +271,34 @@ internal fun validateSetup(
           setup.derivedCreateQuizQuestionCount()
         else -> maxQuestions
       }
-    if (questionCount > limit) return "Question count must be between 1 and $limit."
+    if (questionCount > limit) {
+      return tr(
+        language,
+        "Question count must be between 1 and $limit.",
+        "Броят въпроси трябва да е между 1 и $limit.",
+        "Die Anzahl der Fragen muss zwischen 1 und $limit liegen.",
+      )
+    }
   }
 
-  if (setup.mode == GameMode.LocalMultiplayer) {
-    val names = setup.playerNames.map { it.trim() }.filter { it.isNotEmpty() }
-    if (names.size !in 2..5) return "Local multiplayer needs 2 to 5 named players."
-    if (names.distinctBy { it.lowercase() }.size != names.size) return "Player names must be unique."
-  }
   if (setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizLocalMultiplayer) {
     val names = setup.playerNames.map { it.trim() }.filter { it.isNotEmpty() }
-    if (names.size !in 2..5) return "Local multiplayer needs 2 to 5 named players."
-    if (names.distinctBy { it.lowercase() }.size != names.size) return "Player names must be unique."
+    if (names.size !in 2..5) {
+      return tr(
+        language,
+        "Local multiplayer needs 2 to 5 named players.",
+        "Локалният мултиплейър изисква 2 до 5 именувани играча.",
+        "Lokaler Mehrspieler braucht 2 bis 5 benannte Spieler.",
+      )
+    }
+    if (names.distinctBy { it.lowercase() }.size != names.size) {
+      return tr(
+        language,
+        "Player names must be unique.",
+        "Имената на играчите трябва да са уникални.",
+        "Spielernamen müssen eindeutig sein.",
+      )
+    }
   }
   return null
 }
@@ -253,41 +314,31 @@ internal fun configFor(
 
   val questionCount =
     when {
-      setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore -> poolSize
       setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.usesCreateQuizManualHardcore ->
         if (setup.topic == QuizTopic.Mixed) poolSize * 2 else poolSize
       setup.mode == GameMode.CreateQuiz && !setup.usesCreateQuizTraining && setup.createQuizSource == CreateQuizSource.ManualCountriesCapitals ->
         if (setup.topic == QuizTopic.Mixed) setup.derivedCreateQuizQuestionCount() else poolSize
       setup.mode == GameMode.DailyChallenge -> (setup.questionCount?.coerceIn(1, minOf(poolSize, 10)) ?: minOf(poolSize, 10)).coerceAtLeast(1)
       setup.mode == GameMode.MistakeReview -> mistakeReviewEligibleCountryCount(practiceStats, setup.topic)
-      setup.mode == GameMode.Training ->
-        if (setup.surpriseMe) {
-          random.nextInt(from = 1, until = 1000)
-        } else {
-          setup.questionCount?.coerceIn(1, 999) ?: 1
-        }
       setup.usesCreateQuizTraining -> setup.questionCount?.coerceIn(1, 999) ?: 1
-      setup.mode == GameMode.WorldFlags ->
-        setup.questionCount?.coerceIn(1, poolSize) ?: 1
-      setup.mode == GameMode.LocalMultiplayer ->
-        setup.questionCount?.coerceIn(1, poolSize) ?: 1
       setup.surpriseMe -> random.nextInt(from = 1, until = poolSize + 1)
       else -> setup.questionCount?.coerceIn(1, poolSize) ?: 1
     }
 
   val players =
-    if (setup.mode == GameMode.LocalMultiplayer || setup.usesCreateQuizLocalMultiplayer) {
+    if (setup.usesCreateQuizLocalMultiplayer) {
       setup.playerNames.map { it.trim() }.filter { it.isNotEmpty() }
     } else {
       listOf("Solo")
     }
 
   return QuizConfig(
-    mode =
+    mode = setup.mode,
+    sessionMode =
       when {
-        setup.usesCreateQuizTraining -> GameMode.Training
-        setup.usesCreateQuizLocalMultiplayer -> GameMode.LocalMultiplayer
-        else -> setup.mode
+        setup.usesCreateQuizTraining -> QuizSessionMode.Training
+        setup.usesCreateQuizLocalMultiplayer -> QuizSessionMode.LocalMultiplayer
+        else -> QuizSessionMode.Standard
       },
     variants = variants,
     topic = setup.topic,
@@ -307,10 +358,8 @@ internal fun configFor(
     questionCount = questionCount,
     speedRunSecondsPerAnswer = setup.speedRunSecondsPerAnswer ?: 5,
     countdownEnabled =
-      (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsTimer) ||
-        (setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualTimer),
+      setup.mode == GameMode.CreateQuiz && setup.usesCreateQuizManualTimer,
     surpriseMe = setup.surpriseMe,
-    allInType = setup.allInType,
     hintDifficulty = hintDifficulty,
     players = players,
     poolSource =
@@ -344,12 +393,6 @@ internal fun countryPoolFor(
           }
         }
     }
-  } else if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) {
-    countries
-  } else if (setup.mode == GameMode.WorldFlags || (setup.mode == GameMode.LocalMultiplayer && setup.multiplayerBase == MultiplayerQuizBase.Continents)) {
-    countries.filter { it.continent in setup.selectedContinents }
-  } else if (setup.mode == GameMode.LocalMultiplayer && setup.multiplayerBase == MultiplayerQuizBase.AllIn) {
-    countries
   } else if (setup.mode == GameMode.DailyChallenge || setup.mode == GameMode.MistakeReview) {
     countries
   } else {
@@ -361,9 +404,7 @@ internal fun questionLimitFor(
   countries: List<FlagCountry>,
   practiceStats: Map<String, CountryPracticeStats> = emptyMap(),
 ): Int =
-  if (setup.mode == GameMode.Training) {
-    999
-  } else if (setup.usesCreateQuizTraining) {
+  if (setup.usesCreateQuizTraining) {
     999
   } else if (setup.mode == GameMode.CreateQuiz) {
     when {
@@ -380,10 +421,6 @@ internal fun questionLimitFor(
     }
   } else if (setup.mode == GameMode.MistakeReview) {
     mistakeReviewEligibleCountryCount(practiceStats, setup.topic)
-  } else if (setup.mode == GameMode.WorldFlags && setup.usesWorldFlagsHardcore) {
-    countries.size
-  } else if (setup.mode == GameMode.LocalMultiplayer && setup.multiplayerBase == MultiplayerQuizBase.AllIn) {
-    countries.size
   } else if (setup.mode == GameMode.DailyChallenge) {
     10
   } else {
@@ -515,7 +552,7 @@ internal fun awardAchievementsIfEligible(
     updatedAchievements = updatedAchievements.unlock(AchievementId.VariantMaster, completedAtEpochMillis)
   }
 
-  if (quiz.mode == GameMode.WorldFlags && quiz.countdownEnabled && completedResults.isNotEmpty()) {
+  if (quiz.mode == GameMode.CreateQuiz && quiz.countdownEnabled && completedResults.isNotEmpty()) {
     updatedAchievements = updatedAchievements.unlock(AchievementId.SpeedRunStarter, completedAtEpochMillis)
     if (completedResults.all { it.countsAsCorrect } && completedResults.none { it.hintUsed }) {
       updatedAchievements = updatedAchievements.unlock(AchievementId.SpeedRunPurist, completedAtEpochMillis)
@@ -534,7 +571,7 @@ internal fun awardAchievementsIfEligible(
 
   if (
     perfectQuiz &&
-    quiz.mode == GameMode.WorldFlags &&
+    quiz.mode == GameMode.CreateQuiz &&
     quiz.variants.containsAll(QuizVariant.entries) &&
     completedResults.size == totalCatalogCountries &&
     distinctCountries == totalCatalogCountries
@@ -555,7 +592,7 @@ internal fun awardAchievementsIfEligible(
   if (continentAchievementId != null) {
     val qualifiesForContinentAchievement =
       ProgressionRules.qualifiesForContinentAchievement(
-        mode = quiz.mode ?: GameMode.Training,
+        mode = quiz.mode ?: GameMode.CreateQuiz,
         selectedContinents = quiz.selectedContinents,
         usedHint = completedResults.any { it.hintUsed },
         totalQuestions = completedResults.size,
@@ -609,7 +646,7 @@ internal fun buildQuestionAdvanceOutcome(
       hintUses = currentDraft.hintUses,
       revealed = currentDraft.revealed,
       hintDifficulty = state.settings.hintDifficulty,
-      canEarnHints = quiz.mode != GameMode.LocalMultiplayer,
+      canEarnHints = quiz.sessionMode != QuizSessionMode.LocalMultiplayer,
     )
   val updatedResults = buildQuizResults(quiz.copy(questionStates = updatedQuestionStates), state.settings.language)
   val updatedPlayers =
@@ -617,7 +654,7 @@ internal fun buildQuestionAdvanceOutcome(
       answeredPlayers,
       updatedResults,
       state.settings.hintDifficulty,
-      quiz.mode != GameMode.LocalMultiplayer,
+      quiz.sessionMode != QuizSessionMode.LocalMultiplayer,
     )
   val updatedQuiz =
     quiz.copy(
@@ -647,5 +684,4 @@ internal fun buildQuestionAdvanceOutcome(
     shouldComplete = false,
   )
 }
-
 

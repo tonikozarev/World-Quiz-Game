@@ -1,7 +1,6 @@
 ﻿package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.model.ActivityDayRecord
-import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.CountryTag
 import com.example.flaggameandroid.core.model.DailyChallengeCache
@@ -10,9 +9,10 @@ import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
-import com.example.flaggameandroid.core.model.QuizTopic
-import com.example.flaggameandroid.core.model.QuestionResult
 import com.example.flaggameandroid.core.model.MistakeReviewRecoveryWrongCount
+import com.example.flaggameandroid.core.model.QuestionResult
+import com.example.flaggameandroid.core.model.QuizSessionMode
+import com.example.flaggameandroid.core.model.QuizTopic
 import java.time.Instant
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -40,7 +40,6 @@ internal fun resolveQuizPool(
   practiceStats: Map<String, CountryPracticeStats>,
   dailyChallengeCache: DailyChallengeCache?,
   nowEpochMillis: Long,
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): QuizPoolResolution {
   val generatedDailyChallengeCache =
     if (setup.mode == GameMode.DailyChallenge) {
@@ -49,7 +48,6 @@ internal fun resolveQuizPool(
         topic = setup.topic,
         dailyChallengeCache = dailyChallengeCache,
         nowEpochMillis = nowEpochMillis,
-        timeZone = timeZone,
       )
     } else {
       dailyChallengeCache
@@ -60,13 +58,10 @@ internal fun resolveQuizPool(
         if (generatedDailyChallengeCache?.completed == true) {
           emptyList()
         } else {
-          dailyChallengePool(countries, generatedDailyChallengeCache, nowEpochMillis, timeZone)
+          dailyChallengePool(countries, generatedDailyChallengeCache, nowEpochMillis)
         }
       GameMode.MistakeReview -> countries.filter { country -> practiceStats[country.code]?.isMistakeReviewEligible(setup.topic) == true }
       GameMode.CreateQuiz -> createQuizPool(setup, countries)
-      GameMode.WorldFlags,
-      GameMode.LocalMultiplayer,
-      GameMode.Training -> countryPoolFor(setup, countries)
     }
 
   val updatedCache =
@@ -86,9 +81,8 @@ internal fun dailyChallengePool(
   countries: List<FlagCountry>,
   dailyChallengeCache: DailyChallengeCache?,
   nowEpochMillis: Long,
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): List<FlagCountry> {
-  val dayKey = localDayKey(nowEpochMillis, timeZone)
+  val dayKey = localDayKey(nowEpochMillis)
   val theme =
     dailyChallengeCache?.takeIf { it.dayKey == dayKey }?.theme
       ?: determineDailyChallengeTheme(dayKey, countries)
@@ -101,9 +95,8 @@ internal fun buildDailyChallengeCache(
   topic: QuizTopic,
   dailyChallengeCache: DailyChallengeCache?,
   nowEpochMillis: Long,
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): DailyChallengeCache {
-  val dayKey = localDayKey(nowEpochMillis, timeZone)
+  val dayKey = localDayKey(nowEpochMillis)
   val theme =
     dailyChallengeCache?.takeIf { it.dayKey == dayKey && it.topic == topic }?.theme
       ?: determineDailyChallengeTheme(dayKey, countries, topic)
@@ -161,7 +154,6 @@ internal fun countriesForTheme(
 
 internal fun localDayKey(
   epochMillis: Long,
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): Long = Instant.ofEpochMilli(epochMillis).atZone(ZoneOffset.UTC).toLocalDate().toEpochDay()
 
 internal fun updateCountryPracticeStats(
@@ -169,8 +161,9 @@ internal fun updateCountryPracticeStats(
   results: List<QuestionResult>,
   completedAtEpochMillis: Long,
   mode: GameMode,
+  sessionMode: QuizSessionMode = QuizSessionMode.Standard,
 ): Map<String, CountryPracticeStats> =
-  if (mode == GameMode.Training) {
+  if (sessionMode == QuizSessionMode.Training) {
     previous
   } else {
     val updated =
@@ -248,9 +241,8 @@ internal fun updateActivityCalendar(
   previous: Map<Long, ActivityDayRecord>,
   completedAtEpochMillis: Long,
   mode: GameMode,
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): Map<Long, ActivityDayRecord> {
-  val dayKey = localDayKey(completedAtEpochMillis, timeZone)
+  val dayKey = localDayKey(completedAtEpochMillis)
   val current = previous[dayKey] ?: ActivityDayRecord(dayKey = dayKey)
   val previousDayKey = dayKey - 1
   val previousDay = previous[previousDayKey]
@@ -276,9 +268,8 @@ internal fun recentActivityDays(
   activityCalendar: Map<Long, ActivityDayRecord>,
   days: Int = 30,
   nowEpochMillis: Long = System.currentTimeMillis(),
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): List<ActivityDayRecord> {
-  val today = localDayKey(nowEpochMillis, timeZone)
+  val today = localDayKey(nowEpochMillis)
   return (0 until days)
     .map { offset ->
       val dayKey = today - offset
@@ -290,9 +281,8 @@ internal fun recentActivityDays(
 internal fun weekActivityDays(
   activityCalendar: Map<Long, ActivityDayRecord>,
   nowEpochMillis: Long = System.currentTimeMillis(),
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): List<ActivityDayRecord> {
-  val today = LocalDate.ofEpochDay(localDayKey(nowEpochMillis, timeZone))
+  val today = LocalDate.ofEpochDay(localDayKey(nowEpochMillis))
   val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
   return (0..6).map { offset ->
     val date = monday.plusDays(offset.toLong())
@@ -304,9 +294,8 @@ internal fun weekActivityDays(
 internal fun streakLength(
   activityCalendar: Map<Long, ActivityDayRecord>,
   nowEpochMillis: Long = System.currentTimeMillis(),
-  timeZone: AppTimeZone = AppTimeZone.Utc,
 ): Int {
-  val today = localDayKey(nowEpochMillis, timeZone)
+  val today = localDayKey(nowEpochMillis)
   val todayRecord = activityCalendar[today] ?: return 0
   val startDayKey = todayRecord.streakStartDayKey ?: today
   return (today - startDayKey + 1).coerceAtLeast(1).toInt()

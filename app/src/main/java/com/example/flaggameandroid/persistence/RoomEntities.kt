@@ -14,7 +14,6 @@ data class ProgressEntity(
   val eligibleQuizzesTowardNextLevel: Int,
   val lastOpenedAtEpochMillis: Long = 0L,
   val lastPlayedAtEpochMillis: Long = 0L,
-  val inactiveIconActive: Boolean = false,
   val ratingsSerialized: String = "",
   val achievementUnlocksSerialized: String = "",
   val countryPracticeSerialized: String = "",

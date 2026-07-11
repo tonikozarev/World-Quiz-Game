@@ -2,11 +2,11 @@ package com.example.flaggameandroid.core.data
 
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.QuizConfig
 import com.example.flaggameandroid.core.model.QuizPoolSource
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import java.text.Normalizer
@@ -34,11 +34,11 @@ class QuizQuestionGenerator(
           config.topic == QuizTopic.Mixed &&
           config.poolSource == com.example.flaggameandroid.core.model.QuizPoolSource.Standard ->
           pool.size * 2
-        config.mode == GameMode.Training -> 999
+        config.sessionMode == QuizSessionMode.Training -> 999
         else -> pool.size
       }
     val targetCount =
-      if (config.mode == GameMode.Training) {
+      if (config.sessionMode == QuizSessionMode.Training) {
         configuredCount.coerceIn(1, 999)
       } else {
         configuredCount.coerceIn(1, maxQuestions)
@@ -47,7 +47,7 @@ class QuizQuestionGenerator(
     val correctCountries =
       if (explicitSpecs.isNotEmpty()) {
         explicitSpecs.mapNotNull { spec -> pool.firstOrNull { it.code == spec.countryCode } ?: answerPool.firstOrNull { it.code == spec.countryCode } }
-      } else if (config.mode == GameMode.Training) {
+      } else if (config.sessionMode == QuizSessionMode.Training) {
         buildTrainingCountries(pool, targetCount)
       } else if (config.poolSource == QuizPoolSource.MistakeReview) {
         buildUniqueReviewCountries(pool, targetCount)
@@ -169,11 +169,7 @@ class QuizQuestionGenerator(
     targetCount: Int,
   ): List<QuizVariant> {
     val selectedVariants = config.variants.ifEmpty { QuizVariant.entries.toSet() }
-    if (
-      config.mode != GameMode.WorldFlags ||
-      config.allInType != AllInType.NoBluffAllTough ||
-      selectedVariants.size != QuizVariant.entries.size
-    ) {
+    if (selectedVariants.size != QuizVariant.entries.size) {
       return buildEvenVariants(selectedVariants, targetCount)
     }
 

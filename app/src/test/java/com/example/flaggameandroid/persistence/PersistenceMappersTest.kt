@@ -22,7 +22,6 @@ class PersistenceMappersTest {
         eligibleQuizzesTowardNextLevel = 2,
         lastOpenedAtEpochMillis = 1234L,
         lastPlayedAtEpochMillis = 5678L,
-        inactiveIconActive = true,
         ratings = RatingsProgress(
           bronzeCount = 2,
           goldCount = 1,
@@ -55,7 +54,6 @@ class PersistenceMappersTest {
     assertEquals(original.eligibleQuizzesTowardNextLevel, restored.eligibleQuizzesTowardNextLevel)
     assertEquals(original.lastOpenedAtEpochMillis, restored.lastOpenedAtEpochMillis)
     assertEquals(original.lastPlayedAtEpochMillis, restored.lastPlayedAtEpochMillis)
-    assertEquals(original.inactiveIconActive, restored.inactiveIconActive)
     assertEquals(original.ratings, restored.ratings)
     assertEquals(original.achievements, restored.achievements)
     assertEquals(original.accountName, restored.accountName)
@@ -67,7 +65,7 @@ class PersistenceMappersTest {
   fun quizHistoryEntity_usesTheExpectedFieldMapping() {
     val history =
       PersistedQuizHistory(
-        mode = GameMode.WorldFlags,
+        mode = GameMode.CreateQuiz,
         totalQuestions = 44,
         correctAnswers = 44,
         skippedAnswers = 0,
@@ -77,7 +75,7 @@ class PersistenceMappersTest {
 
     val entity = history.toEntity()
 
-    assertEquals("WorldFlags", entity.mode)
+    assertEquals("CreateQuiz", entity.mode)
     assertEquals(44, entity.totalQuestions)
     assertEquals(44, entity.correctAnswers)
     assertEquals(0, entity.skippedAnswers)

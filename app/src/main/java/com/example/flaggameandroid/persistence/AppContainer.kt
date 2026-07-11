@@ -2,7 +2,6 @@ package com.example.flaggameandroid.persistence
 
 import android.content.Context
 import androidx.room.Room
-import com.example.flaggameandroid.engagement.AppEngagementCoordinator
 
 class AppContainer(
   context: Context,
@@ -22,6 +21,7 @@ class AppContainer(
       Migration7To8,
       Migration8To9,
       Migration9To10,
+      Migration10To11,
     ).build()
 
   val settingsStore: SettingsStore = DataStoreSettingsStore(context.flagGameSettingsDataStore)
@@ -30,13 +30,6 @@ class AppContainer(
     RoomProgressStore(
       progressDao = database.progressDao(),
       quizHistoryDao = database.quizHistoryDao(),
-    )
-
-  val engagementCoordinator: AppEngagementCoordinator =
-    AppEngagementCoordinator(
-      context = context.applicationContext,
-      settingsStore = settingsStore,
-      progressStore = progressStore,
     )
 }
 

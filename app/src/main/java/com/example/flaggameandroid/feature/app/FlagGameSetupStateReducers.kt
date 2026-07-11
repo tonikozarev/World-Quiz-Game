@@ -1,6 +1,5 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.FlagCountry
@@ -265,17 +264,25 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
 ): FlagGameUiState {
   val continentCodes = countries.filter { it.continent == continent }.map { it.code }.toSet()
   if (continentCodes.isEmpty()) return this
+  val nextSelectedContinents =
+    if (continent in setup.selectedContinents) {
+      setup.selectedContinents - continent
+    } else {
+      setup.selectedContinents + continent
+    }
   val continentSelectedCountries = continentCodes.all { it in setup.selectedCountryCodes }
   val continentSelectedCapitals = continentCodes.all { it in setup.selectedCapitalCountryCodes }
+  val toggleBothColumns = setup.topic == QuizTopic.Mixed
+  val allColumnsSelected = continentSelectedCountries && (!toggleBothColumns || continentSelectedCapitals)
   val nextCountrySelection =
-    if (continentSelectedCountries) {
+    if (allColumnsSelected) {
       setup.selectedCountryCodes - continentCodes
     } else {
       setup.selectedCountryCodes + continentCodes
     }
   val nextCapitalSelection =
-    if (setup.topic == QuizTopic.Mixed) {
-      if (continentSelectedCapitals) {
+    if (toggleBothColumns) {
+      if (allColumnsSelected) {
         setup.selectedCapitalCountryCodes - continentCodes
       } else {
         setup.selectedCapitalCountryCodes + continentCodes
@@ -286,6 +293,7 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
   val nextSetup =
     setup.copy(
       createQuizSource = CreateQuizSource.ManualCountriesCapitals,
+      selectedContinents = nextSelectedContinents,
       selectedCountryCodes = nextCountrySelection,
       selectedCapitalCountryCodes = nextCapitalSelection,
       createQuizSeed = 0L,
@@ -301,7 +309,12 @@ internal fun FlagGameUiState.withCreateQuizContinentToggled(
 
 internal fun FlagGameUiState.withSpeedRunSecondsPerAnswerInput(speedRunSeconds: String): FlagGameUiState =
   withUpdatedSetup {
-    it.copy(speedRunSecondsPerAnswerInput = speedRunSeconds.filter { char -> char.isDigit() })
+    val digits = speedRunSeconds.filter { char -> char.isDigit() }.take(2)
+    val parsed = digits.toIntOrNull()
+    val clampedSeconds = parsed?.coerceAtMost(60)
+    it.copy(
+      speedRunSecondsPerAnswerInput = clampedSeconds?.toString().orEmpty(),
+    )
   }
 
 internal fun FlagGameUiState.withCreateQuizManualHardcoreToggled(countries: List<FlagCountry>): FlagGameUiState {
@@ -324,7 +337,9 @@ internal fun FlagGameUiState.withCreateQuizManualHardcoreToggled(countries: List
 
 internal fun FlagGameUiState.withCreateQuizManualTimerEnabledToggled(): FlagGameUiState =
   withUpdatedSetup {
-    it.copy(createQuizManualTimerEnabled = !it.createQuizManualTimerEnabled)
+    it.copy(
+      createQuizManualTimerEnabled = !it.createQuizManualTimerEnabled,
+    )
   }
 
 internal fun FlagGameUiState.withCreateQuizTrainingToggled(countries: List<FlagCountry>): FlagGameUiState {
@@ -345,7 +360,10 @@ internal fun FlagGameUiState.withCreateQuizTrainingToggled(countries: List<FlagC
   )
 }
 
-internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(countries: List<FlagCountry>): FlagGameUiState {
+internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(
+  countries: List<FlagCountry>,
+  displayName: String,
+): FlagGameUiState {
   val enabled = !setup.createQuizLocalMultiplayerEnabled
   val nextSetup =
     setup.copy(
@@ -353,6 +371,12 @@ internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(countries: Li
       createQuizTrainingEnabled = false,
       createQuizManualHardcoreEnabled = false,
       createQuizSeed = 0L,
+      playerNames =
+        if (enabled) {
+          listOf(displayName.ifBlank { "Player" }, "Player 2")
+        } else {
+          setup.playerNames
+        },
     )
   return copy(
     setup = nextSetup,
@@ -363,8 +387,16 @@ internal fun FlagGameUiState.withCreateQuizLocalMultiplayerToggled(countries: Li
 
 internal fun FlagGameUiState.withCreateQuizAllCountriesToggled(countries: List<FlagCountry>): FlagGameUiState {
   val allCodes = countries.map { it.code }.toSet()
-  val nextSelection = if (setup.selectedCountryCodes.size == allCodes.size) emptySet() else allCodes
-  val nextCapitalSelection = if (setup.topic == QuizTopic.Mixed && setup.selectedCapitalCountryCodes.size == allCodes.size) emptySet() else if (setup.topic == QuizTopic.Mixed) allCodes else emptySet()
+  val allCountriesSelected = setup.selectedCountryCodes.size == allCodes.size
+  val allCapitalsSelected = setup.selectedCapitalCountryCodes.size == allCodes.size
+  val allColumnsSelected = if (setup.topic == QuizTopic.Mixed) allCountriesSelected && allCapitalsSelected else allCountriesSelected
+  val nextSelection = if (allColumnsSelected) emptySet() else allCodes
+  val nextCapitalSelection =
+    if (setup.topic == QuizTopic.Mixed) {
+      if (allColumnsSelected) emptySet() else allCodes
+    } else {
+      emptySet()
+    }
   val nextSetup =
     setup.copy(
       createQuizSource = CreateQuizSource.ManualCountriesCapitals,
@@ -410,30 +442,12 @@ internal fun FlagGameUiState.withSurpriseMeToggled(): FlagGameUiState {
   }
 }
 
-internal fun FlagGameUiState.withAllInTypeSelected(allInType: AllInType): FlagGameUiState =
-  withUpdatedSetup {
-    val variants = it.variants.ifEmpty { QuizVariant.entries.toSet() }
-    it.copy(allInType = allInType, variants = variants)
-  }
-
-internal fun FlagGameUiState.withMultiplayerBaseSelected(
-  base: MultiplayerQuizBase,
-  countries: List<FlagCountry>,
-): FlagGameUiState {
-  val nextSetup = setup.copy(multiplayerBase = base)
-  return copy(
-    setup = nextSetup,
-    questionCountLimit = questionLimitFor(nextSetup, countries),
-    setupError = null,
-  )
-}
-
 internal fun FlagGameUiState.withPlayerNameUpdated(
   index: Int,
   name: String,
 ): FlagGameUiState {
   val names = setup.playerNames.toMutableList()
-  if (index in names.indices) names[index] = name
+  if (index in names.indices) names[index] = name.take(15)
   return withUpdatedSetup { it.copy(playerNames = names) }
 }
 

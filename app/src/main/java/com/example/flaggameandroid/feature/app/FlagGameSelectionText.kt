@@ -3,6 +3,7 @@
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.MedalTier
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 
@@ -11,39 +12,6 @@ private fun tr(language: AppLanguage, english: String, bulgarian: String, german
     AppLanguage.English -> english
     AppLanguage.Bulgarian -> bulgarian
     AppLanguage.German -> german
-  }
-
-internal fun modeBaseTitle(
-  base: MultiplayerQuizBase,
-  language: AppLanguage,
-): String =
-  when (base) {
-    MultiplayerQuizBase.Continents -> tr(language, "Continents", "Континенти", "Kontinente")
-    MultiplayerQuizBase.AllIn -> tr(language, "No Bluff, All Tough", "Без блъф, всичко тежко", "Kein Bluff, alles schwer")
-  }
-
-internal fun modeBaseDescription(
-  base: MultiplayerQuizBase,
-  language: AppLanguage,
-): String =
-  when (base) {
-    MultiplayerQuizBase.Continents -> tr(language, "Quiz by selected continents.", "Тест по избрани континенти.", "Quiz nach ausgewählten Kontinenten.")
-    MultiplayerQuizBase.AllIn -> tr(language, "Quiz from all countries.", "Тест от всички държави.", "Quiz mit allen Ländern.")
-  }
-
-internal fun localizedModeTitle(
-  mode: GameMode,
-  language: AppLanguage,
-): String =
-  when (mode) {
-    GameMode.Training -> tr(language, "Training", "Тренировка", "Training")
-    GameMode.CreateQuiz -> tr(language, "Custom Quiz", "Персонален тест", "Benutzerdefiniertes Quiz")
-    GameMode.WorldFlags ->
-      tr(language, "Country Flags", "Държавни флагове", "Länderflaggen")
-    GameMode.DailyChallenge -> tr(language, "Daily challenge", "Дневно предизвикателство", "Tägliche Herausforderung")
-    GameMode.MistakeReview -> tr(language, "Mistake review", "Преглед на грешките", "Fehlerprüfung")
-    GameMode.LocalMultiplayer -> tr(language, "Local multiplayer", "Локална игра", "Lokaler Mehrspieler")
-    else -> mode.title
   }
 
 internal fun localUtcMidnightResetLabel(): String {
@@ -90,21 +58,21 @@ internal fun localizedVariantDescription(
   when (variant) {
     QuizVariant.FlagToText ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "See a flag and pick the country.", "Виж флаг и избери държавата.", "Sieh eine Flagge und wähle das Land.")
-        QuizTopic.Capitals -> tr(language, "See a flag and pick the capital.", "Виж флаг и избери столицата.", "Sieh eine Flagge und wähle die Hauptstadt.")
-        QuizTopic.Mixed -> tr(language, "See a flag and pick the matching text.", "Виж флаг и избери съответния текст.", "Sieh eine Flagge und wähle den passenden Text.")
+        QuizTopic.Countries -> tr(language, "Pick the correct country.", "Избери вярната държава.", "Wähle das richtige Land.")
+        QuizTopic.Capitals -> tr(language, "Pick the correct capital.", "Избери вярната столица.", "Wähle die richtige Hauptstadt.")
+        QuizTopic.Mixed -> tr(language, "Pick the correct answer.", "Избери верния отговор.", "Wähle die richtige Antwort.")
       }
     QuizVariant.TextToFlag ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "See a country and pick the flag.", "Виж държава и избери флага.", "Sieh ein Land und wähle die Flagge.")
-        QuizTopic.Capitals -> tr(language, "See a capital and pick the flag.", "Виж столица и избери флага.", "Sieh eine Hauptstadt und wähle die Flagge.")
-        QuizTopic.Mixed -> tr(language, "See text and pick the flag.", "Виж текст и избери флага.", "Sieh Text und wähle die Flagge.")
+        QuizTopic.Countries -> tr(language, "Pick the correct flag.", "Избери верния флаг.", "Wähle die richtige Flagge.")
+        QuizTopic.Capitals -> tr(language, "Pick the correct flag.", "Избери верния флаг.", "Wähle die richtige Flagge.")
+        QuizTopic.Mixed -> tr(language, "Pick the correct flag.", "Избери верния флаг.", "Wähle die richtige Flagge.")
       }
     QuizVariant.TypeText ->
       when (topic) {
-        QuizTopic.Countries -> tr(language, "See a flag and write the country name.", "Виж флаг и напиши името на държавата.", "Sieh eine Flagge und tippe den Ländernamen.")
-        QuizTopic.Capitals -> tr(language, "See a flag and write the capital.", "Виж флаг и напиши столицата.", "Sieh eine Flagge und tippe die Hauptstadt.")
-        QuizTopic.Mixed -> tr(language, "See a flag and write the matching text.", "Виж флаг и напиши съответния текст.", "Sieh eine Flagge und tippe den passenden Text.")
+        QuizTopic.Countries -> tr(language, "Type the country.", "Напиши вярната държавата.", "Richtiges Land eingeben.")
+        QuizTopic.Capitals -> tr(language, "Type the capital.", "Напиши вярната столицата.", "Richtige Hauptstadt eingeben.")
+        QuizTopic.Mixed -> tr(language, "Type the correct answer.", "Напиши верния отговор.", "Richtige Antwort eingeben.")
       }
   }
 
@@ -113,7 +81,7 @@ internal fun localizedHintDifficultyTitle(
   language: AppLanguage,
 ): String =
   when (difficulty) {
-    HintDifficulty.Rookie -> tr(language, "Easy (Every 3-streak)", "Лесно (Всеки 3 поредни ✔)", "Einsteiger (Alle 3 in Folge)")
+    HintDifficulty.Easy -> tr(language, "Easy (Every 3-streak)", "Лесно (Всеки 3 поредни ✔)", "Einsteiger (Alle 3 in Folge)")
     HintDifficulty.Medium -> tr(language, "Medium (Every 5-streak)", "Средно (5 поредни ✔)", "Mittel (Alle 5 in Folge)")
     HintDifficulty.Hard -> tr(language, "Hard (Every 10-streak)", "Трудно (10 поредни ✔)", "Schwer (Alle 10 in Folge)")
     HintDifficulty.Impossible -> tr(language, "Impossible (Every 25-streak)", "Невъзможно (25 поредни ✔)", "Unmöglich (Alle 25 in Folge)")
@@ -124,7 +92,7 @@ internal fun localizedHintDifficultyShortRule(
   language: AppLanguage,
 ): String =
   when (difficulty) {
-    HintDifficulty.Rookie -> tr(language, "Every 3-streak", "Всеки 3 верни поред", "Alle 3 in Folge")
+    HintDifficulty.Easy -> tr(language, "Every 3-streak", "Всеки 3 верни поред", "Alle 3 in Folge")
     HintDifficulty.Medium -> tr(language, "Every 5-streak", "Всеки 5 верни поред", "Alle 5 in Folge")
     HintDifficulty.Hard -> tr(language, "Every 10-streak", "Всеки 10 верни поред", "Alle 10 in Folge")
     HintDifficulty.Impossible -> tr(language, "Every 25-streak", "Всеки 25 верни поред", "Alle 25 in Folge")
@@ -135,35 +103,41 @@ internal fun localizedHintDifficultyDescription(
   language: AppLanguage,
 ): String =
   when (difficulty) {
-    HintDifficulty.Rookie -> tr(language, "Collect 1 hint for every 3 correct answers in a row.", "Събирай 1 жокер за всеки 3 верни отговора поред.", "Sammle 1 Hinweis für je 3 richtige Antworten in Folge.")
-    HintDifficulty.Medium -> tr(language, "Collect 1 hint for every 5 correct answers in a row.", "Събирай 1 жокер за всеки 5 верни отговора поред.", "Sammle 1 Hinweis für jeweils 5 richtige Antworten in Folge.")
-    HintDifficulty.Hard -> tr(language, "Collect 1 hint for every 10 correct answers in a row.", "Събирай 1 жокер за всеки 10 верни отговора поред.", "Sammle 1 Hinweis für jeweils 10 richtige Antworten in Folge.")
-    HintDifficulty.Impossible -> tr(language, "Collect 1 hint for every 25 correct answers in a row.", "Събирай 1 жокер за всеки 25 верни отговора поред.", "Sammle 1 Hinweis für jeweils 25 richtige Antworten in Folge.")
+    HintDifficulty.Easy ->
+      tr(
+        language,
+        "Collect 1 hint for every 3 correct answers in a row. On this difficulty, generated quizzes aim for about 45% flag-to-text questions, 45% text-to-flag questions, and 10% typed-answer questions.",
+        "Събирай 1 жокер за всеки 3 верни отговора поред. При тази трудност генерираните тестове се стремят към около 45% въпроси флаг към текст, 45% въпроси текст към флаг и 10% въпроси с писане на отговор.",
+        "Sammle 1 Hinweis für je 3 richtige Antworten in Folge. Bei diesem Schwierigkeitsgrad zielen die generierten Quizze auf ungefähr 45% Flagge-zu-Text-Fragen, 45% Text-zu-Flagge-Fragen und 10% Fragen mit Texteingabe ab.",
+      )
+    HintDifficulty.Medium ->
+      tr(
+        language,
+        "Collect 1 hint for every 5 correct answers in a row. On this difficulty, generated quizzes aim for about 40% flag-to-text questions, 40% text-to-flag questions, and 20% typed-answer questions.",
+        "Събирай 1 жокер за всеки 5 верни отговора поред. При тази трудност генерираните тестове се стремят към около 40% въпроси флаг към текст, 40% въпроси текст към флаг и 20% въпроси с писане на отговор.",
+        "Sammle 1 Hinweis für jeweils 5 richtige Antworten in Folge. Bei diesem Schwierigkeitsgrad zielen die generierten Quizze auf ungefähr 40% Flagge-zu-Text-Fragen, 40% Text-zu-Flagge-Fragen und 20% Fragen mit Texteingabe ab.",
+      )
+    HintDifficulty.Hard ->
+      tr(
+        language,
+        "Collect 1 hint for every 10 correct answers in a row. On this difficulty, generated quizzes aim for about 30% flag-to-text questions, 30% text-to-flag questions, and 40% typed-answer questions.",
+        "Събирай 1 жокер за всеки 10 верни отговора поред. При тази трудност генерираните тестове се стремят към около 30% въпроси флаг към текст, 30% въпроси текст към флаг и 40% въпроси с писане на отговор.",
+        "Sammle 1 Hinweis für jeweils 10 richtige Antworten in Folge. Bei diesem Schwierigkeitsgrad zielen die generierten Quizze auf ungefähr 30% Flagge-zu-Text-Fragen, 30% Text-zu-Flagge-Fragen und 40% Fragen mit Texteingabe ab.",
+      )
+    HintDifficulty.Impossible ->
+      tr(
+        language,
+        "Collect 1 hint for every 25 correct answers in a row. On this difficulty, generated quizzes aim for about 20% flag-to-text questions, 20% text-to-flag questions, and 60% typed-answer questions.",
+        "Събирай 1 жокер за всеки 25 верни отговора поред. При тази трудност генерираните тестове се стремят към около 20% въпроси флаг към текст, 20% въпроси текст към флаг и 60% въпроси с писане на отговор.",
+        "Sammle 1 Hinweis für jeweils 25 richtige Antworten in Folge. Bei diesem Schwierigkeitsgrad zielen die generierten Quizze auf ungefähr 20% Flagge-zu-Text-Fragen, 20% Text-zu-Flagge-Fragen und 60% Fragen mit Texteingabe ab.",
+      )
   }
-
-internal fun localizedMedalTitle(
-  medalTier: MedalTier,
-  language: AppLanguage,
-): String =
-  when (medalTier) {
-    MedalTier.Bronze -> tr(language, "Bronze", "Бронз", "Bronze")
-    MedalTier.Silver -> tr(language, "Silver", "Сребро", "Silber")
-    MedalTier.Gold -> tr(language, "Gold", "Злато", "Gold")
-    MedalTier.Titanium -> tr(language, "Platinum", "Платина", "Platin")
-    MedalTier.Diamond -> tr(language, "Diamond", "Диамант", "Diamant")
-  }
-
-internal fun localizedMedalLabel(language: AppLanguage): String =
-  tr(language, "Perfect quiz count", "Брояч за перфектни тестове", "Zähler für fehlerfreie Quizze")
 
 internal fun localizedMedalIntro(language: AppLanguage): String =
   tr(language, "Perfect quiz counters", "Броячи за перфектни тестове", "Zähler für fehlerfreie Quizze")
 
 internal fun cleanModeSelectionTitle(language: AppLanguage): String =
   tr(language, "Start a quiz", "Стартирай тест", "Starte ein Quiz")
-
-internal fun localizedGameModesHubTitle(language: AppLanguage): String =
-  tr(language, "Game modes", "Режими на игра", "Spielmodi")
 
 internal fun localizedQuizTopicTitle(language: AppLanguage): String =
   tr(language, "Choose type of quiz", "Избери тип тест", "Quiz-Typ auswählen")
@@ -205,14 +179,9 @@ internal fun cleanModeTitle(
   language: AppLanguage,
 ): String =
   when (mode) {
-    GameMode.Training -> tr(language, "Training", "Тренировка", "Training")
-    GameMode.CreateQuiz -> tr(language, "Create own quiz", "Създай собствен тест", "Quiz selber erstellen")
-    GameMode.WorldFlags ->
-      tr(language, "Country Flags", "Държавни флагове", "Länderflaggen")
+    GameMode.CreateQuiz -> tr(language, "Custom quiz", "Създай собствен тест", "Eigenes Quiz erstellen")
     GameMode.DailyChallenge -> tr(language, "Daily challenge", "Дневно предизвикателство", "Tägliche Herausforderung")
     GameMode.MistakeReview -> tr(language, "Mistake review", "Преглед на грешките", "Fehlerprüfung")
-    GameMode.LocalMultiplayer -> tr(language, "Local multiplayer", "Локална игра", "Lokaler Mehrspieler")
-    else -> mode.title
   }
 
 internal fun cleanModeShortLabel(
@@ -220,9 +189,8 @@ internal fun cleanModeShortLabel(
   language: AppLanguage,
 ): String =
   when (mode) {
-    GameMode.Training -> tr(language, "Practice freely.", "Упражнявай се свободно.", "Frei üben.")
-    GameMode.WorldFlags ->
-      tr(language, "Guess the correct country or flag.", "Познай правилната държава или флаг.", "Errate das richtige Land oder die richtige Flagge.")
+    GameMode.CreateQuiz ->
+      tr(language, "Build your own quiz.", "Създай свой собствен тест.", "Erstelle dein eigenes Quiz.")
     GameMode.DailyChallenge ->
       tr(
         language,
@@ -231,8 +199,6 @@ internal fun cleanModeShortLabel(
         "Wird um ${localUtcMidnightResetLabel()} zurückgesetzt.",
       )
     GameMode.MistakeReview -> tr(language, "Fix mistakes.", "Поправи грешките.", "Fehler verbessern.")
-    GameMode.LocalMultiplayer -> tr(language, "Play together.", "Играй заедно.", "Zusammen spielen.")
-    else -> mode.title
   }
 
 internal fun cleanModeDescription(
@@ -240,27 +206,19 @@ internal fun cleanModeDescription(
   language: AppLanguage,
 ): String =
   when (mode) {
-    GameMode.Training ->
-      tr(
-        language,
-        "Mix flags, country names, and typed answers at your pace. Training does not give level-up progress.",
-        "Смесвай флагове, имена на държави и писмени отговори със свое темпо. Тренировката не дава прогрес към ниво.",
-        "Mische Flaggen, Ländernamen und Texteingaben in deinem Tempo. Training bringt keinen Level-Fortschritt.",
-      )
     GameMode.CreateQuiz ->
       tr(language, "Build and save exact quizzes from preset flag filters or chosen countries.", "Създавай и запазвай точни тестове от филтри по флагове или избрани държави.", "Erstelle und speichere exakte Quizze mit Flaggenfiltern oder ausgewählten Ländern.")
-    GameMode.WorldFlags ->
-      tr(
-        language,
-        "Build a country or flag quiz with optional continents and timer.",
-        "Създай тест по държави или флагове с избор на континенти и таймер по желание.",
-        "Erstelle ein Länder- oder Flaggenquiz mit optionalen Kontinenten und Timer.",
-      )
     GameMode.DailyChallenge ->
-      tr(language, "One fixed quiz each local day.", "Един фиксиран тест за всеки местен ден.", "Ein festes Quiz pro lokalem Tag.")
+      tr(language, "Only one fixed quiz each day.", "Точно един фиксиран тест за всеки ден.", "Genau ein festes Quiz pro Tag.")
     GameMode.MistakeReview ->
-      tr(language, "Practice the countries you often miss.", "Упражнявай държавите, които често пропускаш.", "Übe die Länder, die du oft verpasst.")
-    GameMode.LocalMultiplayer ->
-      tr(language, "Up to 5 players pass one device and play turn by turn.", "До 5 играчи ползват едно устройство и играят поред.", "Bis zu 5 Spieler teilen sich ein Gerät und spielen reihum.")
-    else -> mode.description
+      tr(language, "Practice the countries you often get wrong.", "Упражнявай държавите, които често грешиш.", "Übe die Länder, die du oft falsch hast.")
+  }
+internal fun localizedSessionModeTitle(
+  sessionMode: QuizSessionMode,
+  language: AppLanguage,
+): String =
+  when (sessionMode) {
+    QuizSessionMode.Standard -> tr(language, "Quiz", "Тест", "Quiz")
+    QuizSessionMode.Training -> tr(language, "Training", "Тренировка", "Training")
+    QuizSessionMode.LocalMultiplayer -> tr(language, "Local multiplayer", "Локална игра", "Lokaler Mehrspieler")
   }

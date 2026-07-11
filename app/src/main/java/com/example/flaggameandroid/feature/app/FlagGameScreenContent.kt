@@ -1,11 +1,7 @@
 ﻿package com.example.flaggameandroid.feature.app
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
@@ -20,7 +16,6 @@ internal fun FlagGameScreenContent(
   onAchievementsClicked: () -> Unit,
   onFavoritesClicked: () -> Unit,
   onSettingsClicked: () -> Unit,
-  onGameModesClicked: () -> Unit,
   onQuizTopicSelected: (QuizTopic) -> Unit,
   onQuitClicked: () -> Unit,
   onLevelUpSeen: () -> Unit,
@@ -32,7 +27,6 @@ internal fun FlagGameScreenContent(
   onRefreshDailyChallengeAvailability: () -> Unit,
   onHintDifficultySelected: (HintDifficulty) -> Unit,
   onLanguageSelected: (AppLanguage) -> Unit,
-  onReminderEnabledChanged: (Boolean) -> Unit,
   onResetHintsClick: () -> Unit,
   onAddTestingHintsClick: () -> Unit,
   onTestingLevelUpClick: () -> Unit,
@@ -41,8 +35,6 @@ internal fun FlagGameScreenContent(
   onLockAllAchievementsClick: () -> Unit,
   onResetAchievementsAndMedalsClick: () -> Unit,
   onResetDailyChallengeClick: () -> Unit,
-  onToggleTestingIconClick: () -> Unit,
-  onTriggerTestingReminderClick: () -> Unit,
   onVariantToggled: (QuizVariant) -> Unit,
   onInstantCorrectionToggled: () -> Unit,
   onContinentToggled: (String) -> Unit,
@@ -53,8 +45,6 @@ internal fun FlagGameScreenContent(
   onQuestionCountChanged: (String) -> Unit,
   onSpeedRunSecondsChanged: (String) -> Unit,
   onSurpriseMeClicked: () -> Unit,
-  onAllInTypeSelected: (AllInType) -> Unit,
-  onMultiplayerBaseSelected: (MultiplayerQuizBase) -> Unit,
   onPlayerNameChanged: (Int, String) -> Unit,
   onAddPlayer: () -> Unit,
   onRemovePlayer: () -> Unit,
@@ -137,43 +127,17 @@ internal fun FlagGameScreenContent(
         language = uiState.settings.language,
         dailyChallengeCache = uiState.dailyChallengeCache,
         mistakeReviewEligibleCount = mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, uiState.selectedQuizTopic),
-        onGameModesClick = onGameModesClicked,
         onModeSelected = onModeSelected,
         onRefreshDailyChallengeAvailability = onRefreshDailyChallengeAvailability,
         modifier = modifier,
       )
-    AppScreen.GameModesHub ->
-      GameModesHubScreen(
-        language = uiState.settings.language,
-        dailyChallengeCache = uiState.dailyChallengeCache,
-        mistakeReviewEligibleCount =
-          QuizTopic.entries.maxOf { topic ->
-            mistakeReviewEligibleCountryCount(uiState.countryPracticeStats, topic)
-          },
-        onModeSelected = onModeSelected,
-        onRefreshDailyChallengeAvailability = onRefreshDailyChallengeAvailability,
-        modifier = modifier,
-      )
-    AppScreen.Settings -> {
-      val context = LocalContext.current
-      val notificationPermissionLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    AppScreen.Settings ->
       SettingsScreen(
         settings = uiState.settings,
         hintCount = uiState.hintCount,
-        inactiveIconActive = uiState.inactiveIconActive,
         onBack = onBackToMenuClick,
         onHintDifficultySelected = onHintDifficultySelected,
         onLanguageSelected = onLanguageSelected,
-        onReminderEnabledChanged = { enabled ->
-          onReminderEnabledChanged(enabled)
-          if (enabled &&
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
-            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED
-          ) {
-            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-          }
-        },
         onResetHintsClick = onResetHintsClick,
         onAddTestingHintsClick = onAddTestingHintsClick,
         onTestingLevelUpClick = onTestingLevelUpClick,
@@ -182,11 +146,8 @@ internal fun FlagGameScreenContent(
         onLockAllAchievementsClick = onLockAllAchievementsClick,
         onResetAchievementsAndMedalsClick = onResetAchievementsAndMedalsClick,
         onResetDailyChallengeClick = onResetDailyChallengeClick,
-        onToggleTestingIconClick = onToggleTestingIconClick,
-        onTriggerTestingReminderClick = onTriggerTestingReminderClick,
         modifier = modifier,
       )
-    }
     AppScreen.Setup ->
       SetupScreen(
         setup = uiState.setup,
@@ -208,8 +169,6 @@ internal fun FlagGameScreenContent(
         onQuestionCountChange = onQuestionCountChanged,
         onSpeedRunSecondsChange = onSpeedRunSecondsChanged,
         onSurpriseMe = onSurpriseMeClicked,
-        onAllInTypeSelected = onAllInTypeSelected,
-        onMultiplayerBaseSelected = onMultiplayerBaseSelected,
         onPlayerNameChanged = onPlayerNameChanged,
         onAddPlayer = onAddPlayer,
         onRemovePlayer = onRemovePlayer,
@@ -223,6 +182,7 @@ internal fun FlagGameScreenContent(
         onCreateQuizCapitalBulkToggled = onCreateQuizCapitalBulkToggled,
         onCreateQuizAllCountriesToggled = onCreateQuizAllCountriesToggled,
         onSaveCreateQuizClicked = onSaveCreateQuizClicked,
+        onRemoveSavedQuizTemplate = onRemoveSavedQuizTemplate,
         modifier = modifier,
       )
     AppScreen.Quiz ->

@@ -4,17 +4,9 @@ enum class GameMode(
   val title: String,
   val description: String,
 ) {
-  Training(
-    title = "Training",
-    description = "Mix flags, country names, and typed answers at your pace. Training does not give level-up progress.",
-  ),
   CreateQuiz(
     title = "Create a quiz",
     description = "Build a custom quiz from preset flag filters or your own country selection.",
-  ),
-  WorldFlags(
-    title = "Country Flags",
-    description = "Guess the correct country or flag.",
   ),
   DailyChallenge(
     title = "Daily challenge",
@@ -24,10 +16,12 @@ enum class GameMode(
     title = "Mistake review",
     description = "Practice only the countries you missed before.",
   ),
-  LocalMultiplayer(
-    title = "Local Multiplayer",
-    description = "Up to 5 players pass one device and play turn by turn.",
-  ),
+}
+
+enum class QuizSessionMode {
+  Standard,
+  Training,
+  LocalMultiplayer,
 }
 
 internal fun startQuizModes(): List<GameMode> =
@@ -36,9 +30,6 @@ internal fun startQuizModes(): List<GameMode> =
     GameMode.CreateQuiz,
     GameMode.MistakeReview,
   )
-
-internal fun gameModesHubModes(): List<GameMode> =
-  emptyList()
 
 enum class QuizVariant(
   val title: String,
@@ -76,14 +67,4 @@ enum class QuizTopic(
   Countries("Countries"),
   Capitals("Capitals"),
   Mixed("Mixed"),
-}
-
-enum class AllInType(
-  val title: String,
-  val description: String,
-) {
-  NoBluffAllTough(
-    title = "No Bluff, All Tough",
-    description = "All countries with only the variants you choose.",
-  ),
 }

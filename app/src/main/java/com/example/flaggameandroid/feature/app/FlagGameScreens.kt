@@ -1,12 +1,7 @@
 package com.example.flaggameandroid.feature.app
 
-import android.Manifest
 import android.app.Activity
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,7 +11,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -25,9 +19,6 @@ fun FlagGameRoute(
   screenViewModel: FlagGameViewModel? = null,
 ) {
   val activity = LocalContext.current as? Activity
-  val context = LocalContext.current
-  val notificationPermissionLauncher =
-    rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
   val resolvedViewModel =
     screenViewModel ?: viewModel(factory = FlagGameViewModel.factory(LocalContext.current.applicationContext))
   val uiState by resolvedViewModel.uiState.collectAsStateWithLifecycle()
@@ -55,7 +46,6 @@ fun FlagGameRoute(
     when (uiState.screen) {
       AppScreen.Menu -> showExitDialog = true
       AppScreen.GameModes,
-      AppScreen.GameModesHub,
       AppScreen.Medals,
       AppScreen.Achievements,
       AppScreen.Favorites,
@@ -73,7 +63,6 @@ fun FlagGameRoute(
     onAchievementsClicked = resolvedViewModel::onAchievementsClicked,
     onFavoritesClicked = resolvedViewModel::onFavoritesClicked,
     onSettingsClicked = resolvedViewModel::onSettingsClicked,
-    onGameModesClicked = resolvedViewModel::onGameModesClicked,
     onQuizTopicSelected = resolvedViewModel::onQuizTopicSelected,
     onQuitClicked = { showExitDialog = true },
     onLevelUpSeen = resolvedViewModel::onLevelUpSeen,
@@ -85,15 +74,6 @@ fun FlagGameRoute(
     onRefreshDailyChallengeAvailability = resolvedViewModel::refreshDailyChallengeAvailability,
     onHintDifficultySelected = resolvedViewModel::onHintDifficultySelected,
     onLanguageSelected = resolvedViewModel::onLanguageSelected,
-    onReminderEnabledChanged = { enabled ->
-      resolvedViewModel.onReminderEnabledChanged(enabled)
-      if (enabled &&
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-      ) {
-        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-      }
-    },
     onResetHintsClick = resolvedViewModel::onResetHintsClicked,
     onAddTestingHintsClick = resolvedViewModel::onAddTestingHintsClicked,
     onTestingLevelUpClick = resolvedViewModel::onTestingLevelUpClicked,
@@ -102,8 +82,6 @@ fun FlagGameRoute(
     onLockAllAchievementsClick = resolvedViewModel::onLockAllAchievementsClicked,
     onResetAchievementsAndMedalsClick = resolvedViewModel::onResetAchievementsAndMedalsClicked,
     onResetDailyChallengeClick = resolvedViewModel::onResetDailyChallengeClicked,
-    onToggleTestingIconClick = resolvedViewModel::onToggleTestingIconClicked,
-    onTriggerTestingReminderClick = resolvedViewModel::onTriggerTestingReminderClicked,
     onVariantToggled = resolvedViewModel::onVariantToggled,
     onInstantCorrectionToggled = resolvedViewModel::onInstantCorrectionToggled,
     onContinentToggled = resolvedViewModel::onContinentToggled,
@@ -114,8 +92,6 @@ fun FlagGameRoute(
     onQuestionCountChanged = resolvedViewModel::onQuestionCountChanged,
     onSpeedRunSecondsChanged = resolvedViewModel::onSpeedRunSecondsChanged,
     onSurpriseMeClicked = resolvedViewModel::onSurpriseMeClicked,
-    onAllInTypeSelected = resolvedViewModel::onAllInTypeSelected,
-    onMultiplayerBaseSelected = resolvedViewModel::onMultiplayerBaseSelected,
     onPlayerNameChanged = resolvedViewModel::onPlayerNameChanged,
     onAddPlayer = resolvedViewModel::onAddPlayer,
     onRemovePlayer = resolvedViewModel::onRemovePlayer,

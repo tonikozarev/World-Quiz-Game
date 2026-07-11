@@ -1,6 +1,5 @@
 package com.example.flaggameandroid.feature.app
 
-import com.example.flaggameandroid.core.model.AllInType
 import com.example.flaggameandroid.core.model.AchievementsProgress
 import com.example.flaggameandroid.core.model.ActivityDayRecord
 import com.example.flaggameandroid.core.model.FlagCountry
@@ -11,6 +10,7 @@ import com.example.flaggameandroid.core.model.CreateQuizSource
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.PlayerProgress
 import com.example.flaggameandroid.core.model.ProgressionRules
+import com.example.flaggameandroid.core.model.QuizSessionMode
 import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.SavedQuizTemplate
 import com.example.flaggameandroid.core.model.CountryPracticeStats
@@ -24,8 +24,6 @@ sealed interface AppScreen {
   data object Menu : AppScreen
 
   data object GameModes : AppScreen
-
-  data object GameModesHub : AppScreen
 
   data object Medals : AppScreen
 
@@ -58,28 +56,18 @@ data class ProfileState(
     get() = accountName.ifBlank { "Player" }
 }
 
-enum class MultiplayerQuizBase(
-  val title: String,
-) {
-  Continents("Continents setup"),
-  AllIn("All-In setup"),
-}
-
 data class SettingsState(
   val hintDifficulty: HintDifficulty = HintDifficulty.Medium,
-  val reminderEnabled: Boolean = true,
   val testingToolsVisible: Boolean = false,
   val language: AppLanguage = AppLanguage.English,
 )
 
 data class SetupState(
-  val mode: GameMode = GameMode.Training,
+  val mode: GameMode = GameMode.CreateQuiz,
   val topic: QuizTopic = QuizTopic.Countries,
   val variants: Set<QuizVariant> = QuizVariant.entries.toSet(),
   val selectedContinents: Set<String> = emptySet(),
   val instantCorrectionEnabled: Boolean = true,
-  val worldFlagsHardcoreEnabled: Boolean = false,
-  val worldFlagsTimerEnabled: Boolean = false,
   val createQuizTrainingEnabled: Boolean = false,
   val createQuizManualHardcoreEnabled: Boolean = false,
   val createQuizLocalMultiplayerEnabled: Boolean = false,
@@ -99,9 +87,7 @@ data class SetupState(
   val questionCountInput: String = "10",
   val speedRunSecondsPerAnswerInput: String = "5",
   val surpriseMe: Boolean = false,
-  val allInType: AllInType = AllInType.NoBluffAllTough,
-  val multiplayerBase: MultiplayerQuizBase = MultiplayerQuizBase.Continents,
-  val playerNames: List<String> = listOf("Player 1", "Player 2"),
+  val playerNames: List<String> = listOf("Player", "Player 2"),
   val dailyChallengeTheme: DailyChallengeTheme? = null,
 ) {
   val questionCount: Int?
@@ -110,22 +96,11 @@ data class SetupState(
   val speedRunSecondsPerAnswer: Int?
     get() = speedRunSecondsPerAnswerInput.toIntOrNull()
 
-  val needsContinents: Boolean
-    get() =
-      mode == GameMode.WorldFlags ||
-        (mode == GameMode.LocalMultiplayer && multiplayerBase == MultiplayerQuizBase.Continents)
-
   val needsPlayers: Boolean
-    get() = mode == GameMode.LocalMultiplayer || (mode == GameMode.CreateQuiz && createQuizLocalMultiplayerEnabled)
+    get() = mode == GameMode.CreateQuiz && createQuizLocalMultiplayerEnabled
 
   val needsManualCountriesCapitals: Boolean
     get() = mode == GameMode.CreateQuiz && createQuizSource == CreateQuizSource.ManualCountriesCapitals
-
-  val usesWorldFlagsHardcore: Boolean
-    get() = mode == GameMode.WorldFlags && worldFlagsHardcoreEnabled
-
-  val usesWorldFlagsTimer: Boolean
-    get() = mode == GameMode.WorldFlags && worldFlagsTimerEnabled
 
   val usesCreateQuizManualHardcore: Boolean
     get() = mode == GameMode.CreateQuiz && createQuizManualHardcoreEnabled
@@ -141,6 +116,14 @@ data class SetupState(
 
   val createQuizMixedSelectionCount: Int
     get() = selectedCountryCodes.size + selectedCapitalCountryCodes.size
+
+  val createQuizManualSelectionCount: Int
+    get() =
+      if (topic == QuizTopic.Mixed) {
+        createQuizMixedSelectionCount
+      } else {
+        selectedCountryCodes.size
+      }
 }
 
 enum class QuestionStatus {
@@ -163,7 +146,7 @@ data class QuestionDraftState(
 
 data class QuizState(
   val mode: GameMode? = null,
-  val allInType: AllInType? = null,
+  val sessionMode: QuizSessionMode = QuizSessionMode.Standard,
   val topic: QuizTopic = QuizTopic.Countries,
   val variants: Set<QuizVariant> = emptySet(),
   val selectedContinents: Set<String> = emptySet(),
@@ -290,7 +273,6 @@ data class FlagGameUiState(
   val setupError: String? = null,
   val lastOpenedAtEpochMillis: Long = 0L,
   val lastPlayedAtEpochMillis: Long = 0L,
-  val inactiveIconActive: Boolean = false,
   val countryPracticeStats: Map<String, CountryPracticeStats> = emptyMap(),
   val activityCalendar: Map<Long, ActivityDayRecord> = emptyMap(),
   val dailyChallengeCaches: Map<QuizTopic, DailyChallengeCache> = emptyMap(),

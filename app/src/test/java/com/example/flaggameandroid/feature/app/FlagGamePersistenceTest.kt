@@ -27,7 +27,6 @@ class FlagGamePersistenceTest {
         initialPersistedState =
           PersistedAppState(
             hintDifficulty = HintDifficulty.Hard,
-            reminderEnabled = false,
             hintCount = 7.0,
             level = 3,
             hintsTowardNextLevel = 4,
@@ -40,7 +39,6 @@ class FlagGamePersistenceTest {
 
     val state = viewModel.uiState.value
     assertEquals(HintDifficulty.Hard, state.settings.hintDifficulty)
-    assertEquals(false, state.settings.reminderEnabled)
     assertEquals(7.0, state.hintCount)
     assertEquals(3, state.levelProgress.level)
     assertEquals(4, state.levelProgress.hintsTowardNextLevel)
@@ -60,32 +58,11 @@ class FlagGamePersistenceTest {
   }
 
   @Test
-  fun changingReminderToggle_savesToSettingsStore() {
-    val settingsStore = RecordingSettingsStore()
-    val viewModel = viewModel(settingsStore = settingsStore)
-
-    viewModel.onReminderEnabledChanged(false)
-
-    assertEquals(false, settingsStore.savedReminderEnabled)
-  }
-
-  @Test
-  fun togglingTestingIcon_updatesUiStateAndSavedProgress() {
-    val progressStore = RecordingProgressStore()
-    val viewModel = viewModel(progressStore = progressStore)
-
-    viewModel.onToggleTestingIconClicked()
-
-    assertEquals(true, viewModel.uiState.value.inactiveIconActive)
-    assertTrue(progressStore.savedProgressSnapshots.last().inactiveIconActive)
-  }
-
-  @Test
   fun finishingQuiz_savesProgressAndRecordsHistory() {
     val progressStore = RecordingProgressStore()
     val viewModel = viewModel(progressStore = progressStore)
 
-    viewModel.onModeSelected(GameMode.WorldFlags)
+    viewModel.onModeSelected(GameMode.CreateQuiz)
     viewModel.uiState.value.setup.selectedContinents
       .filterNot { it == "Europe" }
       .forEach(viewModel::onContinentToggled)
@@ -187,18 +164,11 @@ class FlagGamePersistenceTest {
 
   private class RecordingSettingsStore : SettingsStore {
     var savedHintDifficulty: HintDifficulty? = null
-    var savedReminderEnabled: Boolean? = null
 
     override suspend fun loadHintDifficulty(): HintDifficulty = HintDifficulty.Medium
 
-    override suspend fun loadReminderEnabled(): Boolean = true
-
     override suspend fun saveHintDifficulty(hintDifficulty: HintDifficulty) {
       savedHintDifficulty = hintDifficulty
-    }
-
-    override suspend fun saveReminderEnabled(enabled: Boolean) {
-      savedReminderEnabled = enabled
     }
   }
 

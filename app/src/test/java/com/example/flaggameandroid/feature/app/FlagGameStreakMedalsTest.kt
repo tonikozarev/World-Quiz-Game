@@ -1,7 +1,6 @@
 package com.example.flaggameandroid.feature.app
 
 import com.example.flaggameandroid.core.model.ActivityDayRecord
-import com.example.flaggameandroid.core.model.AppTimeZone
 import com.example.flaggameandroid.core.model.RatingsProgress
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -28,7 +27,6 @@ class FlagGameStreakMedalsTest {
         previousActivityCalendar = previousActivityCalendar,
         updatedActivityCalendar = emptyMap(),
         completedAtEpochMillis = completedAt,
-        timeZone = AppTimeZone.Utc,
       )
 
     assertEquals(1, updated.streak7Count)
@@ -50,7 +48,6 @@ class FlagGameStreakMedalsTest {
         previousActivityCalendar = previousActivityCalendar,
         updatedActivityCalendar = emptyMap(),
         completedAtEpochMillis = completedAt,
-        timeZone = AppTimeZone.Utc,
       )
 
     assertEquals(1, updated.streak30Count)
