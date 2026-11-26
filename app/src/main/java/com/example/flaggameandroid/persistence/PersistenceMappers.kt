@@ -82,7 +82,8 @@ private fun Map<String, CountryPracticeStats>.serializeCountryPracticeStats(): S
       stats.capitalCorrectCount.toString(),
       stats.capitalWrongCount.toString(),
       stats.lastMissedAtEpochMillis.toString(),
-      if (stats.favorite) "1" else "0",
+      if (stats.favoriteCountry) "1" else "0",
+      if (stats.favoriteCapital) "1" else "0",
     ).joinToString(separator = ",")
   }
 
@@ -95,14 +96,17 @@ private fun String.toCountryPracticeStats(): Map<String, CountryPracticeStats> =
         val parts = row.split(",")
         if (parts.size < 5) return@mapNotNull null
         val code = parts[0]
+        val hasTopicSpecificStats = parts.size >= 7
+        val hasSeparateFavorites = parts.size >= 8
         code to
           CountryPracticeStats(
             correctCount = parts[1].toIntOrNull() ?: 0,
             wrongCount = parts[2].toIntOrNull() ?: 0,
-            capitalCorrectCount = parts.getOrNull(3)?.toIntOrNull() ?: 0,
-            capitalWrongCount = parts.getOrNull(4)?.toIntOrNull() ?: 0,
-            lastMissedAtEpochMillis = parts.getOrNull(if (parts.size >= 7) 5 else 3)?.toLongOrNull() ?: 0L,
-            favorite = parts.getOrNull(if (parts.size >= 7) 6 else 4) == "1",
+            capitalCorrectCount = if (hasTopicSpecificStats) parts[3].toIntOrNull() ?: 0 else 0,
+            capitalWrongCount = if (hasTopicSpecificStats) parts[4].toIntOrNull() ?: 0 else 0,
+            lastMissedAtEpochMillis = parts.getOrNull(if (hasTopicSpecificStats) 5 else 3)?.toLongOrNull() ?: 0L,
+            favoriteCountry = hasSeparateFavorites && parts[6] == "1",
+            favoriteCapital = hasSeparateFavorites && parts[7] == "1",
           )
       }
       .toMap()

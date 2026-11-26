@@ -154,7 +154,7 @@ internal fun PracticeSummaryCard(
   language: AppLanguage,
   countryPracticeStats: Map<String, CountryPracticeStats>,
 ) {
-  val favorites = countryPracticeStats.values.count { it.favorite }
+  val favorites = countryPracticeStats.values.count { it.favoriteCountry }
   val weakCountries = countryPracticeStats.values.count { it.isWeak }
   Card(modifier = Modifier.fillMaxWidth()) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -304,51 +304,57 @@ fun FavoritesScreen(
   savedQuizTemplates: List<SavedQuizTemplate>,
   language: AppLanguage,
   onBack: () -> Unit,
-  onToggleFavoriteCountry: (String) -> Unit,
+  onToggleFavorite: (String, QuizTopic) -> Unit,
   onOpenSavedQuizTemplate: (String) -> Unit,
   onRemoveSavedQuizTemplate: (String) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val favoriteCountries = countries.filter { countryPracticeStats[it.code]?.favorite == true }
-  val grouped = favoriteCountries.groupBy { it.continent }
   var favoriteCountriesDialogVisible by remember { mutableStateOf(false) }
-  var pendingRemovalCountryCode by remember { mutableStateOf<String?>(null) }
+  var favoriteTopic by remember { mutableStateOf(QuizTopic.Countries) }
+  var pendingRemovalFavorite by remember { mutableStateOf<Pair<String, QuizTopic>?>(null) }
+  val groupedFavorites = favoriteItemsByContinent(countries, countryPracticeStats, favoriteTopic)
+  val favoriteItems = groupedFavorites.values.flatten()
 
   ScreenShell(modifier = modifier) {
     if (favoriteCountriesDialogVisible) {
       AlertDialog(
         onDismissRequest = { favoriteCountriesDialogVisible = false },
-        title = { Text(text = cleanText(language, UiText.FavoriteCountriesCapitals)) },
+        title = { Text(text = cleanText(language, UiText.FavoritesDialogTitle)) },
         text = {
-          if (favoriteCountries.isEmpty()) {
-            Text(
-              text =
-                when (language) {
-                  AppLanguage.English -> "Marked favorites will appear here, grouped by continent."
-                  AppLanguage.Bulgarian -> "Маркираните любими ще се показват тук, групирани по континенти."
-                  AppLanguage.German -> "Markierte Favoriten erscheinen hier, nach Kontinenten gruppiert."
-                },
+          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            FavoriteTopicTabs(
+              selectedTopic = favoriteTopic,
+              language = language,
+              onTopicSelected = { favoriteTopic = it },
             )
-          } else {
-            Column(
-              modifier =
-                Modifier
-                  .fillMaxWidth()
-                  .heightIn(max = 420.dp)
-                  .verticalScroll(rememberScrollState()),
-              verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-              grouped.keys.sorted().forEach { continent ->
-                val list = grouped[continent].orEmpty()
-                if (list.isNotEmpty()) {
-                  SectionCard(title = localizedContinentName(continent, language)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                      list.sortedBy { it.localizedName(language) }.forEach { country ->
-                        FavoriteCountryRow(
-                          country = country,
-                          language = language,
-                          onRemoveFavoriteCountry = { pendingRemovalCountryCode = it },
-                        )
+            if (favoriteItems.isEmpty()) {
+              Text(text = localizedEmptyFavoritesText(favoriteTopic, language))
+            } else {
+              Column(
+                modifier =
+                  Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+              ) {
+                groupedFavorites.keys.sorted().forEach { continent ->
+                  val list = groupedFavorites[continent].orEmpty()
+                  if (list.isNotEmpty()) {
+                    SectionCard(title = localizedContinentName(continent, language)) {
+                      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        list
+                          .sortedBy { it.localizedQuizText(language, favoriteTopic) }
+                          .forEach { country ->
+                            FavoriteItemRow(
+                              country = country,
+                              topic = favoriteTopic,
+                              language = language,
+                              onRemoveFavorite = {
+                                pendingRemovalFavorite = it to favoriteTopic
+                              },
+                            )
+                          }
                       }
                     }
                   }
@@ -372,9 +378,9 @@ fun FavoritesScreen(
       )
     }
 
-    pendingRemovalCountryCode?.let { countryCode ->
+    pendingRemovalFavorite?.let { (countryCode, topic) ->
       AlertDialog(
-        onDismissRequest = { pendingRemovalCountryCode = null },
+        onDismissRequest = { pendingRemovalFavorite = null },
         title = {
           Text(
             text =
@@ -386,20 +392,13 @@ fun FavoritesScreen(
           )
         },
         text = {
-          Text(
-            text =
-              when (language) {
-                AppLanguage.English -> "Do you want to remove this country from your favorites?"
-                AppLanguage.Bulgarian -> "Искаш ли да премахнеш тази държава от любимите?"
-                AppLanguage.German -> "Möchtest du dieses Land aus den Favoriten entfernen?"
-              },
-          )
+          Text(text = localizedRemoveFavoriteMessage(topic, language))
         },
         confirmButton = {
           TextButton(
             onClick = {
-              onToggleFavoriteCountry(countryCode)
-              pendingRemovalCountryCode = null
+              onToggleFavorite(countryCode, topic)
+              pendingRemovalFavorite = null
             },
           ) {
             Text(
@@ -413,7 +412,7 @@ fun FavoritesScreen(
           }
         },
         dismissButton = {
-          TextButton(onClick = { pendingRemovalCountryCode = null }) {
+          TextButton(onClick = { pendingRemovalFavorite = null }) {
             Text(
               text =
                 when (language) {
@@ -430,11 +429,16 @@ fun FavoritesScreen(
     HeaderRow(title = cleanText(language, UiText.Favorites))
 
     SectionCard(title = cleanText(language, UiText.FavoriteCountriesCapitals)) {
-      Button(
-        onClick = { favoriteCountriesDialogVisible = true },
+      Box(
         modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
       ) {
-        Text(text = cleanText(language, UiText.FavoriteCountriesCapitals))
+        Button(
+          onClick = { favoriteCountriesDialogVisible = true },
+          contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
+        ) {
+          Text(text = cleanText(language, UiText.OpenFavorites))
+        }
       }
     }
 
@@ -613,10 +617,11 @@ private fun SavedQuizTemplateRow(
 }
 
 @Composable
-private fun FavoriteCountryRow(
+private fun FavoriteItemRow(
   country: com.example.flaggameandroid.core.model.FlagCountry,
+  topic: QuizTopic,
   language: AppLanguage,
-  onRemoveFavoriteCountry: (String) -> Unit,
+  onRemoveFavorite: (String) -> Unit,
 ) {
   Surface(
     color = MaterialTheme.colorScheme.surfaceVariant,
@@ -630,7 +635,7 @@ private fun FavoriteCountryRow(
     ) {
       Text(text = country.emoji, style = MaterialTheme.typography.titleLarge)
       Text(
-        text = country.localizedName(language),
+        text = localizedFavoriteItemLabel(country, topic, language),
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.weight(1f),
@@ -644,7 +649,7 @@ private fun FavoriteCountryRow(
         modifier =
           Modifier
             .size(32.dp)
-            .clickable { onRemoveFavoriteCountry(country.code) },
+            .clickable { onRemoveFavorite(country.code) },
       ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
           Text(
@@ -658,6 +663,131 @@ private fun FavoriteCountryRow(
     }
   }
 }
+
+internal fun localizedFavoriteItemLabel(
+  country: com.example.flaggameandroid.core.model.FlagCountry,
+  topic: QuizTopic,
+  language: AppLanguage,
+): String =
+  when (topic) {
+    QuizTopic.Countries -> country.localizedName(language)
+    QuizTopic.Capitals ->
+      "${country.localizedQuizText(language, QuizTopic.Capitals)} (${country.localizedName(language)})"
+    QuizTopic.Mixed -> error("Favorite rows only support countries and capitals")
+  }
+
+@Composable
+private fun FavoriteTopicTabs(
+  selectedTopic: QuizTopic,
+  language: AppLanguage,
+  onTopicSelected: (QuizTopic) -> Unit,
+) {
+  Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    listOf(QuizTopic.Countries, QuizTopic.Capitals).forEach { topic ->
+      val selected = selectedTopic == topic
+      Surface(
+        color =
+          if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+          } else {
+            MaterialTheme.colorScheme.surfaceVariant
+          },
+        contentColor =
+          if (selected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+          } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+          },
+        shape = RoundedCornerShape(12.dp),
+        modifier =
+          Modifier
+            .weight(1f)
+            .clickable { onTopicSelected(topic) },
+      ) {
+        Text(
+          text = localizedFavoriteTopicTitle(topic, language),
+          modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+          style = MaterialTheme.typography.labelLarge,
+          fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+          textAlign = TextAlign.Center,
+        )
+      }
+    }
+  }
+}
+
+internal fun localizedFavoriteTopicTitle(
+  topic: QuizTopic,
+  language: AppLanguage,
+): String =
+  when (topic) {
+    QuizTopic.Countries ->
+      when (language) {
+        AppLanguage.English -> "Countries"
+        AppLanguage.Bulgarian -> "Държави"
+        AppLanguage.German -> "Länder"
+      }
+    QuizTopic.Capitals ->
+      when (language) {
+        AppLanguage.English -> "Capitals"
+        AppLanguage.Bulgarian -> "Столици"
+        AppLanguage.German -> "Hauptstädte"
+      }
+    QuizTopic.Mixed -> error("Favorites tabs only support countries and capitals")
+  }
+
+internal fun localizedEmptyFavoritesText(
+  topic: QuizTopic,
+  language: AppLanguage,
+): String =
+  when (topic) {
+    QuizTopic.Countries ->
+      when (language) {
+        AppLanguage.English -> "Favorite countries will appear here, grouped by continent."
+        AppLanguage.Bulgarian -> "Любимите държави ще се показват тук, групирани по континенти."
+        AppLanguage.German -> "Lieblingsländer erscheinen hier, nach Kontinenten gruppiert."
+      }
+    QuizTopic.Capitals ->
+      when (language) {
+        AppLanguage.English -> "Favorite capitals will appear here, grouped by continent."
+        AppLanguage.Bulgarian -> "Любимите столици ще се показват тук, групирани по континенти."
+        AppLanguage.German -> "Lieblingshauptstädte erscheinen hier, nach Kontinenten gruppiert."
+      }
+    QuizTopic.Mixed -> error("Favorites tabs only support countries and capitals")
+  }
+
+internal fun localizedRemoveFavoriteMessage(
+  topic: QuizTopic,
+  language: AppLanguage,
+): String =
+  when (topic) {
+    QuizTopic.Countries ->
+      when (language) {
+        AppLanguage.English -> "Do you want to remove this country from your favorites?"
+        AppLanguage.Bulgarian -> "Искаш ли да премахнеш тази държава от любимите?"
+        AppLanguage.German -> "Möchtest du dieses Land aus den Favoriten entfernen?"
+      }
+    QuizTopic.Capitals ->
+      when (language) {
+        AppLanguage.English -> "Do you want to remove this capital from your favorites?"
+        AppLanguage.Bulgarian -> "Искаш ли да премахнеш тази столица от любимите?"
+        AppLanguage.German -> "Möchtest du diese Hauptstadt aus den Favoriten entfernen?"
+      }
+    QuizTopic.Mixed -> error("Favorites tabs only support countries and capitals")
+  }
+
+internal fun favoriteItemsByContinent(
+  countries: List<com.example.flaggameandroid.core.model.FlagCountry>,
+  countryPracticeStats: Map<String, CountryPracticeStats>,
+  topic: QuizTopic,
+): Map<String, List<com.example.flaggameandroid.core.model.FlagCountry>> =
+  countries
+    .filter { country -> countryPracticeStats[country.code]?.isFavoriteFor(topic) == true }
+    .groupBy { it.continent }
+
 @Composable
 fun SettingsScreen(
   settings: SettingsState,

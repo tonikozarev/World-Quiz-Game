@@ -156,7 +156,7 @@ class QuizQuestionGenerator(
   ): Int {
     val stats = practiceStats[country.code]
     var weight = 1
-    if (stats?.favorite == true) weight += 3
+    if (stats?.isFavoriteFor(topic) == true) weight += 3
     val weakForTopic = (stats?.wrongCountFor(topic) ?: 0) >= 2 && (stats?.wrongCountFor(topic) ?: 0) > (stats?.correctCountFor(topic) ?: 0)
     if (weakForTopic) weight += 4
     val topicWrongCount = stats?.wrongCountFor(topic) ?: 0

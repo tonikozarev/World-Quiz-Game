@@ -5,6 +5,7 @@ import com.example.flaggameandroid.core.data.StaticFlagCatalogRepository
 import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.CreateQuizPreset
 import com.example.flaggameandroid.core.model.CreateQuizSource
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
 import com.example.flaggameandroid.core.model.QuizVariant
@@ -63,11 +64,10 @@ class FlagGameViewModelTest {
   }
 
   @Test
-  fun instantCorrectionToggle_enablesImmediatePreviewOutsideTraining() {
+  fun instantCorrectionDefault_enablesImmediatePreviewOutsideTraining() {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)
-    viewModel.onInstantCorrectionToggled()
     QuizVariant.entries.filterNot { it == QuizVariant.FlagToCountry }.forEach(viewModel::onVariantToggled)
     viewModel.onQuestionCountChanged(1)
     viewModel.onStartQuiz()
@@ -82,11 +82,10 @@ class FlagGameViewModelTest {
   }
 
   @Test
-  fun instantCorrectionToggle_allowsTypedVerifyOutsideTraining() {
+  fun instantCorrectionDefault_allowsTypedVerifyOutsideTraining() {
     val viewModel = viewModel()
 
     viewModel.onModeSelected(GameMode.CreateQuiz)
-    viewModel.onInstantCorrectionToggled()
     QuizVariant.entries.filterNot { it == QuizVariant.TypeCountryName }.forEach(viewModel::onVariantToggled)
     viewModel.onQuestionCountChanged(1)
     viewModel.onStartQuiz()
@@ -144,6 +143,18 @@ class FlagGameViewModelTest {
   }
 
   @Test
+  fun savingMixedQuizWithoutSelectionsDoesNotCreateTemplate() {
+    val viewModel = viewModel()
+
+    viewModel.onModeSelected(GameMode.CreateQuiz)
+    viewModel.onQuizTopicSelected(QuizTopic.Mixed)
+
+    assertTrue(viewModel.uiState.value.setup.hasNoMixedManualQuestions)
+    assertEquals(FlagGameViewModel.SaveQuizResult.NoOp, viewModel.onSaveCreateQuizClicked("Empty mixed quiz"))
+    assertTrue(viewModel.uiState.value.savedQuizTemplates.isEmpty())
+  }
+
+  @Test
   fun surpriseMeClearsCountAndCanBeDeselectedForCustomAmount() {
     val viewModel = viewModel()
 
@@ -192,6 +203,7 @@ class FlagGameViewModelTest {
   fun changedAnswerBeforeNext_usesFinalSelectionForScore() {
     val viewModel = viewModel()
     viewModel.onModeSelected(GameMode.CreateQuiz)
+    viewModel.onInstantCorrectionToggled()
     QuizVariant.entries.filterNot { it == QuizVariant.FlagToCountry }.forEach(viewModel::onVariantToggled)
     viewModel.onQuestionCountChanged(3)
     viewModel.onStartQuiz()
@@ -215,7 +227,6 @@ class FlagGameViewModelTest {
     val viewModel = viewModel()
     viewModel.onModeSelected(GameMode.CreateQuiz)
     viewModel.onCreateQuizTrainingToggled()
-    viewModel.onInstantCorrectionToggled()
     QuizVariant.entries.filterNot { it == QuizVariant.FlagToCountry }.forEach(viewModel::onVariantToggled)
     viewModel.onQuestionCountChanged(2)
     viewModel.onStartQuiz()
@@ -241,6 +252,7 @@ class FlagGameViewModelTest {
 
     viewModel.onModeSelected(GameMode.CreateQuiz)
     viewModel.onCreateQuizTrainingToggled()
+    viewModel.onInstantCorrectionToggled()
     QuizVariant.entries.filterNot { it == QuizVariant.FlagToCountry }.forEach(viewModel::onVariantToggled)
     viewModel.onQuestionCountChanged(1)
     viewModel.onStartQuiz()
@@ -927,15 +939,73 @@ class FlagGameViewModelTest {
   }
 
   @Test
-  fun togglingFavoriteCountry_updatesPracticeStatsAndPersists() {
+  fun togglingFavorite_updatesOnlyRequestedTopicAndPersists() {
     val progressStore = RecordingProgressStore()
     val viewModel = viewModel(PersistedAppState(), progressStore)
 
-    viewModel.onToggleFavoriteCountry("DE")
+    viewModel.onToggleFavorite("DE", QuizTopic.Capitals)
 
     val state = viewModel.uiState.value
-    assertTrue(state.countryPracticeStats["DE"]?.favorite == true)
-    assertTrue(progressStore.savedProgressSnapshots.last().countryPracticeStats["DE"]?.favorite == true)
+    assertFalse(state.countryPracticeStats["DE"]?.favoriteCountry == true)
+    assertTrue(state.countryPracticeStats["DE"]?.favoriteCapital == true)
+    assertFalse(progressStore.savedProgressSnapshots.last().countryPracticeStats["DE"]?.favoriteCountry == true)
+    assertTrue(progressStore.savedProgressSnapshots.last().countryPracticeStats["DE"]?.favoriteCapital == true)
+  }
+
+  @Test
+  fun removingCapitalFavorite_keepsCountryFavoriteAndPersists() {
+    val progressStore = RecordingProgressStore()
+    val initialState =
+      PersistedAppState(
+        countryPracticeStats =
+          mapOf(
+            "DE" to
+              CountryPracticeStats(
+                favoriteCountry = true,
+                favoriteCapital = true,
+              ),
+          ),
+      )
+    val viewModel = viewModel(initialState, progressStore)
+
+    viewModel.onToggleFavorite("DE", QuizTopic.Capitals)
+
+    val updatedStats = viewModel.uiState.value.countryPracticeStats.getValue("DE")
+    assertTrue(updatedStats.favoriteCountry)
+    assertFalse(updatedStats.favoriteCapital)
+
+    val persistedStats =
+      progressStore.savedProgressSnapshots.last().countryPracticeStats.getValue("DE")
+    assertTrue(persistedStats.favoriteCountry)
+    assertFalse(persistedStats.favoriteCapital)
+  }
+
+  @Test
+  fun removingCountryFavorite_keepsCapitalFavoriteAndPersists() {
+    val progressStore = RecordingProgressStore()
+    val initialState =
+      PersistedAppState(
+        countryPracticeStats =
+          mapOf(
+            "DE" to
+              CountryPracticeStats(
+                favoriteCountry = true,
+                favoriteCapital = true,
+              ),
+          ),
+      )
+    val viewModel = viewModel(initialState, progressStore)
+
+    viewModel.onToggleFavorite("DE", QuizTopic.Countries)
+
+    val updatedStats = viewModel.uiState.value.countryPracticeStats.getValue("DE")
+    assertFalse(updatedStats.favoriteCountry)
+    assertTrue(updatedStats.favoriteCapital)
+
+    val persistedStats =
+      progressStore.savedProgressSnapshots.last().countryPracticeStats.getValue("DE")
+    assertFalse(persistedStats.favoriteCountry)
+    assertTrue(persistedStats.favoriteCapital)
   }
 
   @Test

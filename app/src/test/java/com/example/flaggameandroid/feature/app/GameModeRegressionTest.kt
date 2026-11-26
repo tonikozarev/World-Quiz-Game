@@ -66,6 +66,15 @@ class GameModeRegressionTest {
   }
 
   @Test
+  fun newCustomQuizStartsWithInstantCorrectionEnabled() {
+    val countries = StaticFlagCatalogRepository().getCountries()
+    val continents = countries.map { it.continent }.distinct()
+
+    assertTrue(buildSetupForMode(GameMode.CreateQuiz, continents, countries, "Tony").instantCorrectionEnabled)
+    assertEquals(false, buildSetupForMode(GameMode.MistakeReview, continents, countries, "Tony").instantCorrectionEnabled)
+  }
+
+  @Test
   fun dailyChallenge_ignoresSelectedTopicAndUsesMixedTopic() {
     val viewModel = viewModel()
 

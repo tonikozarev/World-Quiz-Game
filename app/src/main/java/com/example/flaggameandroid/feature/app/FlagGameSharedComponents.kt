@@ -424,7 +424,7 @@ private fun PreviewResultRow() {
           ),
         language = AppLanguage.English,
         isFavorite = false,
-        onToggleFavoriteCountry = {},
+        onToggleFavorite = { _, _ -> },
         isWeak = true,
       )
     }

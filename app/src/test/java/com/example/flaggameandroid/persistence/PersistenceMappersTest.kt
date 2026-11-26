@@ -4,6 +4,7 @@ import com.example.flaggameandroid.core.model.AchievementId
 import com.example.flaggameandroid.core.model.AchievementsProgress
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.HintDifficulty
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.RatingsProgress
 import com.example.flaggameandroid.feature.app.AppLanguage
 import junit.framework.TestCase.assertEquals
@@ -38,6 +39,12 @@ class PersistenceMappersTest {
                 AchievementId.WorldPurist to 222L,
               ),
           ),
+        countryPracticeStats =
+          mapOf(
+            "DE" to CountryPracticeStats(favoriteCountry = true),
+            "FR" to CountryPracticeStats(favoriteCapital = true),
+            "BG" to CountryPracticeStats(favoriteCountry = true, favoriteCapital = true),
+          ),
         accountName = "Tony",
         avatarIndex = 12,
         language = AppLanguage.German,
@@ -56,9 +63,38 @@ class PersistenceMappersTest {
     assertEquals(original.lastPlayedAtEpochMillis, restored.lastPlayedAtEpochMillis)
     assertEquals(original.ratings, restored.ratings)
     assertEquals(original.achievements, restored.achievements)
+    assertEquals(original.countryPracticeStats, restored.countryPracticeStats)
     assertEquals(original.accountName, restored.accountName)
     assertEquals(original.avatarIndex, restored.avatarIndex)
     assertEquals(original.language, restored.language)
+  }
+
+  @Test
+  fun legacyCountryPracticeData_preservesStatsAndClearsFavorites() {
+    val legacyEntity =
+      PersistedAppState()
+        .toProgressEntity()
+        .copy(countryPracticeSerialized = "DE,4,2,1,3,99,1;BG,7,5,123,1")
+
+    val restored = legacyEntity.toPersistedAppState(HintDifficulty.Medium.name)
+    val stats = restored.countryPracticeStats.getValue("DE")
+
+    assertEquals(4, stats.correctCount)
+    assertEquals(2, stats.wrongCount)
+    assertEquals(1, stats.capitalCorrectCount)
+    assertEquals(3, stats.capitalWrongCount)
+    assertEquals(99L, stats.lastMissedAtEpochMillis)
+    assertEquals(false, stats.favoriteCountry)
+    assertEquals(false, stats.favoriteCapital)
+
+    val oldestStats = restored.countryPracticeStats.getValue("BG")
+    assertEquals(7, oldestStats.correctCount)
+    assertEquals(5, oldestStats.wrongCount)
+    assertEquals(0, oldestStats.capitalCorrectCount)
+    assertEquals(0, oldestStats.capitalWrongCount)
+    assertEquals(123L, oldestStats.lastMissedAtEpochMillis)
+    assertEquals(false, oldestStats.favoriteCountry)
+    assertEquals(false, oldestStats.favoriteCapital)
   }
 
   @Test

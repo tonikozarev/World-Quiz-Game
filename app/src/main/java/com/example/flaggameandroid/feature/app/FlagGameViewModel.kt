@@ -309,10 +309,13 @@ class FlagGameViewModel(
     }
   }
 
-  fun onToggleFavoriteCountry(countryCode: String) {
+  fun onToggleFavorite(
+    countryCode: String,
+    topic: QuizTopic,
+  ) {
     updateStateAndPersistProgress { state ->
       val current = state.countryPracticeStats[countryCode] ?: CountryPracticeStats()
-      val updated = current.copy(favorite = !current.favorite)
+      val updated = current.withFavoriteToggledFor(topic)
       state.copy(countryPracticeStats = state.countryPracticeStats + (countryCode to updated))
     }
   }
@@ -565,6 +568,7 @@ class FlagGameViewModel(
     val setup = state.setup
     if (setup.mode != GameMode.CreateQuiz) return SaveQuizResult.NoOp
     if (setup.usesCreateQuizTraining) return SaveQuizResult.NoOp
+    if (setup.hasNoMixedManualQuestions) return SaveQuizResult.NoOp
 
     val seed = if (setup.createQuizSeed != 0L) setup.createQuizSeed else random.nextLong()
     val resolvedQuestionCountryCodes =
