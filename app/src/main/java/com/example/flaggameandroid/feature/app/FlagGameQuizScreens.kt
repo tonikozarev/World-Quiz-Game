@@ -39,9 +39,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.flaggameandroid.core.data.QuizAnswerChecker
+import com.example.flaggameandroid.core.model.CountryPracticeStats
 import com.example.flaggameandroid.core.model.GameMode
 import com.example.flaggameandroid.core.model.FlagCountry
 import com.example.flaggameandroid.core.model.FlagQuestion
+import com.example.flaggameandroid.core.model.QuestionResult
+import com.example.flaggameandroid.core.model.QuizTopic
 import com.example.flaggameandroid.core.model.QuizVariant
 import com.example.flaggameandroid.theme.AccentGold
 import com.example.flaggameandroid.theme.AccentGreen
@@ -351,7 +354,7 @@ fun ResultsScreen(
   language: AppLanguage,
   levelProgress: LevelProgressState,
   countryPracticeStats: Map<String, com.example.flaggameandroid.core.model.CountryPracticeStats>,
-  onToggleFavoriteCountry: (String) -> Unit,
+  onToggleFavorite: (String, QuizTopic) -> Unit,
   completedAtEpochMillis: Long,
   onPlayAgain: () -> Unit,
   onBackToMenu: () -> Unit,
@@ -414,13 +417,13 @@ fun ResultsScreen(
       AppLanguage.German -> "Antwortübersicht"
     }) {
       quiz.results.forEachIndexed { index, result ->
-        val isFavorite = countryPracticeStats[result.question.correctCountry.code]?.favorite == true
+        val isFavorite = isFavoriteResult(result, countryPracticeStats)
         ResultRow(
           index = index + 1,
           result = result,
           language = language,
           isFavorite = isFavorite,
-          onToggleFavoriteCountry = onToggleFavoriteCountry,
+          onToggleFavorite = onToggleFavorite,
         )
       }
     }
@@ -457,4 +460,11 @@ fun ResultsScreen(
     }
   }
 }
+
+internal fun isFavoriteResult(
+  result: QuestionResult,
+  countryPracticeStats: Map<String, CountryPracticeStats>,
+): Boolean =
+  countryPracticeStats[result.question.correctCountry.code]
+    ?.isFavoriteFor(result.question.topic) == true
 

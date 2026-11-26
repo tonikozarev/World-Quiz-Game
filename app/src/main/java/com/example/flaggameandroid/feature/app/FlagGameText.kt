@@ -47,6 +47,18 @@ internal fun cleanText(
         AppLanguage.Bulgarian -> "Любими държави/столици"
         AppLanguage.German -> "Lieblingsländer/Hauptstädte"
       }
+    UiText.FavoritesDialogTitle ->
+      when (language) {
+        AppLanguage.English -> "Favorites"
+        AppLanguage.Bulgarian -> "Любими"
+        AppLanguage.German -> "Favoriten"
+      }
+    UiText.OpenFavorites ->
+      when (language) {
+        AppLanguage.English -> "Open favorites"
+        AppLanguage.Bulgarian -> "Отвори любимите"
+        AppLanguage.German -> "Favoriten öffnen"
+      }
     UiText.Settings ->
       when (language) {
         AppLanguage.English -> "Settings"
@@ -198,6 +210,8 @@ internal enum class UiText {
   Achievements,
   Favorites,
   FavoriteCountriesCapitals,
+  FavoritesDialogTitle,
+  OpenFavorites,
   Settings,
   Quit,
   Profile,

@@ -117,6 +117,14 @@ data class SetupState(
   val createQuizMixedSelectionCount: Int
     get() = selectedCountryCodes.size + selectedCapitalCountryCodes.size
 
+  val hasNoMixedManualQuestions: Boolean
+    get() =
+      mode == GameMode.CreateQuiz &&
+        topic == QuizTopic.Mixed &&
+        createQuizSource == CreateQuizSource.ManualCountriesCapitals &&
+        !usesCreateQuizManualHardcore &&
+        createQuizMixedSelectionCount == 0
+
   val createQuizManualSelectionCount: Int
     get() =
       if (topic == QuizTopic.Mixed) {

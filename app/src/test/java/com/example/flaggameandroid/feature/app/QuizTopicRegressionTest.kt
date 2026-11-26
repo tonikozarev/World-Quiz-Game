@@ -159,4 +159,20 @@ class QuizTopicRegressionTest {
     assertEquals(1, mistakeReviewEligibleCountryCount(stats, QuizTopic.Countries))
     assertEquals(1, mistakeReviewEligibleCountryCount(stats, QuizTopic.Capitals))
   }
+
+  @Test
+  fun countryAndCapitalFavorites_areIndependent() {
+    val countryFavorite = CountryPracticeStats().withFavoriteToggledFor(QuizTopic.Countries)
+
+    assertTrue(countryFavorite.isFavoriteFor(QuizTopic.Countries))
+    assertFalse(countryFavorite.isFavoriteFor(QuizTopic.Capitals))
+
+    val bothFavorites = countryFavorite.withFavoriteToggledFor(QuizTopic.Capitals)
+    val capitalOnly = bothFavorites.withFavoriteToggledFor(QuizTopic.Countries)
+
+    assertTrue(bothFavorites.isFavoriteFor(QuizTopic.Countries))
+    assertTrue(bothFavorites.isFavoriteFor(QuizTopic.Capitals))
+    assertFalse(capitalOnly.isFavoriteFor(QuizTopic.Countries))
+    assertTrue(capitalOnly.isFavoriteFor(QuizTopic.Capitals))
+  }
 }

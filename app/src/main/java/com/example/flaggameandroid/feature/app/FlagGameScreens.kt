@@ -119,7 +119,7 @@ fun FlagGameRoute(
     onBackToGameModesClick = resolvedViewModel::onBackToGameModes,
     onQuestionBack = resolvedViewModel::onQuestionBack,
     onQuestionForward = resolvedViewModel::onQuestionForward,
-    onToggleFavoriteCountry = resolvedViewModel::onToggleFavoriteCountry,
+    onToggleFavorite = resolvedViewModel::onToggleFavorite,
     onOpenSavedQuizTemplate = resolvedViewModel::onOpenSavedQuizTemplate,
     onRemoveSavedQuizTemplate = resolvedViewModel::onRemoveSavedQuizTemplate,
   )

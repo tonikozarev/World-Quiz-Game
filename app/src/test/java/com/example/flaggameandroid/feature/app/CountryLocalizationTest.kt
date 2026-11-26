@@ -81,6 +81,26 @@ class CountryLocalizationTest {
   }
 
   @Test
+  fun favoriteItemLabels_useTopicSpecificLocalizedFormat() {
+    assertEquals(
+      "Germany",
+      localizedFavoriteItemLabel(germany, QuizTopic.Countries, AppLanguage.English),
+    )
+    assertEquals(
+      "Berlin (Germany)",
+      localizedFavoriteItemLabel(germany, QuizTopic.Capitals, AppLanguage.English),
+    )
+    assertEquals(
+      "Берлин (Германия)",
+      localizedFavoriteItemLabel(germany, QuizTopic.Capitals, AppLanguage.Bulgarian),
+    )
+    assertEquals(
+      "Berlin (Deutschland)",
+      localizedFavoriteItemLabel(germany, QuizTopic.Capitals, AppLanguage.German),
+    )
+  }
+
+  @Test
   fun capitalTypedAnswers_acceptSecondaryCapitalAnswersWithoutChangingTheDisplayedMainCapital() {
     val benin = catalog.first { it.code == "BJ" }
 

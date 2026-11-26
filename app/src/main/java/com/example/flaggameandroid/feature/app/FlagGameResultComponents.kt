@@ -80,7 +80,7 @@ internal fun ResultRow(
   result: QuestionResult,
   language: AppLanguage,
   isFavorite: Boolean,
-  onToggleFavoriteCountry: (String) -> Unit,
+  onToggleFavorite: (String, QuizTopic) -> Unit,
   isWeak: Boolean = false,
 ) {
   val background =
@@ -140,7 +140,7 @@ internal fun ResultRow(
           modifier = Modifier.weight(1f),
         )
         TextButton(
-          onClick = { onToggleFavoriteCountry(result.question.correctCountry.code) },
+          onClick = { onToggleFavorite(result.question.correctCountry.code, result.question.topic) },
           contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
           modifier = Modifier.size(28.dp),
         ) {

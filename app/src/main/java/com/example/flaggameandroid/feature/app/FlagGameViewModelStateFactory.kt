@@ -119,7 +119,7 @@ internal fun buildSetupForMode(
         GameMode.DailyChallenge -> QuizTopic.Mixed
         else -> topic
       },
-    instantCorrectionEnabled = false,
+    instantCorrectionEnabled = mode == GameMode.CreateQuiz,
     selectedContinents = emptySet(),
     questionCountInput =
       when (mode) {

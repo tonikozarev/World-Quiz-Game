@@ -10,7 +10,8 @@ data class CountryPracticeStats(
   val capitalCorrectCount: Int = 0,
   val capitalWrongCount: Int = 0,
   val lastMissedAtEpochMillis: Long = 0L,
-  val favorite: Boolean = false,
+  val favoriteCountry: Boolean = false,
+  val favoriteCapital: Boolean = false,
 ) {
   val totalCorrectCount: Int
     get() = correctCount + capitalCorrectCount
@@ -36,6 +37,20 @@ data class CountryPracticeStats(
       QuizTopic.Countries -> correctCount
       QuizTopic.Capitals -> capitalCorrectCount
       QuizTopic.Mixed -> maxOf(correctCount, capitalCorrectCount)
+    }
+
+  fun isFavoriteFor(topic: QuizTopic): Boolean =
+    when (topic) {
+      QuizTopic.Countries -> favoriteCountry
+      QuizTopic.Capitals -> favoriteCapital
+      QuizTopic.Mixed -> false
+    }
+
+  fun withFavoriteToggledFor(topic: QuizTopic): CountryPracticeStats =
+    when (topic) {
+      QuizTopic.Countries -> copy(favoriteCountry = !favoriteCountry)
+      QuizTopic.Capitals -> copy(favoriteCapital = !favoriteCapital)
+      QuizTopic.Mixed -> this
     }
 
   fun isMistakeReviewEligible(topic: QuizTopic): Boolean =
